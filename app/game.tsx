@@ -100,6 +100,19 @@ export default function GameScreen() {
     }
   }, [globalLevelNum]);
 
+  const conflictSet = useMemo(() => new Set(conflicts.map((c) => `${c.row},${c.col}`)), [conflicts]);
+
+  const cellZoneIndex = useMemo(() => {
+    const map: Record<string, number> = {};
+    if (!level) return map;
+    level.zones.forEach((z, i) => {
+      z.cells.forEach(({ row, col }) => {
+        map[`${row},${col}`] = i;
+      });
+    });
+    return map;
+  }, [level]);
+
   if (!level) {
     return (
       <View style={[styles.loading, { backgroundColor: '#0f1117' }]}>
@@ -120,19 +133,6 @@ export default function GameScreen() {
 
   const gap = gridSize <= 4 ? 10 : 4;
   const totalGridSize = gridSize * cellSize + (gridSize - 1) * gap;
-
-  const conflictSet = useMemo(() => new Set(conflicts.map((c) => `${c.row},${c.col}`)), [conflicts]);
-
-  // Zone index map for cell tinting
-  const cellZoneIndex = useMemo(() => {
-    const map: Record<string, number> = {};
-    level.zones.forEach((z, i) => {
-      z.cells.forEach(({ row, col }) => {
-        map[`${row},${col}`] = i;
-      });
-    });
-    return map;
-  }, [level.zones]);
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
