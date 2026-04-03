@@ -1,0 +1,50 @@
+const colors = {
+  light: {
+    text: '#eef1f5',
+    tint: '#ff6a00',
+    background: '#0f1117',
+    foreground: '#eef1f5',
+    card: '#171c26',
+    cardForeground: '#eef1f5',
+    primary: '#ff6a00',
+    primaryForeground: '#ffffff',
+    secondary: '#1a2030',
+    secondaryForeground: '#eef1f5',
+    muted: '#1a2030',
+    mutedForeground: '#8e9ab0',
+    accent: '#ff6a00',
+    accentForeground: '#ffffff',
+    destructive: '#ef4444',
+    destructiveForeground: '#ffffff',
+    border: '#242e42',
+    input: '#1a2030',
+
+    // Game-specific
+    cellBg: '#1a2030',
+    zoneBorder: '#00ff55',
+    zoneSelected: '#ff5500',
+    hintBorder: '#3aa7ff',
+    conflictColor: '#ee0000',
+    brandOrange: '#ff6a00',
+    brandBlue: '#3aa7ff',
+    coin: '#fbbf24',
+    hint: '#34d399',
+    starPace3: '#10b981',
+    starPace2: '#f59e0b',
+    starPace1: '#ef4444',
+  },
+  radius: 12,
+
+  zoneTints: [
+    '#3b82f6',
+    '#10b981',
+    '#f59e0b',
+    '#ef4444',
+    '#a855f7',
+    '#06b6d4',
+    '#f97316',
+    '#ec4899',
+  ],
+};
+
+export default colors;
