@@ -534,16 +534,16 @@ function getFallbackName(ingredients: string[]): string {
 
 export function getStarThresholds(worldNum: number): { three: number; two: number } {
   const map: Record<number, { three: number; two: number }> = {
-    1: { three: 60, two: 120 },
-    2: { three: 90, two: 180 },
-    3: { three: 150, two: 300 },
-    4: { three: 240, two: 480 },
+    1: { three: 120, two: 240 },
+    2: { three: 180, two: 300 },
+    3: { three: 240, two: 420 },
+    4: { three: 360, two: 540 },
     5: { three: 360, two: 720 },
     6: { three: 480, two: 960 },
     7: { three: 600, two: 1200 },
     8: { three: 720, two: 1440 },
   };
-  return map[worldNum] ?? { three: 60, two: 120 };
+  return map[worldNum] ?? { three: 120, two: 240 };
 }
 
 export function generateLevel(worldNum: number, levelInWorld: number): Level {

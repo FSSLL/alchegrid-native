@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  Dimensions,
   Image,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { GRID_BACKGROUNDS } from '../constants/assets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -24,9 +22,7 @@ import ElementPalette from '../components/ElementPalette';
 import ZonePanel from '../components/ZonePanel';
 import StarProgress from '../components/StarProgress';
 import WinOverlay from '../components/WinOverlay';
-import colors from '../constants/colors';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
@@ -105,12 +101,16 @@ export default function GameScreen() {
 
   const conflictSet = useMemo(() => new Set(conflicts.map((c) => `${c.row},${c.col}`)), [conflicts]);
 
-  const cellZoneIndex = useMemo(() => {
-    const map: Record<string, number> = {};
+  // Ghost icons: empty cells show faded recipe product icon (spec §9.2, R15/R16)
+  const cellGhostInfo = useMemo(() => {
+    const map: Record<string, { element: string; opacity: number; grayscale: boolean }> = {};
     if (!level) return map;
-    level.zones.forEach((z, i) => {
-      z.cells.forEach(({ row, col }) => {
-        map[`${row},${col}`] = i;
+    level.zones.forEach((zone) => {
+      if (!zone.recipeName) return;
+      const opacity = zone.cells.length === 1 ? 0.45 : 0.70;
+      const grayscale = zone.cells.length === 1;
+      zone.cells.forEach(({ row, col }) => {
+        map[`${row},${col}`] = { element: zone.recipeName!, opacity, grayscale };
       });
     });
     return map;
@@ -233,7 +233,9 @@ export default function GameScreen() {
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
                     isSelected={selectedZone?.cells.some((cc) => cc.row === r && cc.col === c) ?? false}
-                    zoneIndex={cellZoneIndex[key] ?? 0}
+                    ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
+                    ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.7}
+                    ghostGrayscale={cellGhostInfo[key]?.grayscale ?? false}
                     onPress={handleCellPress}
                   />
                 </View>

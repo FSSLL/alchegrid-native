@@ -9,14 +9,10 @@ import {
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
   withSpring,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import type { Level, ElementID } from '../lib/types';
-import colors from '../constants/colors';
 import { ELEMENT_EMOJIS } from '../lib/elementEmojis';
 
 interface ElementPaletteProps {
@@ -38,18 +34,7 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
   const scale = useSharedValue(1);
 
   React.useEffect(() => {
-    if (isActive) {
-      scale.value = withRepeat(
-        withSequence(
-          withTiming(1.08, { duration: 600 }),
-          withTiming(1.0, { duration: 600 })
-        ),
-        -1,
-        true
-      );
-    } else {
-      scale.value = withSpring(1);
-    }
+    scale.value = withSpring(isActive ? 1.08 : 1, { stiffness: 300, damping: 20 });
   }, [isActive, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -58,33 +43,65 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
 
   const exhausted = remaining === 0;
   const emoji = ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0];
-  const fontSize = itemSize * 0.42;
+  const fontSize = itemSize * 0.44;
+  const labelFontSize = itemSize * 0.19;
 
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
       disabled={exhausted}
+      style={styles.itemWrapper}
     >
+      {/* Label above tile — visible (orange) when active, hidden (transparent) when not */}
+      <Text
+        style={[
+          styles.elementLabel,
+          {
+            fontSize: labelFontSize,
+            color: isActive ? '#ff6a00' : 'transparent',
+            fontWeight: '700',
+          },
+        ]}
+        numberOfLines={1}
+      >
+        {element}
+      </Text>
+
       <Animated.View
         style={[
           styles.item,
           {
             width: itemSize,
             height: itemSize,
-            backgroundColor: isActive ? '#ff6a00' : '#171c26',
-            borderColor: isActive ? '#ff6a00' : '#242e42',
+            // Active: orange ring border only (not fill)
+            borderColor: isActive ? '#ff6a00' : exhausted ? '#1a1f2e' : '#2a3550',
+            borderWidth: isActive ? 2.5 : 1,
             opacity: exhausted ? 0.4 : 1,
           },
           animatedStyle,
         ]}
       >
         <Text style={{ fontSize }}>{emoji}</Text>
+
+        {/* Count badge — bottom-left corner per spec §1.5 */}
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{remaining}</Text>
         </View>
       </Animated.View>
-      <Text style={[styles.elementName, { fontSize: itemSize * 0.18 }]} numberOfLines={1}>
+
+      {/* Label below tile — visible (muted) when not active, hidden when active */}
+      <Text
+        style={[
+          styles.elementLabel,
+          {
+            fontSize: labelFontSize,
+            color: isActive ? 'transparent' : '#6b7a96',
+            fontWeight: '500',
+          },
+        ]}
+        numberOfLines={1}
+      >
         {element}
       </Text>
     </TouchableOpacity>
@@ -95,9 +112,21 @@ PaletteItem.displayName = 'PaletteItem';
 
 const ElementPalette = memo(({ level, board, activeElement, onSelectElement }: ElementPaletteProps) => {
   const gridSize = level.size;
-  const itemSize = gridSize <= 4 ? 72 : gridSize <= 5 ? 52 : gridSize <= 6 ? 44 : 38;
-  const gap = gridSize <= 4 ? 16 : gridSize <= 5 ? 12 : 8;
 
+  // Spec §17.9: item sizes by grid size
+  const itemSize =
+    gridSize <= 4 ? 80 :
+    gridSize <= 5 ? 52 :
+    gridSize <= 6 ? 44 : 38;
+
+  const gap =
+    gridSize <= 4 ? 16 :
+    gridSize <= 5 ? 12 : 8;
+
+  const paddingH =
+    gridSize <= 5 ? 16 : 10;
+
+  // Inventory counts per spec §6.1
   const remaining = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const row of board) {
@@ -121,7 +150,7 @@ const ElementPalette = memo(({ level, board, activeElement, onSelectElement }: E
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingHorizontal: paddingH }]}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -146,41 +175,45 @@ ElementPalette.displayName = 'ElementPalette';
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#171c26',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 16,
+    backgroundColor: 'rgba(23,28,38,0.95)',
+    paddingVertical: 10,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#242e42',
   },
   scroll: {
-    paddingHorizontal: 8,
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  itemWrapper: {
     alignItems: 'center',
   },
   item: {
     borderRadius: 12,
-    borderWidth: 2,
+    backgroundColor: '#12172280',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   badge: {
     position: 'absolute',
-    top: 2,
-    right: 3,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    bottom: 2,
+    left: 3,
+    backgroundColor: 'rgba(0,0,0,0.75)',
     borderRadius: 6,
-    paddingHorizontal: 3,
+    paddingHorizontal: 4,
     paddingVertical: 1,
+    minWidth: 14,
+    alignItems: 'center',
   },
   badgeText: {
     color: 'white',
-    fontSize: 7,
+    fontSize: 9,
     fontWeight: '700',
   },
-  elementName: {
-    color: '#8e9ab0',
+  elementLabel: {
     textAlign: 'center',
-    marginTop: 3,
-    fontWeight: '500',
+    marginVertical: 2,
   },
 });
 

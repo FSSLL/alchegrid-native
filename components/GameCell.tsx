@@ -7,8 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import type { ElementID } from '../lib/types';
-import colors from '../constants/colors';
-import { ELEMENT_EMOJIS } from '../lib/elementEmojis';
+import { ELEMENT_EMOJIS, RECIPE_EMOJIS } from '../lib/elementEmojis';
 
 interface GameCellProps {
   row: number;
@@ -18,7 +17,9 @@ interface GameCellProps {
   isConflict: boolean;
   isHinted: boolean;
   isSelected: boolean;
-  zoneIndex: number;
+  ghostElement: string | null;
+  ghostOpacity: number;
+  ghostGrayscale: boolean;
   onPress: (row: number, col: number) => void;
 }
 
@@ -32,7 +33,9 @@ const GameCell = memo(({
   isConflict,
   isHinted,
   isSelected,
-  zoneIndex,
+  ghostElement,
+  ghostOpacity,
+  ghostGrayscale,
   onPress,
 }: GameCellProps) => {
   const scale = useSharedValue(1);
@@ -54,22 +57,37 @@ const GameCell = memo(({
     onPress(row, col);
   }, [row, col, onPress]);
 
-  const fontSize = cellSize * 0.28;
-  const badgeFontSize = 7;
+  const fontSize = cellSize * 0.42;
+  const labelFontSize = cellSize * 0.18;
 
-  const zoneTint = colors.zoneTints[zoneIndex % colors.zoneTints.length];
-
+  // Cell border per spec:
+  // Conflict: 7px #ee0000 + red shadow (§7.2)
+  // Hinted: 2px #3aa7ff (§3.4 R21)
+  // Normal: transparent
   const borderColor = isConflict
     ? '#ee0000'
     : isHinted
     ? '#3aa7ff'
-    : isSelected
-    ? '#ff5500'
     : 'transparent';
 
-  const borderWidth = isConflict ? 2.5 : isHinted ? 2 : isSelected ? 2 : 0;
+  const borderWidth = isConflict ? 7 : isHinted ? 2 : 0;
 
-  const emoji = element ? (ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0]) : '';
+  const shadowColor = isConflict ? '#ee0000' : isHinted ? '#3aa7ff' : 'transparent';
+  const shadowOpacity = isConflict ? 0.5 : isHinted ? 0.6 : 0;
+  const shadowRadius = isConflict ? 5 : isHinted ? 4 : 0;
+
+  const emoji = element
+    ? (ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0])
+    : '';
+
+  const ghostEmoji = ghostElement
+    ? (RECIPE_EMOJIS[ghostElement.toLowerCase()] ?? ELEMENT_EMOJIS[ghostElement.toLowerCase()] ?? '✦')
+    : '';
+
+  // Cell background: subtle tint for selected zone
+  const cellBg = isSelected
+    ? 'rgba(255,85,0,0.12)'
+    : 'transparent';
 
   return (
     <AnimatedTouchable
@@ -85,14 +103,13 @@ const GameCell = memo(({
           {
             width: cellSize,
             height: cellSize,
-            backgroundColor: element
-              ? `${zoneTint}55`
-              : 'transparent',
+            backgroundColor: cellBg,
             borderColor,
             borderWidth,
-            shadowColor: isConflict ? '#ee0000' : 'transparent',
-            shadowOpacity: isConflict ? 0.6 : 0,
-            shadowRadius: isConflict ? 6 : 0,
+            shadowColor,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity,
+            shadowRadius,
           },
         ]}
       >
@@ -100,14 +117,25 @@ const GameCell = memo(({
           <>
             <Text style={[styles.emoji, { fontSize }]}>{emoji}</Text>
             {cellSize >= 38 && (
-              <Text
-                style={[styles.label, { fontSize: cellSize * 0.18 }]}
-                numberOfLines={1}
-              >
+              <Text style={[styles.label, { fontSize: labelFontSize }]} numberOfLines={1}>
                 {element.length > 6 ? element.substring(0, 4) : element}
               </Text>
             )}
           </>
+        ) : ghostElement ? (
+          // Ghost icon: recipe product at 70% opacity (45% + grayscale for single-cell zones)
+          <Text
+            style={[
+              styles.emoji,
+              {
+                fontSize,
+                opacity: ghostOpacity,
+                // grayscale filter not directly supported in RN; approximated via opacity
+              },
+            ]}
+          >
+            {ghostEmoji}
+          </Text>
         ) : null}
       </View>
     </AnimatedTouchable>
@@ -118,7 +146,7 @@ GameCell.displayName = 'GameCell';
 
 const styles = StyleSheet.create({
   cell: {
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -127,7 +155,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   label: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.75)',
     fontWeight: '600',
     textAlign: 'center',
     marginTop: 1,

@@ -82,13 +82,29 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     if (!activeElement) return;
 
-    const newBoard = board.map((r) => [...r]);
+    const currentCell = board[row][col];
 
-    if (newBoard[row][col] === activeElement) {
+    // Toggle off: tapping same element removes it
+    if (currentCell === activeElement) {
+      const newBoard = board.map((r) => [...r]);
       newBoard[row][col] = null;
-    } else {
-      newBoard[row][col] = activeElement;
+      const conflicts = getConflicts(newBoard, level.size);
+      set({ board: newBoard, conflicts });
+      return;
     }
+
+    // Inventory enforcement (spec §1.3): count remaining slots for activeElement
+    const maxPerElement = level.size;
+    const counts: Record<string, number> = {};
+    level.elements.forEach((el) => { counts[el] = maxPerElement; });
+    board.forEach((r) => r.forEach((cell) => {
+      if (cell !== null && counts[cell] !== undefined) counts[cell]--;
+    }));
+    // Block placement if no slots remain (replacing a different element still uses one slot)
+    if (counts[activeElement] <= 0) return;
+
+    const newBoard = board.map((r) => [...r]);
+    newBoard[row][col] = activeElement;
 
     const conflicts = getConflicts(newBoard, level.size);
 
