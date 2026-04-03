@@ -8,6 +8,7 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -144,7 +145,7 @@ export default function GameScreen() {
   const coinsEarned = stars * 10;
 
   return (
-    <View style={[styles.container, { paddingTop: topPad }]}>
+    <LinearGradient colors={['#0e1117', '#111827', '#0e1117']} style={[styles.container, { paddingTop: topPad }]}>
       {/* Top bar */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => { stopTimer(); router.back(); }} style={styles.backBtn}>
@@ -252,14 +253,13 @@ export default function GameScreen() {
           onReplay={handleReplay}
         />
       )}
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f1117',
   },
   loading: {
     flex: 1,

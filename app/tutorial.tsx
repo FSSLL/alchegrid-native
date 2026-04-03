@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { usePlayerStore } from '../store/playerStore';
@@ -55,7 +56,7 @@ export default function TutorialScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
 
   return (
-    <View style={[styles.container, { paddingTop: topPad }]}>
+    <LinearGradient colors={['#0e1117', '#111827', '#0e1117']} style={[styles.container, { paddingTop: topPad }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -88,7 +89,7 @@ export default function TutorialScreen() {
         </TouchableOpacity>
         <View style={{ height: Platform.OS === 'web' ? 34 : insets.bottom + 20 }} />
       </ScrollView>
-    </View>
+    </LinearGradient>
   );
 }
 
