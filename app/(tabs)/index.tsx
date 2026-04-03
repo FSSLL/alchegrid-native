@@ -138,7 +138,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0e1117' },
-  content: { paddingHorizontal: 16, gap: 10, backgroundColor: '#0e1117' },
+  content: { paddingHorizontal: 16, gap: 10, backgroundColor: '#0e1117', paddingBottom: 64 },
 
   logoWrap: { alignItems: 'center', marginBottom: 4 },
   logo: { width: '70%', height: 145 },
@@ -155,9 +155,10 @@ const styles = StyleSheet.create({
   cardContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 50,
+    paddingTop: 8,
+    paddingBottom: 8,
     paddingHorizontal: 16,
-    gap: 6,
+    gap: 4,
   },
   cardDesc: {
     color: 'rgba(255,255,255,0.75)', fontSize: 11,

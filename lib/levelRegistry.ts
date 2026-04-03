@@ -1,5 +1,6 @@
 import type { WorldInfo, Level } from './types';
 import { generateLevel } from './levelGenerator';
+import { getOfficialLevel } from './levelData';
 
 export const LEVELS_PER_WORLD = 30;
 export const TOTAL_WORLDS = 8;
@@ -24,8 +25,12 @@ export function globalToWorld(globalLevel: number): { worldIndex: number; levelI
 
 export function getLevelData(globalLevel: number): Level | null {
   if (globalLevel < 1 || globalLevel > TOTAL_WORLDS * LEVELS_PER_WORLD) return null;
-  const { worldIndex, levelInWorld } = globalToWorld(globalLevel);
-  return generateLevel(worldIndex + 1, levelInWorld);
+  return getOfficialLevel(globalLevel);
+}
+
+/** For Hardcore and Endless modes only — procedurally generated */
+export function generateProceduralLevel(worldNum: number, levelNum: number): Level {
+  return generateLevel(worldNum, levelNum);
 }
 
 export function getWorldStars(worldIndex: number, starsByLevel: Record<number, number>): number {

@@ -8,7 +8,7 @@ export const HARDCORE_BG = require('../assets/images/Hardcore_2_button_backgroun
 
 // ── Exact aspect ratios for each PNG (measured from actual files) ────────────
 export const LOGO_ASPECT = 1536 / 1024;        // 1.50
-export const CARD_ASPECT = 977 / 1019;         // 0.96 — nearly square
+export const CARD_ASPECT = 1.55;               // landscape card (wider than tall)
 export const PLAY_BTN_ASPECT = 1397 / 440;     // 3.17
 export const BANNER_ASPECT = 1382 / 307;       // 4.50
 export const HARDCORE_ASPECT = 1487 / 652;     // 2.28

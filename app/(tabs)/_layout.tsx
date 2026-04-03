@@ -7,7 +7,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: { display: 'none' },
-        sceneStyle: { backgroundColor: 'transparent' },
+        sceneStyle: { backgroundColor: '#0e1117', justifyContent: 'flex-start' },
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Home' }} />
