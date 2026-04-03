@@ -20,6 +20,7 @@ import GameCell from '../components/GameCell';
 import ZoneBorders from '../components/ZoneBorders';
 import ElementPalette from '../components/ElementPalette';
 import ZonePanel from '../components/ZonePanel';
+import ZoneTooltip from '../components/ZoneTooltip';
 import StarProgress from '../components/StarProgress';
 import WinOverlay from '../components/WinOverlay';
 
@@ -66,8 +67,15 @@ export default function GameScreen() {
       placeElement(row, col, (earnedStars) => {
         completeLevel(globalLevelNum, earnedStars);
       });
+      // Auto-select the zone this cell belongs to
+      if (level) {
+        const zone = level.zones.find((z) =>
+          z.cells.some((c) => c.row === row && c.col === col)
+        );
+        setSelectedZone(zone ?? null);
+      }
     },
-    [placeElement, completeLevel, globalLevelNum]
+    [placeElement, completeLevel, globalLevelNum, level, setSelectedZone]
   );
 
   const handleHintPress = useCallback(() => {
@@ -245,6 +253,17 @@ export default function GameScreen() {
         </View>
       </ScrollView>
 
+      {/* Zone tooltip — appears when a cell is tapped, shows zone recipe + ingredient tiles */}
+      <View style={styles.tooltipRow}>
+        <ZoneTooltip
+          zone={selectedZone}
+          board={board}
+          activeElement={activeElement}
+          onSelectElement={setActiveElement}
+          onClose={() => setSelectedZone(null)}
+        />
+      </View>
+
       {/* Palette */}
       <View style={[styles.palette, { paddingBottom: Math.max(insets.bottom, Platform.OS === 'web' ? 34 : 8) }]}>
         <ElementPalette
@@ -381,6 +400,13 @@ const styles = StyleSheet.create({
   },
   gridContainer: {
     position: 'relative',
+  },
+  tooltipRow: {
+    paddingHorizontal: 12,
+    paddingTop: 6,
+    paddingBottom: 2,
+    minHeight: 56,
+    justifyContent: 'center',
   },
   palette: {
     paddingHorizontal: 12,

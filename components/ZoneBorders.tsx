@@ -60,8 +60,7 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
     <Svg
       width={totalSize}
       height={totalSize}
-      style={{ position: 'absolute', top: 0, left: 0 }}
-      pointerEvents="none"
+      style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
     >
       <Defs>
         {/* Glow filter for selected zone per spec §17.13 */}
