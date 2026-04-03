@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,6 +8,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import type { ElementID } from '../lib/types';
 import { ELEMENT_EMOJIS, RECIPE_EMOJIS } from '../lib/elementEmojis';
+import { ELEMENT_PNGS } from '../constants/assets';
 
 interface GameCellProps {
   row: number;
@@ -24,6 +25,15 @@ interface GameCellProps {
 }
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+function getElementSource(name: string) {
+  return ELEMENT_PNGS[name.toLowerCase()] ?? ELEMENT_PNGS[name] ?? null;
+}
+
+function getGhostSource(recipeName: string) {
+  const key = recipeName.toLowerCase();
+  return ELEMENT_PNGS[key] ?? ELEMENT_PNGS[recipeName] ?? null;
+}
 
 const GameCell = memo(({
   row,
@@ -57,13 +67,10 @@ const GameCell = memo(({
     onPress(row, col);
   }, [row, col, onPress]);
 
+  const iconSize = cellSize * 0.62;
   const fontSize = cellSize * 0.42;
   const labelFontSize = cellSize * 0.18;
 
-  // Cell border per spec:
-  // Conflict: 7px #ee0000 + red shadow (§7.2)
-  // Hinted: 2px #3aa7ff (§3.4 R21)
-  // Normal: transparent
   const borderColor = isConflict
     ? '#ee0000'
     : isHinted
@@ -71,23 +78,23 @@ const GameCell = memo(({
     : 'transparent';
 
   const borderWidth = isConflict ? 7 : isHinted ? 2 : 0;
-
   const shadowColor = isConflict ? '#ee0000' : isHinted ? '#3aa7ff' : 'transparent';
   const shadowOpacity = isConflict ? 0.5 : isHinted ? 0.6 : 0;
   const shadowRadius = isConflict ? 5 : isHinted ? 4 : 0;
 
-  const emoji = element
+  const cellBg = isSelected ? 'rgba(255,85,0,0.12)' : 'transparent';
+
+  // — Placed element —
+  const elementPng = element ? getElementSource(element) : null;
+  const elementEmoji = element
     ? (ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0])
     : '';
 
+  // — Ghost icon —
+  const ghostPng = ghostElement ? getGhostSource(ghostElement) : null;
   const ghostEmoji = ghostElement
     ? (RECIPE_EMOJIS[ghostElement.toLowerCase()] ?? ELEMENT_EMOJIS[ghostElement.toLowerCase()] ?? '✦')
     : '';
-
-  // Cell background: subtle tint for selected zone
-  const cellBg = isSelected
-    ? 'rgba(255,85,0,0.12)'
-    : 'transparent';
 
   return (
     <AnimatedTouchable
@@ -114,28 +121,41 @@ const GameCell = memo(({
         ]}
       >
         {element ? (
-          <>
-            <Text style={[styles.emoji, { fontSize }]}>{emoji}</Text>
-            {cellSize >= 38 && (
-              <Text style={[styles.label, { fontSize: labelFontSize }]} numberOfLines={1}>
-                {element.length > 6 ? element.substring(0, 4) : element}
-              </Text>
-            )}
-          </>
+          elementPng ? (
+            <>
+              <Image
+                source={elementPng}
+                style={{ width: iconSize, height: iconSize }}
+                resizeMode="contain"
+              />
+              {cellSize >= 38 && (
+                <Text style={[styles.label, { fontSize: labelFontSize }]} numberOfLines={1}>
+                  {element.length > 6 ? element.substring(0, 4) : element}
+                </Text>
+              )}
+            </>
+          ) : (
+            <>
+              <Text style={[styles.emoji, { fontSize }]}>{elementEmoji}</Text>
+              {cellSize >= 38 && (
+                <Text style={[styles.label, { fontSize: labelFontSize }]} numberOfLines={1}>
+                  {element.length > 6 ? element.substring(0, 4) : element}
+                </Text>
+              )}
+            </>
+          )
         ) : ghostElement ? (
-          // Ghost icon: recipe product at 70% opacity (45% + grayscale for single-cell zones)
-          <Text
-            style={[
-              styles.emoji,
-              {
-                fontSize,
-                opacity: ghostOpacity,
-                // grayscale filter not directly supported in RN; approximated via opacity
-              },
-            ]}
-          >
-            {ghostEmoji}
-          </Text>
+          ghostPng ? (
+            <Image
+              source={ghostPng}
+              style={{ width: iconSize, height: iconSize, opacity: ghostOpacity }}
+              resizeMode="contain"
+            />
+          ) : (
+            <Text style={[styles.emoji, { fontSize, opacity: ghostOpacity }]}>
+              {ghostEmoji}
+            </Text>
+          )
         ) : null}
       </View>
     </AnimatedTouchable>

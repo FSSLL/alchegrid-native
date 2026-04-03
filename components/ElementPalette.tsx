@@ -2,6 +2,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -14,6 +15,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import type { Level, ElementID } from '../lib/types';
 import { ELEMENT_EMOJIS } from '../lib/elementEmojis';
+import { ELEMENT_PNGS } from '../constants/assets';
 
 interface ElementPaletteProps {
   level: Level;
@@ -42,7 +44,9 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
   }));
 
   const exhausted = remaining === 0;
+  const png = ELEMENT_PNGS[element.toLowerCase()] ?? ELEMENT_PNGS[element] ?? null;
   const emoji = ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0];
+  const iconSize = itemSize * 0.62;
   const fontSize = itemSize * 0.44;
   const labelFontSize = itemSize * 0.19;
 
@@ -74,7 +78,6 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
           {
             width: itemSize,
             height: itemSize,
-            // Active: orange ring border only (not fill)
             borderColor: isActive ? '#ff6a00' : exhausted ? '#1a1f2e' : '#2a3550',
             borderWidth: isActive ? 2.5 : 1,
             opacity: exhausted ? 0.4 : 1,
@@ -82,7 +85,11 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
           animatedStyle,
         ]}
       >
-        <Text style={{ fontSize }}>{emoji}</Text>
+        {png ? (
+          <Image source={png} style={{ width: iconSize, height: iconSize }} resizeMode="contain" />
+        ) : (
+          <Text style={{ fontSize }}>{emoji}</Text>
+        )}
 
         {/* Count badge — bottom-left corner per spec §1.5 */}
         <View style={styles.badge}>
