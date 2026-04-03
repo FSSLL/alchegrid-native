@@ -137,8 +137,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0e1117' },
-  content: { paddingHorizontal: 16, gap: 10, backgroundColor: '#0e1117', paddingBottom: 64 },
+  container: { flex: 1, backgroundColor: 'transparent' },
+  content: { paddingHorizontal: 16, gap: 10, backgroundColor: 'transparent', paddingBottom: 64 },
 
   logoWrap: { alignItems: 'center', marginBottom: 4 },
   logo: { width: '70%', height: 145 },

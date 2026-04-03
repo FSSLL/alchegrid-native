@@ -333,7 +333,7 @@ function GameContent() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0e1117',
+    backgroundColor: 'transparent',
   },
   loading: {
     flex: 1,

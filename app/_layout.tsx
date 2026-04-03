@@ -11,10 +11,12 @@ import {
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, ImageBackground, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+const BG = require('../assets/images/bg.png');
 
 SplashScreen.preventAutoHideAsync();
 
@@ -47,7 +49,16 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ErrorBoundary>
         <GestureHandlerRootView style={styles.root}>
-          <RootLayoutNav />
+          <ImageBackground
+            source={BG}
+            style={styles.bg}
+            resizeMode="cover"
+          >
+            {/* Dark overlay so UI text remains readable over the artwork */}
+            <View style={styles.overlay}>
+              <RootLayoutNav />
+            </View>
+          </ImageBackground>
         </GestureHandlerRootView>
       </ErrorBoundary>
     </SafeAreaProvider>
@@ -57,6 +68,14 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0e1117',
+  },
+  bg: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(8,11,18,0.74)',
   },
 });

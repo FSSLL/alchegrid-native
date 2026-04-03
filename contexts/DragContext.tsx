@@ -188,10 +188,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
 
         {/* Floating ghost — absolutely positioned, follows finger */}
         {dragState && (
-          <View
-            style={[StyleSheet.absoluteFill, styles.ghostOverlay]}
-            pointerEvents="none"
-          >
+          <View style={[StyleSheet.absoluteFill, styles.ghostOverlay]}>
             <Animated.View
               style={[
                 styles.ghost,
