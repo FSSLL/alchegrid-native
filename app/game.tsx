@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,13 +19,22 @@ import { getLevelData } from '../lib/levelRegistry';
 import GameCell from '../components/GameCell';
 import ZoneBorders from '../components/ZoneBorders';
 import ElementPalette from '../components/ElementPalette';
-import ZonePanel from '../components/ZonePanel';
 import ZoneTooltip from '../components/ZoneTooltip';
 import StarProgress from '../components/StarProgress';
 import WinOverlay from '../components/WinOverlay';
+import { DragProvider, useDrag } from '../contexts/DragContext';
 
-
+// ─── Outer shell: provides DragProvider ──────────────────────────────────────
 export default function GameScreen() {
+  return (
+    <DragProvider>
+      <GameContent />
+    </DragProvider>
+  );
+}
+
+// ─── Inner content: can call useDrag() ───────────────────────────────────────
+function GameContent() {
   const insets = useSafeAreaInsets();
   const { globalLevel } = useLocalSearchParams<{ globalLevel: string }>();
   const globalLevelNum = parseInt(globalLevel ?? '1', 10);
@@ -43,6 +52,8 @@ export default function GameScreen() {
     stars,
     initGame,
     placeElement,
+    placeSpecificElement,
+    clearCell,
     setActiveElement,
     setSelectedZone,
     toggleHintMode,
@@ -51,52 +62,66 @@ export default function GameScreen() {
   } = useGameStore();
 
   const { coins, hintBalance, unlimitedHints, completeLevel, usePaidHint, hasDailyFreeHint, useDailyFreeHint } = usePlayerStore();
+  const { registerGrid, setDropHandlers } = useDrag();
+
+  // Ref for measuring absolute grid position for drop detection
+  const gridViewRef = useRef<View>(null);
 
   useEffect(() => {
     const levelData = getLevelData(globalLevelNum);
-    if (levelData) {
-      initGame(levelData);
-    }
-    return () => {
-      stopTimer();
-    };
+    if (levelData) initGame(levelData);
+    return () => { stopTimer(); };
   }, [globalLevelNum]);
+
+  // Wire drop handlers into DragContext
+  useEffect(() => {
+    setDropHandlers(
+      (element, row, col) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        placeSpecificElement(element, row, col, (earnedStars) => {
+          completeLevel(globalLevelNum, earnedStars);
+        });
+        // Auto-select zone of the dropped cell
+        if (level) {
+          const zone = level.zones.find((z) =>
+            z.cells.some((c) => c.row === row && c.col === col),
+          );
+          setSelectedZone(zone ?? null);
+        }
+      },
+      (row, col) => {
+        // dropped outside grid from a cell → erase that cell
+        clearCell(row, col);
+      },
+    );
+  }, [setDropHandlers, placeSpecificElement, clearCell, completeLevel, globalLevelNum, level, setSelectedZone]);
 
   const handleCellPress = useCallback(
     (row: number, col: number) => {
       placeElement(row, col, (earnedStars) => {
         completeLevel(globalLevelNum, earnedStars);
       });
-      // Auto-select the zone this cell belongs to
       if (level) {
         const zone = level.zones.find((z) =>
-          z.cells.some((c) => c.row === row && c.col === col)
+          z.cells.some((c) => c.row === row && c.col === col),
         );
         setSelectedZone(zone ?? null);
       }
     },
-    [placeElement, completeLevel, globalLevelNum, level, setSelectedZone]
+    [placeElement, completeLevel, globalLevelNum, level, setSelectedZone],
   );
 
   const handleHintPress = useCallback(() => {
     const canUse = unlimitedHints || hintBalance > 0;
     const dailyFree = hasDailyFreeHint();
-
     if (!canUse && !dailyFree) return;
-
-    if (dailyFree && !canUse) {
-      useDailyFreeHint();
-    } else if (!unlimitedHints) {
-      usePaidHint();
-    }
-
+    if (dailyFree && !canUse) { useDailyFreeHint(); }
+    else if (!unlimitedHints) { usePaidHint(); }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     toggleHintMode();
   }, [unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, toggleHintMode]);
 
-  const handleReplay = useCallback(() => {
-    resetBoard();
-  }, [resetBoard]);
+  const handleReplay = useCallback(() => { resetBoard(); }, [resetBoard]);
 
   const handleNext = useCallback(() => {
     const nextLevel = globalLevelNum + 1;
@@ -107,9 +132,11 @@ export default function GameScreen() {
     }
   }, [globalLevelNum]);
 
-  const conflictSet = useMemo(() => new Set(conflicts.map((c) => `${c.row},${c.col}`)), [conflicts]);
+  const conflictSet = useMemo(
+    () => new Set(conflicts.map((c) => `${c.row},${c.col}`)),
+    [conflicts],
+  );
 
-  // Ghost icons: empty cells show faded recipe product icon (spec §9.2, R15/R16)
   const cellGhostInfo = useMemo(() => {
     const map: Record<string, { element: string; opacity: number; grayscale: boolean }> = {};
     if (!level) return map;
@@ -127,7 +154,7 @@ export default function GameScreen() {
   if (!level) {
     return (
       <View style={[styles.loading, { backgroundColor: '#0f1117' }]}>
-        <Text style={{ color: '#eef1f5' }}>Loading...</Text>
+        <Text style={{ color: '#eef1f5' }}>Loading…</Text>
       </View>
     );
   }
@@ -153,14 +180,23 @@ export default function GameScreen() {
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const coinsEarned = stars * 10;
-
   const gridBgSource = GRID_BACKGROUNDS[gridSize] ?? GRID_BACKGROUNDS[4];
+
+  // Measure grid after layout so DragContext knows drop zone coordinates
+  const handleGridLayout = () => {
+    gridViewRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
+      registerGrid({ pageX, pageY, cellSize, gap, gridN: gridSize });
+    });
+  };
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
       {/* Top bar */}
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => { stopTimer(); router.back(); }} style={styles.backBtn}>
+        <TouchableOpacity
+          onPress={() => { stopTimer(); router.back(); }}
+          style={styles.backBtn}
+        >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
 
@@ -187,7 +223,9 @@ export default function GameScreen() {
 
       {/* Level label */}
       <View style={styles.levelLabel}>
-        <Text style={styles.levelText}>Level {globalLevelNum} · {level.worldId.replace('world', 'W')}</Text>
+        <Text style={styles.levelText}>
+          Level {globalLevelNum} · {level.worldId.replace('world', 'W')}
+        </Text>
       </View>
 
       {/* Star progress */}
@@ -195,20 +233,17 @@ export default function GameScreen() {
         <StarProgress elapsed={elapsedTime} thresholds={level.starThresholds} />
       </View>
 
-      {/* Zone panel */}
-      <View style={styles.zonePanel}>
-        <ZonePanel
-          level={level}
-          board={board}
-          selectedZone={selectedZone}
-          onSelectZone={setSelectedZone}
-        />
-      </View>
-
       {/* Grid */}
-      <ScrollView contentContainerStyle={styles.gridScroll} style={{ backgroundColor: 'transparent' }}>
-        <View style={[styles.gridContainer, { width: totalGridSize, height: totalGridSize }]}>
-          {/* PNG grid art background */}
+      <ScrollView
+        contentContainerStyle={styles.gridScroll}
+        style={{ backgroundColor: 'transparent' }}
+        scrollEnabled
+      >
+        <View
+          ref={gridViewRef}
+          style={[styles.gridContainer, { width: totalGridSize, height: totalGridSize }]}
+          onLayout={handleGridLayout}
+        >
           <Image
             source={gridBgSource}
             style={{ position: 'absolute', width: totalGridSize, height: totalGridSize }}
@@ -240,7 +275,9 @@ export default function GameScreen() {
                     cellSize={cellSize}
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
-                    isSelected={selectedZone?.cells.some((cc) => cc.row === r && cc.col === c) ?? false}
+                    isSelected={
+                      selectedZone?.cells.some((cc) => cc.row === r && cc.col === c) ?? false
+                    }
                     ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
                     ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.7}
                     ghostGrayscale={cellGhostInfo[key]?.grayscale ?? false}
@@ -248,12 +285,12 @@ export default function GameScreen() {
                   />
                 </View>
               );
-            })
+            }),
           )}
         </View>
       </ScrollView>
 
-      {/* Zone tooltip — appears when a cell is tapped, shows zone recipe + ingredient tiles */}
+      {/* Zone tooltip — shown when a cell is tapped */}
       <View style={styles.tooltipRow}>
         <ZoneTooltip
           zone={selectedZone}
@@ -264,8 +301,13 @@ export default function GameScreen() {
         />
       </View>
 
-      {/* Palette */}
-      <View style={[styles.palette, { paddingBottom: Math.max(insets.bottom, Platform.OS === 'web' ? 34 : 8) }]}>
+      {/* Element palette */}
+      <View
+        style={[
+          styles.palette,
+          { paddingBottom: Math.max(insets.bottom, Platform.OS === 'web' ? 34 : 8) },
+        ]}
+      >
         <ElementPalette
           level={level}
           board={board}
@@ -387,10 +429,6 @@ const styles = StyleSheet.create({
   progressRow: {
     paddingHorizontal: 16,
     paddingBottom: 8,
-  },
-  zonePanel: {
-    paddingVertical: 4,
-    marginBottom: 4,
   },
   gridScroll: {
     alignItems: 'center',

@@ -1,5 +1,5 @@
-import React, { memo, useCallback } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { memo, useCallback, useRef } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, PanResponder } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import type { ElementID } from '../lib/types';
 import { ELEMENT_EMOJIS, RECIPE_EMOJIS } from '../lib/elementEmojis';
 import { ELEMENT_PNGS } from '../constants/assets';
+import { useDrag } from '../contexts/DragContext';
 
 interface GameCellProps {
   row: number;
@@ -48,6 +49,7 @@ const GameCell = memo(({
   ghostGrayscale,
   onPress,
 }: GameCellProps) => {
+  const { startDrag, moveDrag, endDrag, cancelDrag } = useDrag();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -67,6 +69,53 @@ const GameCell = memo(({
     onPress(row, col);
   }, [row, col, onPress]);
 
+  // Refs so PanResponder callbacks always see current values
+  const elementRef = useRef(element);
+  elementRef.current = element;
+  const rowRef = useRef(row);
+  rowRef.current = row;
+  const colRef = useRef(col);
+  colRef.current = col;
+  const isHintedRef = useRef(isHinted);
+  isHintedRef.current = isHinted;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      // Only steal the gesture once element is present and finger has moved
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: (_e, gs) =>
+        !!elementRef.current &&
+        !isHintedRef.current &&
+        (Math.abs(gs.dx) > 6 || Math.abs(gs.dy) > 6),
+      onMoveShouldSetPanResponderCapture: () => false,
+      onPanResponderGrant: (e) => {
+        if (!elementRef.current || isHintedRef.current) return;
+        scale.value = withSpring(0.88, { stiffness: 400, damping: 20 });
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        startDrag(
+          elementRef.current,
+          'cell',
+          e.nativeEvent.pageX,
+          e.nativeEvent.pageY,
+          rowRef.current,
+          colRef.current,
+        );
+      },
+      onPanResponderMove: (e) => {
+        moveDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
+      },
+      onPanResponderRelease: (e) => {
+        scale.value = withSpring(1.0, { stiffness: 400, damping: 25 });
+        endDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
+      },
+      onPanResponderTerminate: () => {
+        scale.value = withSpring(1.0, { stiffness: 400, damping: 25 });
+        cancelDrag();
+      },
+    }),
+  ).current;
+
   const iconSize = cellSize * 0.62;
   const fontSize = cellSize * 0.42;
   const labelFontSize = cellSize * 0.18;
@@ -81,16 +130,13 @@ const GameCell = memo(({
   const shadowColor = isConflict ? '#ee0000' : isHinted ? '#3aa7ff' : 'transparent';
   const shadowOpacity = isConflict ? 0.5 : isHinted ? 0.6 : 0;
   const shadowRadius = isConflict ? 5 : isHinted ? 4 : 0;
-
   const cellBg = isSelected ? 'rgba(255,85,0,0.12)' : 'transparent';
 
-  // — Placed element —
   const elementPng = element ? getElementSource(element) : null;
   const elementEmoji = element
     ? (ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0])
     : '';
 
-  // — Ghost icon —
   const ghostPng = ghostElement ? getGhostSource(ghostElement) : null;
   const ghostEmoji = ghostElement
     ? (RECIPE_EMOJIS[ghostElement.toLowerCase()] ?? ELEMENT_EMOJIS[ghostElement.toLowerCase()] ?? '✦')
@@ -103,6 +149,7 @@ const GameCell = memo(({
       onPress={handlePress}
       activeOpacity={1}
       style={[animatedStyle]}
+      {...panResponder.panHandlers}
     >
       <View
         style={[

@@ -1,22 +1,24 @@
-import React, { memo, useEffect } from 'react';
+import React, { memo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
   StyleSheet,
+  PanResponder,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
-  runOnJS,
 } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import type { Zone, ElementID } from '../lib/types';
 import { ELEMENT_PNGS } from '../constants/assets';
 import { ELEMENT_EMOJIS, RECIPE_EMOJIS } from '../lib/elementEmojis';
 import { isZoneSatisfied } from '../lib/validators';
+import { useDrag } from '../contexts/DragContext';
 
 interface ZoneTooltipProps {
   zone: Zone | null;
@@ -35,6 +37,63 @@ function getEmoji(name: string) {
   return RECIPE_EMOJIS[key] ?? ELEMENT_EMOJIS[key] ?? '◈';
 }
 
+// ─── Draggable ingredient chip ────────────────────────────────────────────────
+interface IngredientChipProps {
+  element: ElementID;
+  isActive: boolean;
+  onPress: () => void;
+}
+
+const IngredientChip = memo(({ element, isActive, onPress }: IngredientChipProps) => {
+  const { startDrag, moveDrag, endDrag, cancelDrag } = useDrag();
+  const elementRef = useRef(element);
+  elementRef.current = element;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: (_e, gs) =>
+        Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5,
+      onMoveShouldSetPanResponderCapture: () => false,
+      onPanResponderGrant: (e) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        startDrag(elementRef.current, 'palette', e.nativeEvent.pageX, e.nativeEvent.pageY);
+      },
+      onPanResponderMove: (e) => {
+        moveDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
+      },
+      onPanResponderRelease: (e) => {
+        endDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
+      },
+      onPanResponderTerminate: () => {
+        cancelDrag();
+      },
+    }),
+  ).current;
+
+  const png = getIcon(element);
+  const emoji = getEmoji(element);
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={[styles.ingredientBtn, isActive && styles.ingredientBtnActive]}
+      {...panResponder.panHandlers}
+    >
+      {png ? (
+        <Image source={png} style={styles.ingredientIcon} resizeMode="contain" />
+      ) : (
+        <Text style={styles.ingredientEmoji}>{emoji}</Text>
+      )}
+    </TouchableOpacity>
+  );
+});
+
+IngredientChip.displayName = 'IngredientChip';
+
+// ─── Main tooltip ─────────────────────────────────────────────────────────────
 const ZoneTooltip = memo(({
   zone,
   board,
@@ -66,9 +125,9 @@ const ZoneTooltip = memo(({
     ],
   }));
 
-  if (!zone) return (
-    <Animated.View style={[styles.container, animStyle, styles.hidden]} />
-  );
+  if (!zone) {
+    return <Animated.View style={[styles.container, animStyle, styles.hidden]} />;
+  }
 
   const satisfied = isZoneSatisfied(zone, board);
   const recipePng = zone.recipeName ? getIcon(zone.recipeName) : null;
@@ -89,29 +148,17 @@ const ZoneTooltip = memo(({
         </Text>
       </View>
 
-      {/* Divider */}
       <View style={styles.divider} />
 
-      {/* Ingredient tiles — tap to select element */}
-      {zone.ingredients.map((el) => {
-        const png = getIcon(el);
-        const emoji = getEmoji(el);
-        const isActive = activeElement === el;
-        return (
-          <TouchableOpacity
-            key={el}
-            onPress={() => onSelectElement(isActive ? null : el)}
-            activeOpacity={0.7}
-            style={[styles.ingredientBtn, isActive && styles.ingredientBtnActive]}
-          >
-            {png ? (
-              <Image source={png} style={styles.ingredientIcon} resizeMode="contain" />
-            ) : (
-              <Text style={styles.ingredientEmoji}>{emoji}</Text>
-            )}
-          </TouchableOpacity>
-        );
-      })}
+      {/* Ingredient chips — draggable to grid + tap to select */}
+      {zone.ingredients.map((el) => (
+        <IngredientChip
+          key={el}
+          element={el}
+          isActive={activeElement === el}
+          onPress={() => onSelectElement(activeElement === el ? null : el)}
+        />
+      ))}
 
       {/* Close */}
       <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={8}>
@@ -199,7 +246,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   hidden: {
-    // Keeps layout space but invisible and non-interactive
     opacity: 0,
     backgroundColor: 'transparent',
     borderColor: 'transparent',

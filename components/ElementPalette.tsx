@@ -1,11 +1,11 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
   Image,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
+  PanResponder,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -16,6 +16,7 @@ import * as Haptics from 'expo-haptics';
 import type { Level, ElementID } from '../lib/types';
 import { ELEMENT_EMOJIS } from '../lib/elementEmojis';
 import { ELEMENT_PNGS } from '../constants/assets';
+import { useDrag } from '../contexts/DragContext';
 
 interface ElementPaletteProps {
   level: Level;
@@ -33,15 +34,56 @@ interface PaletteItemProps {
 }
 
 const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: PaletteItemProps) => {
+  const { startDrag, moveDrag, endDrag, cancelDrag } = useDrag();
   const scale = useSharedValue(1);
+  const isDraggingRef = useRef(false);
 
   React.useEffect(() => {
-    scale.value = withSpring(isActive ? 1.08 : 1, { stiffness: 300, damping: 20 });
+    if (!isDraggingRef.current) {
+      scale.value = withSpring(isActive ? 1.08 : 1, { stiffness: 300, damping: 20 });
+    }
   }, [isActive, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+
+  // PanResponder: drag-and-drop. Tap is handled by the TouchableOpacity wrapper.
+  const elementRef = useRef(element);
+  elementRef.current = element;
+  const remainingRef = useRef(remaining);
+  remainingRef.current = remaining;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      // Don't claim on start — let tap fall through to TouchableOpacity
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      // Claim when significant movement detected
+      onMoveShouldSetPanResponder: (_e, gs) =>
+        (Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5) && remainingRef.current > 0,
+      onMoveShouldSetPanResponderCapture: () => false,
+      onPanResponderGrant: (e) => {
+        isDraggingRef.current = true;
+        scale.value = withSpring(1.15, { stiffness: 400, damping: 20 });
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        startDrag(elementRef.current, 'palette', e.nativeEvent.pageX, e.nativeEvent.pageY);
+      },
+      onPanResponderMove: (e) => {
+        moveDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
+      },
+      onPanResponderRelease: (e) => {
+        isDraggingRef.current = false;
+        scale.value = withSpring(isActive ? 1.08 : 1, { stiffness: 300, damping: 20 });
+        endDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
+      },
+      onPanResponderTerminate: () => {
+        isDraggingRef.current = false;
+        scale.value = withSpring(1, { stiffness: 300, damping: 20 });
+        cancelDrag();
+      },
+    }),
+  ).current;
 
   const exhausted = remaining === 0;
   const png = ELEMENT_PNGS[element.toLowerCase()] ?? ELEMENT_PNGS[element] ?? null;
@@ -56,8 +98,8 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
       activeOpacity={0.7}
       disabled={exhausted}
       style={styles.itemWrapper}
+      {...panResponder.panHandlers}
     >
-      {/* Label above tile — visible (orange) when active, hidden (transparent) when not */}
       <Text
         style={[
           styles.elementLabel,
@@ -91,13 +133,11 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
           <Text style={{ fontSize }}>{emoji}</Text>
         )}
 
-        {/* Count badge — bottom-left corner per spec §1.5 */}
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{remaining}</Text>
         </View>
       </Animated.View>
 
-      {/* Label below tile — visible (muted) when not active, hidden when active */}
       <Text
         style={[
           styles.elementLabel,
@@ -120,7 +160,6 @@ PaletteItem.displayName = 'PaletteItem';
 const ElementPalette = memo(({ level, board, activeElement, onSelectElement }: ElementPaletteProps) => {
   const gridSize = level.size;
 
-  // Spec §17.9: item sizes by grid size
   const itemSize =
     gridSize <= 4 ? 80 :
     gridSize <= 5 ? 52 :
@@ -130,10 +169,6 @@ const ElementPalette = memo(({ level, board, activeElement, onSelectElement }: E
     gridSize <= 4 ? 16 :
     gridSize <= 5 ? 12 : 8;
 
-  const paddingH =
-    gridSize <= 5 ? 16 : 10;
-
-  // Inventory counts per spec §6.1
   const remaining = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const row of board) {
@@ -153,16 +188,13 @@ const ElementPalette = memo(({ level, board, activeElement, onSelectElement }: E
       Haptics.selectionAsync();
       onSelectElement(activeElement === el ? null : el);
     },
-    [activeElement, onSelectElement]
+    [activeElement, onSelectElement],
   );
 
   return (
-    <View style={[styles.container, { paddingHorizontal: paddingH }]}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.scroll, { gap }]}
-      >
+    <View style={styles.container}>
+      {/* space-evenly keeps all items in a single row regardless of padding */}
+      <View style={styles.row}>
         {level.elements.map((el) => (
           <PaletteItem
             key={el}
@@ -173,7 +205,7 @@ const ElementPalette = memo(({ level, board, activeElement, onSelectElement }: E
             onPress={() => handlePress(el)}
           />
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 });
@@ -184,13 +216,15 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: 'rgba(23,28,38,0.95)',
     paddingVertical: 10,
+    paddingHorizontal: 10,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: '#242e42',
   },
-  scroll: {
+  row: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    justifyContent: 'space-evenly',
   },
   itemWrapper: {
     alignItems: 'center',

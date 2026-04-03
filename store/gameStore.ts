@@ -18,6 +18,8 @@ interface GameState {
 
   initGame: (level: Level) => void;
   placeElement: (row: number, col: number, onWin?: (stars: number) => void) => void;
+  placeSpecificElement: (element: ElementID, row: number, col: number, onWin?: (stars: number) => void) => void;
+  clearCell: (row: number, col: number) => void;
   removeElement: (row: number, col: number) => void;
   revealHint: (row: number, col: number) => void;
   toggleHintMode: () => void;
@@ -124,6 +126,50 @@ export const useGameStore = create<GameState>((set, get) => ({
     } else {
       set({ board: newBoard, conflicts });
     }
+  },
+
+  placeSpecificElement: (element, row, col, onWin) => {
+    const { level, board, hintedCells, status } = get();
+    if (!level || status !== 'playing') return;
+    if (hintedCells[`${row},${col}`]) return;
+
+    // Inventory check
+    const maxPerElement = level.size;
+    const counts: Record<string, number> = {};
+    level.elements.forEach((el) => { counts[el] = maxPerElement; });
+    board.forEach((r) => r.forEach((cell) => {
+      if (cell !== null && counts[cell] !== undefined) counts[cell]--;
+    }));
+    if ((counts[element] ?? 0) <= 0) return;
+
+    const newBoard = board.map((r) => [...r]);
+    newBoard[row][col] = element;
+
+    const conflicts = getConflicts(newBoard, level.size);
+    const won = checkWin(level, newBoard);
+
+    if (won) {
+      const { elapsedTime, timerInterval } = get();
+      if (timerInterval) clearInterval(timerInterval);
+      const { three, two } = level.starThresholds;
+      let stars = 1;
+      if (elapsedTime <= three) stars = 3;
+      else if (elapsedTime <= two) stars = 2;
+      set({ board: newBoard, conflicts, status: 'won', timerInterval: null, stars });
+      onWin?.(stars);
+    } else {
+      set({ board: newBoard, conflicts });
+    }
+  },
+
+  clearCell: (row, col) => {
+    const { level, board, hintedCells, status } = get();
+    if (!level || status !== 'playing') return;
+    if (hintedCells[`${row},${col}`]) return;
+    const newBoard = board.map((r) => [...r]);
+    newBoard[row][col] = null;
+    const conflicts = getConflicts(newBoard, level.size);
+    set({ board: newBoard, conflicts });
   },
 
   removeElement: (row, col) => {
