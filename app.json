@@ -8,6 +8,9 @@
     "scheme": "alchegrid",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "assets/**"
+    ],
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",

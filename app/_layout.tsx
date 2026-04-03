@@ -9,9 +9,11 @@ import {
   useFonts as useSpaceMonoFonts,
 } from '@expo-google-fonts/space-mono';
 import { ThemeProvider, DarkTheme } from '@react-navigation/native';
+import { Asset } from 'expo-asset';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
+import { ALL_IMAGES } from '@/lib/preloadAssets';
 import { StyleSheet, View, Image, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -102,7 +104,15 @@ function AppRoot() {
 export default function RootLayout() {
   const [dmLoaded, dmError] = useDMSansFonts({ DMSans_400Regular, DMSans_500Medium, DMSans_700Bold });
   const [monoLoaded, monoError] = useSpaceMonoFonts({ SpaceMono_400Regular });
+
   const ready = (dmLoaded || !!dmError) && (monoLoaded || !!monoError);
+
+  // Kick off image preloading in the background immediately — does NOT block
+  // the app from rendering. All 134 images get downloaded and cached while the
+  // user sees the first screen, so they appear instantly on subsequent visits.
+  useEffect(() => {
+    Asset.loadAsync(ALL_IMAGES).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
