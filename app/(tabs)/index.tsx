@@ -103,8 +103,8 @@ export default function HomeScreen() {
       ))}
 
       {/* Hardcore button */}
-      <TouchableOpacity activeOpacity={0.85} style={styles.bannerWrap} onPress={() => router.push('/tutorial')}>
-        <Image source={HARDCORE_BG} style={styles.bannerBg} resizeMode="contain" />
+      <TouchableOpacity activeOpacity={0.85} style={styles.hardcoreWrap} onPress={() => router.push('/tutorial')}>
+        <Image source={HARDCORE_BG} style={styles.hardcoreBg} resizeMode="contain" />
       </TouchableOpacity>
 
       {/* Bottom row */}
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 12,
   },
 
-  cardWrap: { width: '100%' },
+  cardWrap: { marginHorizontal: -16, alignSelf: 'stretch' },
   cardBg: { width: '100%', height: undefined, aspectRatio: CARD_ASPECT },
   cardContent: {
     alignItems: 'center',
@@ -208,6 +208,9 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.75)', fontSize: 10,
     textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
+
+  hardcoreWrap: { marginHorizontal: -16, alignSelf: 'stretch' },
+  hardcoreBg: { width: '100%', height: undefined, aspectRatio: HARDCORE_ASPECT },
 
   bottomRow: { flexDirection: 'row', gap: 10 },
   halfWrap: { flex: 1 },
