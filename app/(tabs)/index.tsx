@@ -138,9 +138,9 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingHorizontal: 16, gap: 10, backgroundColor: 'transparent', paddingBottom: 64 },
+  content: { gap: 10, backgroundColor: 'transparent', paddingBottom: 64 },
 
-  logoWrap: { alignItems: 'center', marginBottom: 4 },
+  logoWrap: { alignItems: 'center', marginBottom: 4, paddingHorizontal: 16 },
   logo: { width: '70%', height: 145 },
   tagline: {
     fontSize: 12, fontWeight: '700', color: '#ff8c00',
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 12,
   },
 
-  cardWrap: { marginHorizontal: -16, alignSelf: 'stretch' },
+  cardWrap: { width: '100%' },
   cardBg: { width: '100%', height: undefined, aspectRatio: CARD_ASPECT },
   cardContent: {
     alignItems: 'center',
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
 
-  bannerWrap: { width: '100%' },
+  bannerWrap: { width: '100%', paddingHorizontal: 16 },
   bannerBg: { width: '100%', height: undefined, aspectRatio: BANNER_ASPECT },
   bannerContent: { alignItems: 'center', justifyContent: 'center' },
   bannerTitle: {
@@ -209,9 +209,9 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
 
-  hardcoreWrap: { marginHorizontal: -16, alignSelf: 'stretch' },
+  hardcoreWrap: { width: '100%' },
   hardcoreBg: { width: '100%', height: undefined, aspectRatio: HARDCORE_ASPECT },
 
-  bottomRow: { flexDirection: 'row', gap: 10 },
+  bottomRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16 },
   halfWrap: { flex: 1 },
 });
