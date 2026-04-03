@@ -11,26 +11,80 @@ import {
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
-import { StyleSheet, ImageBackground, View } from 'react-native';
+import { StyleSheet, View, Image, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const BG = require('../assets/images/bg.png');
 
+// Inject background CSS at module load time so there is no white flash on web.
+// bg.png is placed in public/ and served statically at /bg.png by Expo's Metro server.
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const _tag = document.createElement('style');
+  _tag.id = 'alchegrid-bg';
+  _tag.textContent = `
+    html, body, #root { height: 100%; margin: 0; padding: 0; }
+    body {
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(8,11,18,0.75), rgba(8,11,18,0.75)),
+        url('/bg.png') center center / cover no-repeat;
+    }
+  `;
+  document.head.appendChild(_tag);
+}
+
 SplashScreen.preventAutoHideAsync();
+
+const TRANSPARENT_SCREEN = {
+  headerShown: false,
+  contentStyle: { backgroundColor: 'transparent' },
+} as const;
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="game" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="worlds" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="world-levels" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="tutorial" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="catalog" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="settings" options={{ headerShown: false, animation: 'slide_from_right' }} />
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: 'transparent' },
+      }}
+    >
+      <Stack.Screen name="(tabs)" options={TRANSPARENT_SCREEN} />
+      <Stack.Screen name="game" options={{ ...TRANSPARENT_SCREEN, animation: 'slide_from_right' }} />
+      <Stack.Screen name="worlds" options={{ ...TRANSPARENT_SCREEN, animation: 'slide_from_right' }} />
+      <Stack.Screen name="world-levels" options={{ ...TRANSPARENT_SCREEN, animation: 'slide_from_right' }} />
+      <Stack.Screen name="tutorial" options={{ ...TRANSPARENT_SCREEN, animation: 'slide_from_right' }} />
+      <Stack.Screen name="catalog" options={{ ...TRANSPARENT_SCREEN, animation: 'slide_from_right' }} />
+      <Stack.Screen name="settings" options={{ ...TRANSPARENT_SCREEN, animation: 'slide_from_right' }} />
     </Stack>
+  );
+}
+
+function AppRoot() {
+  if (Platform.OS === 'web') {
+    // On web, body CSS handles the background.
+    // GestureHandlerRootView must be transparent so body CSS shows through.
+    return (
+      <GestureHandlerRootView style={styles.rootWeb}>
+        <RootLayoutNav />
+      </GestureHandlerRootView>
+    );
+  }
+
+  // Native: render the background image + tint overlay in React Native
+  return (
+    <GestureHandlerRootView style={styles.root}>
+      <Image
+        source={BG}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+      />
+      <View style={[StyleSheet.absoluteFill, styles.tint]} />
+      <View style={styles.nav}>
+        <RootLayoutNav />
+      </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -48,18 +102,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <GestureHandlerRootView style={styles.root}>
-          <ImageBackground
-            source={BG}
-            style={styles.bg}
-            resizeMode="cover"
-          >
-            {/* Dark overlay so UI text remains readable over the artwork */}
-            <View style={styles.overlay}>
-              <RootLayoutNav />
-            </View>
-          </ImageBackground>
-        </GestureHandlerRootView>
+        <AppRoot />
       </ErrorBoundary>
     </SafeAreaProvider>
   );
@@ -68,14 +111,16 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: '#080b12',
   },
-  bg: {
+  rootWeb: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    backgroundColor: 'transparent',
   },
-  overlay: {
+  tint: {
+    backgroundColor: 'rgba(8,11,18,0.75)',
+  },
+  nav: {
     flex: 1,
-    backgroundColor: 'rgba(8,11,18,0.74)',
   },
 });
