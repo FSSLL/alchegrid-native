@@ -18,6 +18,7 @@ const ZonePanel = memo(({ level, board, selectedZone, onSelectZone }: ZonePanelP
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.scroll}
+      style={{ backgroundColor: 'transparent' }}
     >
       {level.zones.map((zone, i) => {
         const satisfied = isZoneSatisfied(zone, board);

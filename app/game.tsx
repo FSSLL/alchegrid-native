@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   Platform,
   Dimensions,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { GRID_BACKGROUNDS } from '../constants/assets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -144,8 +146,10 @@ export default function GameScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const coinsEarned = stars * 10;
 
+  const gridBgSource = GRID_BACKGROUNDS[gridSize] ?? GRID_BACKGROUNDS[4];
+
   return (
-    <LinearGradient colors={['#0e1117', '#111827', '#0e1117']} style={[styles.container, { paddingTop: topPad }]}>
+    <View style={[styles.container, { paddingTop: topPad }]}>
       {/* Top bar */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => { stopTimer(); router.back(); }} style={styles.backBtn}>
@@ -194,8 +198,14 @@ export default function GameScreen() {
       </View>
 
       {/* Grid */}
-      <ScrollView contentContainerStyle={styles.gridScroll}>
+      <ScrollView contentContainerStyle={styles.gridScroll} style={{ backgroundColor: 'transparent' }}>
         <View style={[styles.gridContainer, { width: totalGridSize, height: totalGridSize }]}>
+          {/* PNG grid art background */}
+          <Image
+            source={gridBgSource}
+            style={{ position: 'absolute', width: totalGridSize, height: totalGridSize }}
+            resizeMode="stretch"
+          />
           <ZoneBorders
             zones={level.zones}
             size={gridSize}
@@ -253,13 +263,14 @@ export default function GameScreen() {
           onReplay={handleReplay}
         />
       )}
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0e1117',
   },
   loading: {
     flex: 1,

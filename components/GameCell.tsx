@@ -65,9 +65,9 @@ const GameCell = memo(({
     ? '#3aa7ff'
     : isSelected
     ? '#ff5500'
-    : '#242e42';
+    : 'transparent';
 
-  const borderWidth = isConflict ? 2.5 : isHinted ? 2 : isSelected ? 2 : 1;
+  const borderWidth = isConflict ? 2.5 : isHinted ? 2 : isSelected ? 2 : 0;
 
   const emoji = element ? (ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0]) : '';
 
@@ -86,8 +86,8 @@ const GameCell = memo(({
             width: cellSize,
             height: cellSize,
             backgroundColor: element
-              ? `${zoneTint}40`
-              : '#1a2030',
+              ? `${zoneTint}55`
+              : 'transparent',
             borderColor,
             borderWidth,
             shadowColor: isConflict ? '#ee0000' : 'transparent',

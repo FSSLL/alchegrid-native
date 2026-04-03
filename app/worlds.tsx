@@ -6,31 +6,16 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  Image,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { WORLD_INFO, isWorldUnlocked, getWorldStars, LEVELS_PER_WORLD, STARS_TO_UNLOCK_NEXT_WORLD } from '../lib/levelRegistry';
 import { usePlayerStore } from '../store/playerStore';
+import { WORLD_BUTTONS, WORLD_ASPECTS } from '../constants/assets';
 
-const WORLD_GRADIENTS: [string, string][] = [
-  ['#0e2a0e', '#153815'],
-  ['#1a1a0a', '#2a2610'],
-  ['#0a0a1a', '#0f1530'],
-  ['#1a0e0a', '#2a1810'],
-  ['#0a0a20', '#12103a'],
-  ['#001a10', '#002a18'],
-  ['#150a0a', '#2a1010'],
-  ['#050510', '#0a0a20'],
-];
-
-const WORLD_ACCENT: string[] = [
-  '#22c55e', '#d97706', '#3b82f6', '#f97316',
-  '#8b5cf6', '#10b981', '#ef4444', '#6366f1',
-];
-
-const WORLD_EMOJIS = ['🌿', '⚙️', '⚡', '🧪', '⚛️', '🧬', '🏛️', '🌌'];
+const WORLD_TEXT_PADDING_TOP = [20, 35, 35, 35, 35, 35, 35, 35];
 
 export default function WorldsScreen() {
   const insets = useSafeAreaInsets();
@@ -38,7 +23,7 @@ export default function WorldsScreen() {
   const { progressIndex, starsByLevel } = usePlayerStore();
 
   return (
-    <LinearGradient colors={['#0e1117', '#111827', '#0e1117']} style={styles.bg}>
+    <View style={styles.container}>
       <View style={[styles.header, { paddingTop: topPad + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -54,7 +39,7 @@ export default function WorldsScreen() {
           const maxStars = LEVELS_PER_WORLD * 3;
           const completed = Math.max(0, Math.min(LEVELS_PER_WORLD, progressIndex - world.globalStart + 1));
           const prevWorldName = idx > 0 ? WORLD_INFO[idx - 1].name : '';
-          const accent = WORLD_ACCENT[idx];
+          const ptop = WORLD_TEXT_PADDING_TOP[idx];
 
           return (
             <TouchableOpacity
@@ -64,60 +49,44 @@ export default function WorldsScreen() {
                 Haptics.selectionAsync();
                 router.push({ pathname: '/world-levels', params: { worldNum: world.worldNumber.toString() } });
               }}
-              activeOpacity={unlocked ? 0.82 : 1}
+              activeOpacity={unlocked ? 0.85 : 1}
+              style={[styles.worldWrap, !unlocked && styles.worldLocked]}
             >
-              <LinearGradient
-                colors={WORLD_GRADIENTS[idx]}
-                style={[styles.worldCard, !unlocked && styles.worldCardLocked]}
-              >
-                <View style={[styles.accentTop, { backgroundColor: accent }]} />
-
-                <View style={styles.worldTop}>
-                  <Text style={styles.worldEmoji}>{WORLD_EMOJIS[idx]}</Text>
-                  <View style={styles.worldInfo}>
-                    <Text style={styles.worldName}>{world.name}</Text>
-                    <Text style={styles.worldMeta}>
-                      {world.size}×{world.size} Grid • {world.elements.length} Elements
-                    </Text>
-                  </View>
-                  {!unlocked && <Text style={styles.lockIcon}>🔒</Text>}
-                  {unlocked && (
-                    <Text style={[styles.worldNumBadge, { color: accent, borderColor: accent }]}>
-                      W{world.worldNumber}
-                    </Text>
-                  )}
-                </View>
-
-                <View style={styles.worldBottom}>
+              <Image
+                source={WORLD_BUTTONS[idx]}
+                style={[styles.worldBg, { aspectRatio: WORLD_ASPECTS[idx] ?? 1.85 }]}
+                resizeMode="contain"
+              />
+              <View style={[StyleSheet.absoluteFill, styles.worldContent, { paddingTop: ptop }]}>
+                <Text style={styles.worldName}>{world.name}</Text>
+                <Text style={styles.worldMeta}>
+                  {unlocked
+                    ? `${world.size}×${world.size} Grid • ${completed}/${LEVELS_PER_WORLD} Complete`
+                    : `Collect ${STARS_TO_UNLOCK_NEXT_WORLD} stars in ${prevWorldName}`}
+                </Text>
+                {unlocked ? (
                   <View style={styles.starsRow}>
-                    <Text style={styles.starEmoji}>⭐</Text>
-                    <Text style={styles.starsCount}>{stars} / {maxStars}</Text>
-                    <View style={styles.starsBarBg}>
-                      <View style={[styles.starsBarFill, { width: `${(stars / maxStars) * 100}%` as any, backgroundColor: accent }]} />
-                    </View>
+                    <Text style={styles.starFilled}>★</Text>
+                    <Text style={styles.starsText}>{stars}/{maxStars}</Text>
                   </View>
-
-                  {unlocked ? (
-                    <Text style={styles.progressText}>{completed}/{LEVELS_PER_WORLD} levels complete</Text>
-                  ) : (
-                    <Text style={styles.lockedText}>
-                      Collect {STARS_TO_UNLOCK_NEXT_WORLD} stars in {prevWorldName} to unlock
-                    </Text>
-                  )}
-                </View>
-              </LinearGradient>
+                ) : (
+                  <View style={styles.starsRow}>
+                    <Text style={styles.lockIcon}>🔒</Text>
+                    <Text style={styles.lockedText}>Locked</Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           );
         })}
-
         <View style={{ height: Platform.OS === 'web' ? 20 : insets.bottom + 24 }} />
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#0e1117' },
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingBottom: 12,
@@ -125,36 +94,32 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     width: 40, height: 40, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 12,
   },
-  backIcon: { color: '#94a3b8', fontSize: 20, fontWeight: '700' },
-  title: { fontSize: 26, fontWeight: '900', color: '#fff' },
-  scroll: { paddingHorizontal: 16, gap: 10 },
-  worldCard: {
-    borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: '#222d3d', overflow: 'hidden',
+  backIcon: { color: '#cbd5e1', fontSize: 20, fontWeight: '700' },
+  title: {
+    fontSize: 28, fontWeight: '900', color: '#fff',
+    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4,
   },
-  worldCardLocked: { opacity: 0.5 },
-  accentTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 2.5 },
-  worldTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  worldEmoji: { fontSize: 30 },
-  worldInfo: { flex: 1 },
+  scroll: { paddingHorizontal: 16, gap: 0, paddingTop: 0 },
+  worldWrap: { width: '100%' },
+  worldLocked: { opacity: 0.5 },
+  worldBg: { width: '100%', height: undefined },
+  worldContent: {
+    alignItems: 'center', justifyContent: 'center', gap: 2,
+  },
   worldName: {
-    fontSize: 19, fontWeight: '900', color: '#fff',
+    fontSize: 24, fontWeight: '900', color: '#fff',
     textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6,
+    letterSpacing: 0.5,
   },
-  worldMeta: { fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: '600', marginTop: 2 },
-  lockIcon: { fontSize: 20 },
-  worldNumBadge: {
-    fontSize: 11, fontWeight: '900', borderWidth: 1.5, borderRadius: 8,
-    paddingHorizontal: 6, paddingVertical: 2,
+  worldMeta: {
+    fontSize: 14, color: 'rgba(255,255,255,0.88)', fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
-  worldBottom: { gap: 5 },
-  starsRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  starEmoji: { fontSize: 13 },
-  starsCount: { fontSize: 13, fontWeight: '700', color: '#fbbf24', minWidth: 56 },
-  starsBarBg: { flex: 1, height: 5, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' },
-  starsBarFill: { height: '100%', borderRadius: 3 },
-  progressText: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
-  lockedText: { fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' },
+  starsRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
+  starFilled: { fontSize: 16, color: '#fbbf24' },
+  starsText: { fontSize: 15, color: '#fbbf24', fontWeight: '700' },
+  lockIcon: { fontSize: 15 },
+  lockedText: { fontSize: 14, color: 'rgba(255,255,255,0.65)', fontWeight: '700' },
 });
