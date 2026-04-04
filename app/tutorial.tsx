@@ -306,7 +306,7 @@ function FloatingTipCard({ tip, tipIndex, total }: { tip: TipStep; tipIndex: num
 // ─── Practice board (inner content that can call useDrag) ─────────────────────
 function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
   const {
-    level, board, hintedCells, status, conflicts, selectedZone, elapsedTime, stars,
+    level, board, activeElement, hintedCells, status, conflicts, selectedZone, elapsedTime, stars,
     initGame, placeElement, placeSpecificElement, clearCell, setSelectedZone, setActiveElement, removeElement, stopTimer,
   } = useGameStore();
 
@@ -568,7 +568,12 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
             <BouncingArrow direction="down" />
           </View>
         )}
-        <ElementPalette elements={TUTORIAL_LEVEL.elements} elapsed={elapsedTime} />
+        <ElementPalette
+          level={level ?? TUTORIAL_LEVEL}
+          board={board}
+          activeElement={activeElement}
+          onSelectElement={setActiveElement}
+        />
       </View>
 
       {/* ── Win overlay ── */}
