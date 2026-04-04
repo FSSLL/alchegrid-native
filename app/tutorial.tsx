@@ -254,11 +254,11 @@ type TipPosition =
 type TipStep = { id: string; title: string; text: string; action: string; position: TipPosition };
 
 const PRACTICE_TIPS: TipStep[] = [
-  { id: 'drag-element', title: 'Place an Element',      text: 'Tap an element from the inventory, then tap a cell on the board to place it.',         action: 'Select an element, then tap a cell', position: 'above-inventory' },
+  { id: 'drag-element', title: 'Place an Element',      text: 'Drag an element from the inventory and drop it onto a cell on the board.',             action: 'Drag an element onto a cell',        position: 'above-inventory' },
   { id: 'tap-cell',     title: 'Check a Zone',          text: 'Tap any cell to see which combination its zone requires.',                               action: 'Tap a cell on the board',            position: 'above-board' },
   { id: 'read-tooltip', title: 'Zone Tooltip',          text: 'The tooltip shows the recipe and ingredients. Tap another cell to compare.',             action: 'Tap a different cell',               position: 'below-board' },
-  { id: 'single-cell',  title: 'Single-Cell Zone',      text: 'See the ghost icon at the top-left? Tap Fire from the inventory, then tap that cell!',   action: 'Place Fire in the top-left cell',    position: 'over-board-topleft' },
-  { id: 'multi-cell',   title: 'Multi-Cell Zones',      text: 'Colored ghost icons show multi-cell zones. Tap an element into one now.',               action: 'Place an element in a multi-cell zone', position: 'over-board' },
+  { id: 'single-cell',  title: 'Single-Cell Zone',      text: 'See the ghost icon at the top-left? Drag Fire from the inventory and drop it on that cell!', action: 'Drag Fire to the top-left cell',  position: 'over-board-topleft' },
+  { id: 'multi-cell',   title: 'Multi-Cell Zones',      text: 'Colored ghost icons show multi-cell zones. Drag an element from inventory into one now.',   action: 'Drag an element into a multi-cell zone', position: 'over-board' },
   { id: 'conflicts',    title: 'Watch for Conflicts!',  text: 'Same element twice in a row or column? Those cells turn red! Tap anywhere to continue.', action: 'Tap anywhere to dismiss',            position: 'below-board-arrow-up' },
   { id: 'go',           title: "You're Ready!",         text: 'The timer is running — finish faster for more stars! Complete the puzzle on your own.',   action: '',                                   position: 'over-board-top' },
 ];
@@ -306,8 +306,8 @@ function FloatingTipCard({ tip, tipIndex, total }: { tip: TipStep; tipIndex: num
 // ─── Practice board (inner content that can call useDrag) ─────────────────────
 function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
   const {
-    level, board, activeElement, hintedCells, status, conflicts, selectedZone, elapsedTime, stars,
-    initGame, placeElement, placeSpecificElement, clearCell, setSelectedZone, setActiveElement, removeElement, stopTimer,
+    level, board, hintedCells, status, conflicts, selectedZone, elapsedTime, stars,
+    initGame, placeSpecificElement, clearCell, setSelectedZone, removeElement, stopTimer,
   } = useGameStore();
 
   const { registerGrid, setDropHandlers } = useDrag();
@@ -362,18 +362,16 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
     if (zone && zone.cells.length > 1) setMultizonePlaced(true);
   }
 
+  // Cell tap only shows zone tooltip — placement is drag-only
   const handleCellPress = useCallback(
     (row: number, col: number) => {
-      placeElement(row, col);
-      const el = useGameStore.getState().board[row][col];
-      if (el) trackPlacement(el, row, col);
       if (level) {
         const zone = level.zones.find((z) => z.cells.some((c) => c.row === row && c.col === col));
         setSelectedZone(zone ?? null);
       }
       setTappedCells((p) => p + 1);
     },
-    [placeElement, level, setSelectedZone],
+    [level, setSelectedZone],
   );
 
   // Conflict demo: tip step 5 (index 5)
@@ -562,7 +560,7 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
       </View>
 
       {/* Zone tooltip */}
-      <ZoneTooltip zone={selectedZone} onClose={() => setSelectedZone(null)} />
+      <ZoneTooltip zone={selectedZone} board={safeBoard} onClose={() => setSelectedZone(null)} />
 
       {/* ── Element palette ── */}
       <View style={{ position: 'relative', width: '100%', alignItems: 'center', marginTop: 8 }}>
@@ -575,9 +573,7 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
         )}
         <ElementPalette
           level={level ?? TUTORIAL_LEVEL}
-          board={board}
-          activeElement={activeElement}
-          onSelectElement={setActiveElement}
+          board={safeBoard}
         />
       </View>
 

@@ -44,17 +44,14 @@ function GameContent() {
     board,
     hintedCells,
     status,
-    activeElement,
     hintMode,
     conflicts,
     selectedZone,
     elapsedTime,
     stars,
     initGame,
-    placeElement,
     placeSpecificElement,
     clearCell,
-    setActiveElement,
     setSelectedZone,
     toggleHintMode,
     stopTimer,
@@ -96,19 +93,16 @@ function GameContent() {
     );
   }, [setDropHandlers, placeSpecificElement, clearCell, completeLevel, globalLevelNum, level, setSelectedZone]);
 
+  // Cell tap only opens zone tooltip — placement is drag-only
   const handleCellPress = useCallback(
     (row: number, col: number) => {
-      placeElement(row, col, (earnedStars) => {
-        completeLevel(globalLevelNum, earnedStars);
-      });
-      if (level) {
-        const zone = level.zones.find((z) =>
-          z.cells.some((c) => c.row === row && c.col === col),
-        );
-        setSelectedZone(zone ?? null);
-      }
+      if (!level) return;
+      const zone = level.zones.find((z) =>
+        z.cells.some((c) => c.row === row && c.col === col),
+      );
+      setSelectedZone(zone ?? null);
     },
-    [placeElement, completeLevel, globalLevelNum, level, setSelectedZone],
+    [level, setSelectedZone],
   );
 
   const handleHintPress = useCallback(() => {
@@ -295,8 +289,6 @@ function GameContent() {
         <ZoneTooltip
           zone={selectedZone}
           board={board}
-          activeElement={activeElement}
-          onSelectElement={setActiveElement}
           onClose={() => setSelectedZone(null)}
         />
       </View>
@@ -311,8 +303,6 @@ function GameContent() {
         <ElementPalette
           level={level}
           board={board}
-          activeElement={activeElement}
-          onSelectElement={setActiveElement}
         />
       </View>
 

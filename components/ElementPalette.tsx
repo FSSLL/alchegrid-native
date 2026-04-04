@@ -1,10 +1,9 @@
-import React, { memo, useCallback, useMemo, useRef } from 'react';
+import React, { memo, useMemo, useRef } from 'react';
 import {
   View,
   Text,
   Image,
   StyleSheet,
-  TouchableOpacity,
   PanResponder,
 } from 'react-native';
 import Animated, {
@@ -21,34 +20,23 @@ import { useDrag } from '../contexts/DragContext';
 interface ElementPaletteProps {
   level: Level;
   board: (ElementID | null)[][];
-  activeElement: ElementID | null;
-  onSelectElement: (el: ElementID | null) => void;
 }
 
 interface PaletteItemProps {
   element: ElementID;
   remaining: number;
-  isActive: boolean;
   itemSize: number;
-  onPress: () => void;
 }
 
-const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: PaletteItemProps) => {
+const PaletteItem = memo(({ element, remaining, itemSize }: PaletteItemProps) => {
   const { startDrag, moveDrag, endDrag, cancelDrag } = useDrag();
   const scale = useSharedValue(1);
   const isDraggingRef = useRef(false);
-
-  React.useEffect(() => {
-    if (!isDraggingRef.current) {
-      scale.value = withSpring(isActive ? 1.08 : 1, { stiffness: 300, damping: 20 });
-    }
-  }, [isActive, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  // PanResponder: drag-and-drop. Tap is handled by the TouchableOpacity wrapper.
   const elementRef = useRef(element);
   elementRef.current = element;
   const remainingRef = useRef(remaining);
@@ -56,10 +44,9 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
 
   const panResponder = useRef(
     PanResponder.create({
-      // Don't claim on start — let tap fall through to TouchableOpacity
+      // Don't claim on finger-down — only claim once movement detected
       onStartShouldSetPanResponder: () => false,
       onStartShouldSetPanResponderCapture: () => false,
-      // Claim when significant movement detected
       onMoveShouldSetPanResponder: (_e, gs) =>
         (Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5) && remainingRef.current > 0,
       onMoveShouldSetPanResponderCapture: () => false,
@@ -74,7 +61,7 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
       },
       onPanResponderRelease: (e) => {
         isDraggingRef.current = false;
-        scale.value = withSpring(isActive ? 1.08 : 1, { stiffness: 300, damping: 20 });
+        scale.value = withSpring(1, { stiffness: 300, damping: 20 });
         endDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
       },
       onPanResponderTerminate: () => {
@@ -90,39 +77,21 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
   const emoji = ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0];
   const iconSize = itemSize * 0.62;
   const fontSize = itemSize * 0.44;
-  const labelFontSize = itemSize * 0.19;
+  const labelFontSize = Math.max(9, itemSize * 0.19);
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      disabled={exhausted}
-      style={styles.itemWrapper}
+    <View
+      style={[styles.itemWrapper, exhausted && { opacity: 0.35 }]}
       {...panResponder.panHandlers}
     >
-      <Text
-        style={[
-          styles.elementLabel,
-          {
-            fontSize: labelFontSize,
-            color: isActive ? '#ff6a00' : 'transparent',
-            fontWeight: '700',
-          },
-        ]}
-        numberOfLines={1}
-      >
-        {element}
-      </Text>
-
       <Animated.View
         style={[
           styles.item,
           {
             width: itemSize,
             height: itemSize,
-            borderColor: isActive ? '#ff6a00' : exhausted ? '#1a1f2e' : '#2a3550',
-            borderWidth: isActive ? 2.5 : 1,
-            opacity: exhausted ? 0.4 : 1,
+            borderColor: exhausted ? '#1a1f2e' : '#2a3550',
+            borderWidth: 1.5,
           },
           animatedStyle,
         ]}
@@ -133,41 +102,28 @@ const PaletteItem = memo(({ element, remaining, isActive, itemSize, onPress }: P
           <Text style={{ fontSize }}>{emoji}</Text>
         )}
 
+        {/* Remaining count badge */}
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{remaining}</Text>
         </View>
       </Animated.View>
 
-      <Text
-        style={[
-          styles.elementLabel,
-          {
-            fontSize: labelFontSize,
-            color: isActive ? 'transparent' : '#6b7a96',
-            fontWeight: '500',
-          },
-        ]}
-        numberOfLines={1}
-      >
+      <Text style={[styles.elementLabel, { fontSize: labelFontSize }]} numberOfLines={1}>
         {element}
       </Text>
-    </TouchableOpacity>
+    </View>
   );
 });
 
 PaletteItem.displayName = 'PaletteItem';
 
-const ElementPalette = memo(({ level, board, activeElement, onSelectElement }: ElementPaletteProps) => {
+const ElementPalette = memo(({ level, board }: ElementPaletteProps) => {
   const gridSize = level.size;
 
   const itemSize =
-    gridSize <= 4 ? 80 :
+    gridSize <= 4 ? 76 :
     gridSize <= 5 ? 52 :
     gridSize <= 6 ? 44 : 38;
-
-  const gap =
-    gridSize <= 4 ? 16 :
-    gridSize <= 5 ? 12 : 8;
 
   const remaining = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -183,26 +139,15 @@ const ElementPalette = memo(({ level, board, activeElement, onSelectElement }: E
     return result;
   }, [board, level.elements, gridSize]);
 
-  const handlePress = useCallback(
-    (el: ElementID) => {
-      Haptics.selectionAsync();
-      onSelectElement(activeElement === el ? null : el);
-    },
-    [activeElement, onSelectElement],
-  );
-
   return (
     <View style={styles.container}>
-      {/* space-evenly keeps all items in a single row regardless of padding */}
       <View style={styles.row}>
         {level.elements.map((el) => (
           <PaletteItem
             key={el}
             element={el}
             remaining={remaining[el] ?? 0}
-            isActive={activeElement === el}
             itemSize={itemSize}
-            onPress={() => handlePress(el)}
           />
         ))}
       </View>
@@ -228,6 +173,7 @@ const styles = StyleSheet.create({
   },
   itemWrapper: {
     alignItems: 'center',
+    gap: 4,
   },
   item: {
     borderRadius: 12,
@@ -254,7 +200,8 @@ const styles = StyleSheet.create({
   },
   elementLabel: {
     textAlign: 'center',
-    marginVertical: 2,
+    color: '#6b7a96',
+    fontWeight: '500',
   },
 });
 

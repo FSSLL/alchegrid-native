@@ -23,8 +23,6 @@ import { useDrag } from '../contexts/DragContext';
 interface ZoneTooltipProps {
   zone: Zone | null;
   board: (ElementID | null)[][];
-  activeElement: ElementID | null;
-  onSelectElement: (el: ElementID | null) => void;
   onClose: () => void;
 }
 
@@ -37,14 +35,12 @@ function getEmoji(name: string) {
   return RECIPE_EMOJIS[key] ?? ELEMENT_EMOJIS[key] ?? '◈';
 }
 
-// ─── Draggable ingredient chip ────────────────────────────────────────────────
+// ─── Draggable ingredient chip (drag-only, no tap-to-select) ──────────────────
 interface IngredientChipProps {
   element: ElementID;
-  isActive: boolean;
-  onPress: () => void;
 }
 
-const IngredientChip = memo(({ element, isActive, onPress }: IngredientChipProps) => {
+const IngredientChip = memo(({ element }: IngredientChipProps) => {
   const { startDrag, moveDrag, endDrag, cancelDrag } = useDrag();
   const elementRef = useRef(element);
   elementRef.current = element;
@@ -76,31 +72,20 @@ const IngredientChip = memo(({ element, isActive, onPress }: IngredientChipProps
   const emoji = getEmoji(element);
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[styles.ingredientBtn, isActive && styles.ingredientBtnActive]}
-      {...panResponder.panHandlers}
-    >
+    <View style={styles.ingredientBtn} {...panResponder.panHandlers}>
       {png ? (
         <Image source={png} style={styles.ingredientIcon} resizeMode="contain" />
       ) : (
         <Text style={styles.ingredientEmoji}>{emoji}</Text>
       )}
-    </TouchableOpacity>
+    </View>
   );
 });
 
 IngredientChip.displayName = 'IngredientChip';
 
 // ─── Main tooltip ─────────────────────────────────────────────────────────────
-const ZoneTooltip = memo(({
-  zone,
-  board,
-  activeElement,
-  onSelectElement,
-  onClose,
-}: ZoneTooltipProps) => {
+const ZoneTooltip = memo(({ zone, board, onClose }: ZoneTooltipProps) => {
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(10);
   const scale = useSharedValue(0.95);
@@ -150,14 +135,9 @@ const ZoneTooltip = memo(({
 
       <View style={styles.divider} />
 
-      {/* Ingredient chips — draggable to grid + tap to select */}
+      {/* Ingredient chips — drag from here onto the grid */}
       {zone.ingredients.map((el) => (
-        <IngredientChip
-          key={el}
-          element={el}
-          isActive={activeElement === el}
-          onPress={() => onSelectElement(activeElement === el ? null : el)}
-        />
+        <IngredientChip key={el} element={el} />
       ))}
 
       {/* Close */}
@@ -219,10 +199,6 @@ const styles = StyleSheet.create({
     borderColor: '#2a3550',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  ingredientBtnActive: {
-    borderColor: '#ff6a00',
-    backgroundColor: 'rgba(255,106,0,0.15)',
   },
   ingredientIcon: {
     width: 22,
