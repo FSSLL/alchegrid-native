@@ -209,16 +209,17 @@ function WorldCard({
   const cardImage = WORLD_CARD_IMAGES[info.world] ?? null;
 
   const header = cardImage ? (
-    <ImageBackground
-      source={cardImage}
-      resizeMode="cover"
-      style={styles.worldHeaderImg}
-    >
+    <TouchableOpacity onPress={onToggle} activeOpacity={0.88} style={styles.worldHeaderImg}>
+      <ImageBackground
+        source={cardImage}
+        resizeMode="cover"
+        style={StyleSheet.absoluteFill}
+      />
       <LinearGradient
         colors={['transparent', 'rgba(6,9,18,0.92)']}
         style={styles.imgGradient}
       />
-      <TouchableOpacity onPress={onToggle} activeOpacity={0.85} style={styles.worldHeaderImgContent}>
+      <View style={styles.worldHeaderImgContent}>
         <View style={styles.numBoxWrapper}>
           <LinearGradient colors={info.numberBg as [string, string]} style={styles.numBox}>
             <Text style={[styles.numText, { color: info.accent }]}>{info.world}</Text>
@@ -233,8 +234,8 @@ function WorldCard({
         <View style={styles.chevronPill}>
           <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
         </View>
-      </TouchableOpacity>
-    </ImageBackground>
+      </View>
+    </TouchableOpacity>
   ) : (
     <TouchableOpacity onPress={onToggle} activeOpacity={0.8} style={styles.worldHeader}>
       <LinearGradient colors={info.numberBg as [string, string]} style={styles.numBox}>
@@ -312,7 +313,7 @@ export default function CatalogScreen() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  root:          { flex: 1, backgroundColor: '#0b0f1a' },
+  root:          { flex: 1, backgroundColor: 'transparent' },
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 12,
