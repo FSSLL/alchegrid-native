@@ -178,7 +178,7 @@ function WorldBody({
   );
 }
 
-// ── World card background images (worlds 1-6) ────────────────────────────────
+// ── World card background images (worlds 1-7) ────────────────────────────────
 const WORLD_CARD_IMAGES: Record<number, ReturnType<typeof require>> = {
   1: require('../assets/images/world_1_card.jpg'),
   2: require('../assets/images/world_2_card.jpg'),
@@ -186,6 +186,7 @@ const WORLD_CARD_IMAGES: Record<number, ReturnType<typeof require>> = {
   4: require('../assets/images/world_4_card.jpg'),
   5: require('../assets/images/world_5_card.jpg'),
   6: require('../assets/images/world_6_card.jpg'),
+  7: require('../assets/images/world_7_card.jpg'),
 };
 
 // ── World accordion card ──────────────────────────────────────────────────────
