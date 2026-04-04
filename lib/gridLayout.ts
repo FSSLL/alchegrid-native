@@ -14,7 +14,7 @@ export function computeGridLayout(
 ): { cellSize: number; gap: number; totalGridPx: number } {
   const gap = CELL_GAP;
   const available = screenWidth - 2 * SIDE_GAP;
-  const cellSize = Math.floor((available - (gridSize - 1) * gap) / gridSize);
+  const cellSize = Math.floor(((available - (gridSize - 1) * gap) / gridSize) * 0.9);
   const totalGridPx = gridSize * cellSize + (gridSize - 1) * gap;
   return { cellSize, gap, totalGridPx };
 }
