@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  ImageBackground,
   Platform,
   Modal,
 } from 'react-native';
@@ -177,6 +178,13 @@ function WorldBody({
   );
 }
 
+// ── World card background images (worlds 1-3 provided) ───────────────────────
+const WORLD_CARD_IMAGES: Record<number, ReturnType<typeof require>> = {
+  1: require('../assets/images/world_1_card.png'),
+  2: require('../assets/images/world_2_card.png'),
+  3: require('../assets/images/world_3_card.png'),
+};
+
 // ── World accordion card ──────────────────────────────────────────────────────
 function WorldCard({
   info,
@@ -194,8 +202,15 @@ function WorldCard({
     [info.world],
   );
 
-  return (
-    <View style={[styles.worldCard, { borderColor: info.border }]}>
+  const cardImage = WORLD_CARD_IMAGES[info.world] ?? null;
+
+  const cardInner = (
+    <>
+      {/* Dark overlay so text is always readable */}
+      {cardImage && (
+        <View style={styles.cardOverlay} />
+      )}
+
       {/* Header */}
       <TouchableOpacity onPress={onToggle} activeOpacity={0.8} style={styles.worldHeader}>
         {/* Number box */}
@@ -209,7 +224,9 @@ function WorldCard({
         {/* Name + meta */}
         <View style={styles.worldMeta}>
           <Text style={styles.worldName}>{info.name}</Text>
-          <Text style={styles.worldMetaLine}>{info.grid} grid · {recipeCount} combos</Text>
+          <Text style={[styles.worldMetaLine, cardImage ? styles.worldMetaLineOnImg : null]}>
+            {info.grid} grid · {recipeCount} combos
+          </Text>
         </View>
 
         {/* Chevron */}
@@ -220,6 +237,24 @@ function WorldCard({
 
       {/* Expanded body */}
       {isOpen && <WorldBody info={info} onTap={onTap} />}
+    </>
+  );
+
+  if (cardImage) {
+    return (
+      <ImageBackground
+        source={cardImage}
+        resizeMode="cover"
+        style={[styles.worldCard, { borderColor: info.border }]}
+      >
+        {cardInner}
+      </ImageBackground>
+    );
+  }
+
+  return (
+    <View style={[styles.worldCard, { borderColor: info.border }]}>
+      {cardInner}
     </View>
   );
 }
@@ -303,6 +338,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f1623',
     overflow: 'hidden',
   },
+  cardOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(8,12,22,0.62)',
+    borderRadius: 14,
+  },
+  worldMetaLineOnImg: { color: 'rgba(255,255,255,0.55)' },
   worldHeader: {
     flexDirection: 'row', alignItems: 'center',
     padding: 12, gap: 12,
