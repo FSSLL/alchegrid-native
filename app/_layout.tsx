@@ -76,6 +76,7 @@ function RootLayoutNav() {
         <Stack.Screen name="settings" options={{ ...SCREEN_OPTS, animation: 'slide_from_right' }} />
         <Stack.Screen name="endless" options={{ ...SCREEN_OPTS, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="hardcore" options={{ ...SCREEN_OPTS, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="community" options={{ ...SCREEN_OPTS, animation: 'slide_from_bottom' }} />
       </Stack>
     </ThemeProvider>
   );

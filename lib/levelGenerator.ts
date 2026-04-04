@@ -13,7 +13,7 @@ export const WORLD_ELEMENTS: Record<number, string[]> = {
 
 type RecipeMap = Record<string, string>;
 
-const WORLD_RECIPES: Record<number, RecipeMap> = {
+export const WORLD_RECIPES: Record<number, RecipeMap> = {
   1: {
     'Earth+Water': 'Mud',
     'Fire+Wind': 'Lightning',

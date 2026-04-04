@@ -122,6 +122,16 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.halfWrap}
           activeOpacity={0.85}
+          onPress={() => router.push('/community')}
+        >
+          <Image source={BANNER_BG} style={styles.bannerBg} resizeMode="contain" />
+          <View style={[StyleSheet.absoluteFill, styles.bannerContent]}>
+            <Text style={styles.bannerTitle}>🧭 Community</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.halfWrap}
+          activeOpacity={0.85}
           onPress={() => router.push('/settings')}
         >
           <Image source={BANNER_BG} style={styles.bannerBg} resizeMode="contain" />
