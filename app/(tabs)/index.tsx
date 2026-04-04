@@ -103,7 +103,7 @@ export default function HomeScreen() {
       ))}
 
       {/* Hardcore button */}
-      <TouchableOpacity activeOpacity={0.85} style={styles.hardcoreWrap} onPress={() => router.push('/tutorial')}>
+      <TouchableOpacity activeOpacity={0.85} style={styles.hardcoreWrap} onPress={() => router.push('/hardcore')}>
         <Image source={HARDCORE_BG} style={styles.hardcoreBg} resizeMode="contain" />
       </TouchableOpacity>
 

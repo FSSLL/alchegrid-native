@@ -373,7 +373,7 @@ const WORLD_RECIPES: Record<number, RecipeMap> = {
   },
 };
 
-function seededRandom(seed: number): () => number {
+export function seededRandom(seed: number): () => number {
   let s = seed;
   return function () {
     s = (s * 1664525 + 1013904223) & 0xffffffff;
@@ -381,7 +381,7 @@ function seededRandom(seed: number): () => number {
   };
 }
 
-function shuffleArray<T>(arr: T[], rng: () => number): T[] {
+export function shuffleArray<T>(arr: T[], rng: () => number): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
@@ -390,7 +390,7 @@ function shuffleArray<T>(arr: T[], rng: () => number): T[] {
   return a;
 }
 
-function generateLatinSquare(size: number, elements: string[], rng: () => number): string[][] {
+export function generateLatinSquare(size: number, elements: string[], rng: () => number): string[][] {
   const shuffled = shuffleArray(elements, rng);
   const grid: string[][] = [];
   for (let r = 0; r < size; r++) {
@@ -408,7 +408,7 @@ function generateLatinSquare(size: number, elements: string[], rng: () => number
   return rowShuffled.map((row) => colOrder.map((c) => row[c]));
 }
 
-function partitionGrid(size: number, rng: () => number): number[][] {
+export function partitionGrid(size: number, rng: () => number): number[][] {
   const zoneGrid = Array.from({ length: size }, () => new Array(size).fill(-1));
   let zoneId = 0;
 
@@ -460,7 +460,7 @@ function partitionGrid(size: number, rng: () => number): number[][] {
   return zoneGrid;
 }
 
-function weightedZoneSize(rng: () => number): number {
+export function weightedZoneSize(rng: () => number): number {
   const r = rng();
   if (r < 0.15) return 2;
   if (r < 0.45) return 3;
@@ -469,7 +469,7 @@ function weightedZoneSize(rng: () => number): number {
   return 6;
 }
 
-function splitZonesByUniqueness(
+export function splitZonesByUniqueness(
   zoneMap: number[][],
   solution: string[][],
   size: number
@@ -519,12 +519,12 @@ function hashString(s: string): number {
   return Math.abs(h);
 }
 
-function findRecipe(worldNum: number, ingredients: string[]): string | null {
+export function findRecipe(worldNum: number, ingredients: string[]): string | null {
   const key = [...ingredients].sort().join('+');
   return WORLD_RECIPES[worldNum]?.[key] ?? null;
 }
 
-function getFallbackName(ingredients: string[]): string {
+export function getFallbackName(ingredients: string[]): string {
   const key = ingredients.join('+');
   const h = hashString(key);
   if (ingredients.length === 2) return FALLBACK_NAMES_2[h % FALLBACK_NAMES_2.length];
