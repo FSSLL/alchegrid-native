@@ -25,6 +25,8 @@ interface PlayerStore {
   dismissTutorial: () => void;
   canUseHint: () => boolean;
   hasDailyFreeHint: () => boolean;
+  unlockAll: () => void;
+  resetProgress: () => void;
 }
 
 export const usePlayerStore = create<PlayerStore>()(
@@ -87,6 +89,32 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       dismissTutorial: () => set({ tutorialDismissed: true }),
+
+      unlockAll: () => {
+        const allStars: Record<number, number> = {};
+        for (let i = 1; i <= 240; i++) allStars[i] = 3;
+        set({
+          progressIndex: 240,
+          starsByLevel: allStars,
+          coins: 9999,
+          hintBalance: 99,
+          unlimitedHints: true,
+          tutorialDismissed: true,
+          seenWorlds: [0, 1, 2, 3, 4, 5, 6, 7],
+        });
+      },
+
+      resetProgress: () =>
+        set({
+          progressIndex: 0,
+          starsByLevel: {},
+          coins: 100,
+          hintBalance: 3,
+          unlimitedHints: false,
+          tutorialDismissed: false,
+          seenWorlds: [],
+          lastDailyFreeHint: '',
+        }),
 
       canUseHint: () => {
         const { hintBalance, unlimitedHints } = get();

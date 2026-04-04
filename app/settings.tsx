@@ -18,7 +18,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const [code, setCode] = useState('');
-  const { coins, hintBalance, unlimitedHints, activateUnlimitedHints, addHint, addCoins } = usePlayerStore();
+  const { coins, hintBalance, unlimitedHints, activateUnlimitedHints, addHint, addCoins, unlockAll, resetProgress } = usePlayerStore();
 
   const handleRedeemCode = () => {
     const trimmed = code.trim().toUpperCase();
@@ -80,6 +80,40 @@ export default function SettingsScreen() {
             />
             <TouchableOpacity style={styles.redeemBtn} onPress={handleRedeemCode}>
               <Text style={styles.redeemBtnText}>Redeem</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Dev Tools */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🛠 Dev Tools</Text>
+          <View style={styles.card}>
+            <TouchableOpacity
+              style={[styles.redeemBtn, { backgroundColor: '#16a34a' }]}
+              onPress={() => {
+                unlockAll();
+                Alert.alert('Unlocked!', 'All 240 levels unlocked · 3 stars each · 9999 coins · 99 hints');
+              }}
+            >
+              <Text style={styles.redeemBtnText}>🔓 Unlock All Levels</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.redeemBtn, { backgroundColor: '#dc2626' }]}
+              onPress={() =>
+                Alert.alert('Reset Progress', 'This will reset all stars, coins, and level progress.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Reset',
+                    style: 'destructive',
+                    onPress: () => {
+                      resetProgress();
+                      Alert.alert('Reset', 'Progress has been reset to the beginning.');
+                    },
+                  },
+                ])
+              }
+            >
+              <Text style={styles.redeemBtnText}>🔄 Reset All Progress</Text>
             </TouchableOpacity>
           </View>
         </View>
