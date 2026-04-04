@@ -14,14 +14,17 @@ const ZONE_GREEN   = '#22c55e';
 const ZONE_WIDTH   = 3.5;
 const ZONE_OPACITY = 0.9;
 
-// Build the outer perimeter path for a group of cells (shared edges suppressed)
+// Build the outer perimeter path for a group of cells (shared edges suppressed).
+// Each border is drawn at the MIDPOINT of the gap between cells so that borders
+// from adjacent different-zone cells land on the same coordinate and appear as
+// a single line rather than two parallel lines.
 function buildMergedPerimeterPath(
   cells: { row: number; col: number }[],
   cellSize: number,
   gap: number,
 ): string {
   const cellSet = new Set(cells.map((c) => `${c.row},${c.col}`));
-  const inset = 0;
+  const h = gap / 2; // half-gap — extend each border to the midpoint of the gap
   const segs: string[] = [];
 
   for (const { row, col } of cells) {
@@ -30,14 +33,16 @@ function buildMergedPerimeterPath(
     const x2 = x + cellSize;
     const y2 = y + cellSize;
 
+    // Horizontal edges: line runs across the full cell width + half-gap on each side
+    // Vertical edges:   line runs the full cell height + half-gap on each side
     if (!cellSet.has(`${row - 1},${col}`))
-      segs.push(`M ${x + inset} ${y} L ${x2 - inset} ${y}`);
+      segs.push(`M ${x - h} ${y - h} L ${x2 + h} ${y - h}`);     // top
     if (!cellSet.has(`${row + 1},${col}`))
-      segs.push(`M ${x + inset} ${y2} L ${x2 - inset} ${y2}`);
+      segs.push(`M ${x - h} ${y2 + h} L ${x2 + h} ${y2 + h}`);   // bottom
     if (!cellSet.has(`${row},${col - 1}`))
-      segs.push(`M ${x} ${y + inset} L ${x} ${y2 - inset}`);
+      segs.push(`M ${x - h} ${y - h} L ${x - h} ${y2 + h}`);      // left
     if (!cellSet.has(`${row},${col + 1}`))
-      segs.push(`M ${x2} ${y + inset} L ${x2} ${y2 - inset}`);
+      segs.push(`M ${x2 + h} ${y - h} L ${x2 + h} ${y2 + h}`);   // right
   }
 
   return segs.join(' ');

@@ -14,7 +14,7 @@ import * as Haptics from 'expo-haptics';
 
 import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
-import { getLevelData } from '../lib/levelRegistry';
+import { getLevelData, globalToWorld } from '../lib/levelRegistry';
 import GameCell from '../components/GameCell';
 import ZoneBorders from '../components/ZoneBorders';
 import ElementPalette from '../components/ElementPalette';
@@ -37,6 +37,7 @@ function GameContent() {
   const insets = useSafeAreaInsets();
   const { globalLevel } = useLocalSearchParams<{ globalLevel: string }>();
   const globalLevelNum = parseInt(globalLevel ?? '1', 10);
+  const { levelInWorld, worldIndex } = globalToWorld(globalLevelNum);
 
   const {
     level,
@@ -217,7 +218,7 @@ function GameContent() {
       {/* Level label */}
       <View style={styles.levelLabel}>
         <Text style={styles.levelText}>
-          Level {globalLevelNum} · {level.worldId.replace('world', 'W')}
+          Level {levelInWorld} · W{worldIndex + 1}
         </Text>
       </View>
 
