@@ -14,7 +14,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import { ALL_IMAGES } from '@/lib/preloadAssets';
-import { StyleSheet, View, Image, Platform } from 'react-native';
+import { StyleSheet, View, Image, Platform, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -82,7 +82,12 @@ function RootLayoutNav() {
   );
 }
 
+const BG_W = 1024;
+const BG_H = 1536;
+
 function AppRoot() {
+  const { width: sw, height: sh } = useWindowDimensions();
+
   if (Platform.OS === 'web') {
     // Body CSS provides the background; every React layer must be transparent.
     return (
@@ -92,10 +97,20 @@ function AppRoot() {
     );
   }
 
-  // Native: background image + tint rendered in React Native.
+  // Compute "contain" scale: fit the full image inside the screen.
+  const scale  = Math.min(sw / BG_W, sh / BG_H);
+  const imgW   = BG_W * scale;
+  const imgH   = BG_H * scale;
+  const left   = (sw - imgW) / 2;
+  const top    = (sh - imgH) / 2;
+
   return (
     <GestureHandlerRootView style={styles.root}>
-      <Image source={BG} style={StyleSheet.absoluteFill} resizeMode="contain" />
+      <Image
+        source={BG}
+        style={{ position: 'absolute', width: imgW, height: imgH, left, top }}
+        resizeMode="stretch"
+      />
       <View style={[StyleSheet.absoluteFill, styles.tint]} />
       <View style={styles.nav}>
         <RootLayoutNav />
