@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Platform,
   Image,
+  Animated,
   useWindowDimensions,
 } from 'react-native';
 import { GRID_BACKGROUNDS } from '../constants/assets';
@@ -65,6 +66,21 @@ function GameContent() {
 
   // Ref for measuring absolute grid position for drop detection
   const gridViewRef = useRef<View>(null);
+  const hintPulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (hintMode) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(hintPulse, { toValue: 1.14, duration: 480, useNativeDriver: true }),
+          Animated.timing(hintPulse, { toValue: 1, duration: 480, useNativeDriver: true }),
+        ]),
+      ).start();
+    } else {
+      hintPulse.stopAnimation();
+      Animated.timing(hintPulse, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+    }
+  }, [hintMode]);
 
   useEffect(() => {
     const levelData = getLevelData(globalLevelNum);
@@ -108,14 +124,18 @@ function GameContent() {
   );
 
   const handleHintPress = useCallback(() => {
+    if (hintMode) {
+      toggleHintMode();
+      return;
+    }
     const canUse = unlimitedHints || hintBalance > 0;
     const dailyFree = hasDailyFreeHint();
     if (!canUse && !dailyFree) return;
     if (dailyFree && !canUse) { useDailyFreeHint(); }
-    else if (!unlimitedHints) { usePaidHint(); }
+    if (!unlimitedHints) { usePaidHint(); }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     toggleHintMode();
-  }, [unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, toggleHintMode]);
+  }, [hintMode, unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, toggleHintMode]);
 
   const handleReplay = useCallback(() => { resetBoard(); }, [resetBoard]);
 
@@ -192,13 +212,15 @@ function GameContent() {
           <Text style={styles.coinText}>🪙 {coins}</Text>
         </View>
 
-        <TouchableOpacity
-          style={[styles.hintBtn, hintMode && styles.hintBtnActive]}
-          onPress={handleHintPress}
-        >
-          <Text style={styles.hintIcon}>💡</Text>
-          <Text style={styles.hintCount}>{unlimitedHints ? '∞' : hintBalance}</Text>
-        </TouchableOpacity>
+        <Animated.View style={{ transform: [{ scale: hintPulse }] }}>
+          <TouchableOpacity
+            style={[styles.hintBtn, hintMode && styles.hintBtnActive]}
+            onPress={handleHintPress}
+          >
+            <Text style={styles.hintIcon}>💡</Text>
+            <Text style={styles.hintCount}>{unlimitedHints ? '∞' : hintBalance}</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
         <View style={styles.pill}>
           <Text style={styles.timerText}>{formatTime(elapsedTime)}</Text>

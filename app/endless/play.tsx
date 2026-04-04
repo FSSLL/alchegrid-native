@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { GRID_BACKGROUNDS } from '../../constants/assets';
 import { useGameStore } from '../../store/gameStore';
 import { useEndlessStore } from '../../store/endlessStore';
+import { usePlayerStore } from '../../store/playerStore';
 import { generateEndlessLevel } from '../../lib/generateEndlessLevel';
 import { computeGridLayout } from '../../lib/gridLayout';
 import GameCell from '../../components/GameCell';
@@ -49,10 +50,26 @@ function EndlessGameContent() {
 
   // ── game store ──────────────────────────────────────────────────────────
   const {
-    level, board, hintedCells, status, activeElement, hintMode,
+    level, board, hintedCells, status, activeElement, hintMode, toggleHintMode,
     conflicts, selectedZone, initGame, placeElement, placeSpecificElement,
     clearCell, setActiveElement, setSelectedZone, stopTimer,
   } = useGameStore();
+
+  const { hintBalance, unlimitedHints, usePaidHint, hasDailyFreeHint, useDailyFreeHint } = usePlayerStore();
+
+  const handleHintPress = useCallback(() => {
+    if (hintMode) {
+      toggleHintMode();
+      return;
+    }
+    const canUse = unlimitedHints || hintBalance > 0;
+    const dailyFree = hasDailyFreeHint();
+    if (!canUse && !dailyFree) return;
+    if (dailyFree && !canUse) { useDailyFreeHint(); }
+    if (!unlimitedHints) { usePaidHint(); }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    toggleHintMode();
+  }, [hintMode, unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, toggleHintMode]);
 
   // ── endless store ────────────────────────────────────────────────────────
   const {
@@ -221,6 +238,14 @@ function EndlessGameContent() {
             {totalScore.toLocaleString()} pts{levelMistakes > 0 ? ` · ⚠${levelMistakes}` : ''}
           </Text>
         </View>
+        <TouchableOpacity
+          style={[styles.hintBtn, hintMode && styles.hintBtnActive]}
+          onPress={handleHintPress}
+        >
+          <Text style={styles.hintIcon}>💡</Text>
+          <Text style={styles.hintCount}>{unlimitedHints ? '∞' : hintBalance}</Text>
+        </TouchableOpacity>
+
         <View style={styles.timerBadge}>
           <Text style={styles.timerText}>{formatTime(elapsedDisplay)}</Text>
         </View>
@@ -307,6 +332,16 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
   timerText: { color: '#fff', fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
+
+  hintBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 16,
+    paddingHorizontal: 10, paddingVertical: 6,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+  },
+  hintBtnActive: { borderColor: '#3aa7ff', backgroundColor: 'rgba(58,167,255,0.18)' },
+  hintIcon: { fontSize: 14 },
+  hintCount: { color: '#34d399', fontSize: 13, fontWeight: '700' },
 
   mistakeFlash: {
     position: 'absolute', top: 80, left: 0, right: 0, alignItems: 'center', zIndex: 99,

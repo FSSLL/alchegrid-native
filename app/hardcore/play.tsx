@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import { GRID_BACKGROUNDS } from '../../constants/assets';
 import { useGameStore } from '../../store/gameStore';
 import { useHardcoreStore } from '../../store/hardcoreStore';
+import { usePlayerStore } from '../../store/playerStore';
 import { getHardcoreLevel } from '../../lib/generateHardcoreLevel';
 import { computeGridLayout } from '../../lib/gridLayout';
 import GameCell from '../../components/GameCell';
@@ -43,9 +44,26 @@ function HardcoreGameContent() {
   // ── game store ──────────────────────────────────────────────────────────
   const {
     level, board, status, activeElement,
-    conflicts, initGame, placeElement, placeSpecificElement,
+    conflicts, selectedZone, hintedCells, hintMode, toggleHintMode,
+    initGame, placeElement, placeSpecificElement,
     clearCell, setActiveElement, setSelectedZone, stopTimer,
   } = useGameStore();
+
+  const { hintBalance, unlimitedHints, usePaidHint, hasDailyFreeHint, useDailyFreeHint } = usePlayerStore();
+
+  const handleHintPress = useCallback(() => {
+    if (hintMode) {
+      toggleHintMode();
+      return;
+    }
+    const canUse = unlimitedHints || hintBalance > 0;
+    const dailyFree = hasDailyFreeHint();
+    if (!canUse && !dailyFree) return;
+    if (dailyFree && !canUse) { useDailyFreeHint(); }
+    if (!unlimitedHints) { usePaidHint(); }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    toggleHintMode();
+  }, [hintMode, unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, toggleHintMode]);
 
   // ── hardcore store ──────────────────────────────────────────────────────
   const {
@@ -215,6 +233,14 @@ function HardcoreGameContent() {
           </View>
         </View>
 
+        <TouchableOpacity
+          style={[styles.hintBtn, hintMode && styles.hintBtnActive]}
+          onPress={handleHintPress}
+        >
+          <Text style={styles.hintIcon}>💡</Text>
+          <Text style={styles.hintCount}>{unlimitedHints ? '∞' : hintBalance}</Text>
+        </TouchableOpacity>
+
         <View style={styles.timerBadge}>
           <Text style={styles.timerText}>{formatTime(elapsedDisplay)}</Text>
         </View>
@@ -248,7 +274,7 @@ function HardcoreGameContent() {
               >
                 <GameCell
                   element={board[row]?.[col] ?? null}
-                  isHinted={false}
+                  isHinted={!!hintedCells[`${row},${col}`]}
                   isConflict={conflicts.some((c) => c.row === row && c.col === col)}
                   isInSelectedZone={false}
                   cellSize={cellSize}
@@ -293,6 +319,16 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
   timerText: { color: '#fff', fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
+
+  hintBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 16,
+    paddingHorizontal: 10, paddingVertical: 6,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+  },
+  hintBtnActive: { borderColor: '#3aa7ff', backgroundColor: 'rgba(58,167,255,0.18)' },
+  hintIcon: { fontSize: 14 },
+  hintCount: { color: '#34d399', fontSize: 13, fontWeight: '700' },
 
   toastWrap: {
     position: 'absolute', top: 80, left: 0, right: 0, alignItems: 'center', zIndex: 99,
