@@ -44,7 +44,7 @@ const ElementIcon = memo(({
       <View style={[styles.wrap, { width: size, height: size }]}>
         <Video
           source={videoSrc}
-          style={{ width: size * 0.85, height: size * 0.85, opacity }}
+          style={{ width: size, height: size, opacity }}
           resizeMode={ResizeMode.COVER}
           shouldPlay
           isLooping

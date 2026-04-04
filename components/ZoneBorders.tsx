@@ -1,7 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import Svg, { Path, Defs, Filter, FeGaussianBlur, FeMerge, FeMergeNode } from 'react-native-svg';
 import type { Zone } from '../lib/types';
-import colors from '../constants/colors';
 
 interface ZoneBordersProps {
   zones: Zone[];
@@ -11,31 +10,28 @@ interface ZoneBordersProps {
   selectedZone: Zone | null;
 }
 
-// Build the outer perimeter path for a single zone (shared edges not drawn)
+const ZONE_GREEN   = '#22c55e';
+const ZONE_WIDTH   = 3.5;
+const ZONE_OPACITY = 0.9;
+
+// Build the outer perimeter path for a single zone (shared edges omitted)
 function buildZonePerimeterPath(zone: Zone, cellSize: number, gap: number): string {
   const cellSet = new Set(zone.cells.map((c) => `${c.row},${c.col}`));
-  const inset = 3;
+  const inset = 1;   // tight fit — stays close to cell edge
   const segs: string[] = [];
 
   for (const { row, col } of zone.cells) {
-    const x = col * (cellSize + gap);
-    const y = row * (cellSize + gap);
+    const x  = col * (cellSize + gap);
+    const y  = row * (cellSize + gap);
     const x2 = x + cellSize;
     const y2 = y + cellSize;
 
-    // Top edge: draw if no same-zone cell above
     if (!cellSet.has(`${row - 1},${col}`))
       segs.push(`M ${x + inset} ${y} L ${x2 - inset} ${y}`);
-
-    // Bottom edge: draw if no same-zone cell below
     if (!cellSet.has(`${row + 1},${col}`))
       segs.push(`M ${x + inset} ${y2} L ${x2 - inset} ${y2}`);
-
-    // Left edge: draw if no same-zone cell to the left
     if (!cellSet.has(`${row},${col - 1}`))
       segs.push(`M ${x} ${y + inset} L ${x} ${y2 - inset}`);
-
-    // Right edge: draw if no same-zone cell to the right
     if (!cellSet.has(`${row},${col + 1}`))
       segs.push(`M ${x2} ${y + inset} L ${x2} ${y2 - inset}`);
   }
@@ -48,12 +44,12 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
 
   const zonePaths = useMemo(
     () => zones.map((z) => buildZonePerimeterPath(z, cellSize, gap)),
-    [zones, cellSize, gap]
+    [zones, cellSize, gap],
   );
 
   const selectedPath = useMemo(
     () => (selectedZone ? buildZonePerimeterPath(selectedZone, cellSize, gap) : ''),
-    [selectedZone, cellSize, gap]
+    [selectedZone, cellSize, gap],
   );
 
   return (
@@ -63,7 +59,18 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
       style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
     >
       <Defs>
-        {/* Glow filter for selected zone per spec §17.13 */}
+        {/* Glow for zone borders */}
+        <Filter id="zone-glow" x="-40%" y="-40%" width="180%" height="180%">
+          <FeGaussianBlur in="SourceGraphic" stdDeviation={2.5} result="blur1" />
+          <FeGaussianBlur in="SourceGraphic" stdDeviation={4}   result="blur2" />
+          <FeMerge>
+            <FeMergeNode in="blur2" />
+            <FeMergeNode in="blur1" />
+            <FeMergeNode in="SourceGraphic" />
+          </FeMerge>
+        </Filter>
+
+        {/* Glow for selected zone (orange, unchanged) */}
         <Filter id="sel-glow" x="-30%" y="-30%" width="160%" height="160%">
           <FeGaussianBlur in="SourceGraphic" stdDeviation={1.5} result="blur1" />
           <FeGaussianBlur in="SourceGraphic" stdDeviation={1.5} result="blur2" />
@@ -77,25 +84,25 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
         </Filter>
       </Defs>
 
-      {/* Normal zone borders: 2.5px, each zone gets its own color (spec §17.13) */}
+      {/* Zone borders — all green, glowing */}
       {zonePaths.map((path, i) => {
         if (!path) return null;
-        const zoneColor = colors.zoneTints[i % colors.zoneTints.length];
         return (
           <Path
             key={zones[i].id}
             d={path}
-            stroke={zoneColor}
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            stroke={ZONE_GREEN}
+            strokeWidth={ZONE_WIDTH}
+            strokeLinecap="square"
+            strokeLinejoin="miter"
             fill="none"
-            opacity={0.75}
+            opacity={ZONE_OPACITY}
+            filter="url(#zone-glow)"
           />
         );
       })}
 
-      {/* Selected zone overlay: 5.5px #ff5500 with neon glow (spec §17.13) */}
+      {/* Selected zone — orange neon glow, unchanged */}
       {selectedPath ? (
         <Path
           d={selectedPath}
