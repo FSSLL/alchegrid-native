@@ -54,7 +54,7 @@ export default function HomeScreen() {
 
       {/* Continue Journey card */}
       <TouchableOpacity onPress={handlePlay} activeOpacity={0.88} style={styles.cardWrap}>
-        <Image source={CARD_BG} style={styles.cardBg} resizeMode="contain" />
+        <Image source={CARD_BG} style={styles.cardBg} resizeMode="cover" />
         <View style={[StyleSheet.absoluteFill, styles.cardContent]}>
           <Text style={styles.cardDesc}>
             A strategic elemental puzzle game where{'\n'}logic, geometry, and alchemy combine.
