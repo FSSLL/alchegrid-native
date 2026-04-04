@@ -97,8 +97,8 @@ function AppRoot() {
     );
   }
 
-  // Compute "cover" scale: fill the entire screen edge-to-edge.
-  const scale  = Math.max(sw / BG_W, sh / BG_H);
+  // Compute "contain" scale: fit the full image inside the screen (no cropping).
+  const scale  = Math.min(sw / BG_W, sh / BG_H);
   const imgW   = BG_W * scale;
   const imgH   = BG_H * scale;
   const left   = (sw - imgW) / 2;
