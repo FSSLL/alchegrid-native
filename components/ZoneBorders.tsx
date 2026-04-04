@@ -14,13 +14,17 @@ const ZONE_GREEN   = '#22c55e';
 const ZONE_WIDTH   = 3.5;
 const ZONE_OPACITY = 0.9;
 
-// Build the outer perimeter path for a single zone (shared edges omitted)
-function buildZonePerimeterPath(zone: Zone, cellSize: number, gap: number): string {
-  const cellSet = new Set(zone.cells.map((c) => `${c.row},${c.col}`));
-  const inset = 1;   // tight fit — stays close to cell edge
+// Build the outer perimeter path for a group of cells (shared edges suppressed)
+function buildMergedPerimeterPath(
+  cells: { row: number; col: number }[],
+  cellSize: number,
+  gap: number,
+): string {
+  const cellSet = new Set(cells.map((c) => `${c.row},${c.col}`));
+  const inset = 1;
   const segs: string[] = [];
 
-  for (const { row, col } of zone.cells) {
+  for (const { row, col } of cells) {
     const x  = col * (cellSize + gap);
     const y  = row * (cellSize + gap);
     const x2 = x + cellSize;
@@ -42,13 +46,23 @@ function buildZonePerimeterPath(zone: Zone, cellSize: number, gap: number): stri
 const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBordersProps) => {
   const totalSize = size * cellSize + (size - 1) * gap;
 
-  const zonePaths = useMemo(
-    () => zones.map((z) => buildZonePerimeterPath(z, cellSize, gap)),
-    [zones, cellSize, gap],
-  );
+  // Group zones by recipeName — adjacent same-recipe zones share no internal border
+  const groupPaths = useMemo(() => {
+    const groups: Record<string, { row: number; col: number }[]> = {};
+    for (const zone of zones) {
+      const key = zone.recipeName ?? zone.id;
+      if (!groups[key]) groups[key] = [];
+      for (const c of zone.cells) groups[key].push(c);
+    }
+    return Object.entries(groups).map(([key, cells]) => ({
+      key,
+      path: buildMergedPerimeterPath(cells, cellSize, gap),
+    }));
+  }, [zones, cellSize, gap]);
 
+  // Selected zone highlight (individual zone, per tap)
   const selectedPath = useMemo(
-    () => (selectedZone ? buildZonePerimeterPath(selectedZone, cellSize, gap) : ''),
+    () => (selectedZone ? buildMergedPerimeterPath(selectedZone.cells, cellSize, gap) : ''),
     [selectedZone, cellSize, gap],
   );
 
@@ -59,7 +73,6 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
       style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
     >
       <Defs>
-        {/* Glow for zone borders */}
         <Filter id="zone-glow" x="-40%" y="-40%" width="180%" height="180%">
           <FeGaussianBlur in="SourceGraphic" stdDeviation={2.5} result="blur1" />
           <FeGaussianBlur in="SourceGraphic" stdDeviation={4}   result="blur2" />
@@ -70,7 +83,6 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
           </FeMerge>
         </Filter>
 
-        {/* Glow for selected zone (orange, unchanged) */}
         <Filter id="sel-glow" x="-30%" y="-30%" width="160%" height="160%">
           <FeGaussianBlur in="SourceGraphic" stdDeviation={1.5} result="blur1" />
           <FeGaussianBlur in="SourceGraphic" stdDeviation={1.5} result="blur2" />
@@ -84,12 +96,12 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
         </Filter>
       </Defs>
 
-      {/* Zone borders — all green, glowing */}
-      {zonePaths.map((path, i) => {
+      {/* Zone borders — same-recipe groups share no internal edge */}
+      {groupPaths.map(({ key, path }) => {
         if (!path) return null;
         return (
           <Path
-            key={zones[i].id}
+            key={key}
             d={path}
             stroke={ZONE_GREEN}
             strokeWidth={ZONE_WIDTH}
@@ -102,7 +114,7 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
         );
       })}
 
-      {/* Selected zone — orange neon glow, unchanged */}
+      {/* Selected zone — orange neon glow */}
       {selectedPath ? (
         <Path
           d={selectedPath}

@@ -455,6 +455,11 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
 
   const totalGridSize = 4 * CELL_SIZE + 3 * GRID_GAP;
 
+  // Ensure the grid always renders 4×4 even before initGame fires
+  const safeBoard: (string | null)[][] = board.length === 4
+    ? board
+    : Array.from({ length: 4 }, () => Array(4).fill(null));
+
   return (
     <View style={{ flex: 1, alignItems: 'center' }} onTouchEnd={() => {
       setTappedCells((p) => p + 1);
@@ -501,7 +506,7 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
           onLayout={handleGridLayout}
           style={{ width: totalGridSize, height: totalGridSize, position: 'relative' }}
         >
-          {board.map((row, r) =>
+          {safeBoard.map((row, r) =>
             row.map((cell, c) => {
               const key = `${r},${c}`;
               const ghost = cellGhostInfo[key];
@@ -667,7 +672,10 @@ export default function TutorialScreen() {
           <Text style={ss.headerBtnText}>←</Text>
         </TouchableOpacity>
         <Text style={ss.headerTitle}>{isPractice ? 'Practice Level' : 'Tutorial'}</Text>
-        <TouchableOpacity onPress={() => router.replace('/')} style={ss.headerBtn}>
+        <TouchableOpacity
+          onPress={() => isPractice ? router.replace('/') : goTo(SLIDES.length)}
+          style={ss.headerBtn}
+        >
           <Text style={[ss.headerBtnText, { fontSize: 13, fontWeight: '600' }]}>Skip</Text>
         </TouchableOpacity>
       </View>
