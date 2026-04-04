@@ -75,7 +75,7 @@ const PaletteItem = memo(({ element, remaining, itemSize }: PaletteItemProps) =>
   const exhausted = remaining === 0;
   const png = ELEMENT_PNGS[element.toLowerCase()] ?? ELEMENT_PNGS[element] ?? null;
   const emoji = ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0];
-  const iconSize = itemSize * 0.62;
+  const iconSize = itemSize * 0.76;
   const fontSize = itemSize * 0.44;
   const labelFontSize = Math.max(8, itemSize * 0.19);
 
