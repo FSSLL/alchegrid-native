@@ -48,7 +48,7 @@ export default function HomeScreen() {
     >
       {/* Logo */}
       <View style={styles.logoWrap}>
-        <Image source={LOGO} style={styles.logo} />
+        <Image source={LOGO} style={styles.logo} resizeMode="contain" />
         <Text style={styles.tagline}>Master the Elements. Conquer the Grid.</Text>
       </View>
 
@@ -141,8 +141,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
   content: { gap: 10, backgroundColor: 'transparent', paddingBottom: 64 },
 
-  logoWrap: { alignItems: 'center', marginBottom: 4, paddingHorizontal: 16 },
-  logo: { width: '70%', height: 145 },
+  logoWrap: { alignItems: 'center', marginBottom: 4 },
+  logo: { width: '100%', height: undefined, aspectRatio: LOGO_ASPECT },
   tagline: {
     fontSize: 12, fontWeight: '700', color: '#ff8c00',
     letterSpacing: 2.5, textAlign: 'center', marginTop: 4,
