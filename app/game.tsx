@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Platform,
   Image,
+  useWindowDimensions,
 } from 'react-native';
 import { GRID_BACKGROUNDS } from '../constants/assets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
 import { getLevelData, globalToWorld } from '../lib/levelRegistry';
+import { computeGridLayout } from '../lib/gridLayout';
 import GameCell from '../components/GameCell';
 import ZoneBorders from '../components/ZoneBorders';
 import ElementPalette from '../components/ElementPalette';
@@ -145,6 +147,8 @@ function GameContent() {
     return map;
   }, [level]);
 
+  const { width: screenWidth } = useWindowDimensions();
+
   if (!level) {
     return (
       <View style={[styles.loading, { backgroundColor: '#0f1117' }]}>
@@ -154,17 +158,7 @@ function GameContent() {
   }
 
   const gridSize = level.size;
-  const cellSize =
-    gridSize <= 4 ? 80 :
-    gridSize <= 5 ? 52 :
-    gridSize <= 6 ? 44 :
-    gridSize <= 7 ? 38 :
-    gridSize <= 8 ? 34 :
-    gridSize <= 9 ? 30 :
-    gridSize <= 10 ? 27 : 24;
-
-  const gap = gridSize <= 4 ? 10 : 4;
-  const totalGridSize = gridSize * cellSize + (gridSize - 1) * gap;
+  const { cellSize, gap, totalGridPx: totalGridSize } = computeGridLayout(gridSize, screenWidth);
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);

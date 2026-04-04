@@ -30,6 +30,7 @@ import ElementIcon from '../components/ElementIcon';
 import { DragProvider, useDrag } from '../contexts/DragContext';
 import { GRID_BACKGROUNDS } from '../constants/assets';
 import type { Level } from '../lib/types';
+import { computeGridLayout } from '../lib/gridLayout';
 
 // ─── Tutorial practice level ──────────────────────────────────────────────────
 const TUTORIAL_LEVEL: Level = {
@@ -331,6 +332,9 @@ function TipOverlay({ tip, tipIndex, total }: { tip: TipStep; tipIndex: number; 
 
 // ─── Practice board (inner content that can call useDrag) ─────────────────────
 function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
+  const { width: sw } = useWindowDimensions();
+  const { cellSize: CELL_SIZE, gap: GRID_GAP } = computeGridLayout(4, sw);
+
   const {
     level, board, hintedCells, status, conflicts, selectedZone, elapsedTime, stars,
     initGame, placeSpecificElement, clearCell, setSelectedZone, removeElement, stopTimer,
@@ -609,10 +613,6 @@ function PracticeBoard({ onComplete }: { onComplete: () => void }) {
     </DragProvider>
   );
 }
-
-// ─── Constants for the practice grid ─────────────────────────────────────────
-const CELL_SIZE = 76;
-const GRID_GAP  = 8;
 
 // ─── Main Tutorial screen ─────────────────────────────────────────────────────
 export default function TutorialScreen() {

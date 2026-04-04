@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Platform, Image, Animated,
+  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +10,7 @@ import { GRID_BACKGROUNDS } from '../../constants/assets';
 import { useGameStore } from '../../store/gameStore';
 import { useHardcoreStore } from '../../store/hardcoreStore';
 import { getHardcoreLevel } from '../../lib/generateHardcoreLevel';
+import { computeGridLayout } from '../../lib/gridLayout';
 import GameCell from '../../components/GameCell';
 import ZoneBorders from '../../components/ZoneBorders';
 import ElementPalette from '../../components/ElementPalette';
@@ -184,11 +186,10 @@ function HardcoreGameContent() {
     });
   });
 
+  const { width: screenWidth } = useWindowDimensions();
   if (!level) return null;
 
-  const cellSize = CELL_SIZES[level.size] ?? 38;
-  const cellGap = CELL_GAPS[level.size] ?? 4;
-  const gridPx = level.size * cellSize + (level.size - 1) * cellGap;
+  const { cellSize, gap: cellGap, totalGridPx: gridPx } = computeGridLayout(level.size, screenWidth);
 
   return (
     <View style={styles.container}>
