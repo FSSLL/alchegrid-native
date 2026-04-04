@@ -156,7 +156,7 @@ function PlayContent() {
               resizeMode="stretch"
             />
           )}
-          <ZoneBorders level={level} cellSize={cellSize} gap={cellGap} />
+          <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
           {level.zones.map((zone) =>
             zone.cells.map(({ row, col }) => (
               <View
