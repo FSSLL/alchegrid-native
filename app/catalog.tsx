@@ -180,7 +180,7 @@ function WorldBody({
 
 // ── World card background images (worlds 1-3 provided) ───────────────────────
 const WORLD_CARD_IMAGES: Record<number, ReturnType<typeof require>> = {
-  1: require('../assets/images/world_1_card.png'),
+  1: require('../assets/images/world_1_card.jpg'),
   2: require('../assets/images/world_2_card.png'),
   3: require('../assets/images/world_3_card.png'),
 };
