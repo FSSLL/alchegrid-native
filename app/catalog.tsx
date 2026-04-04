@@ -219,16 +219,20 @@ function WorldCard({
         style={styles.imgGradient}
       />
       <TouchableOpacity onPress={onToggle} activeOpacity={0.85} style={styles.worldHeaderImgContent}>
-        <LinearGradient colors={info.numberBg as [string, string]} style={styles.numBox}>
-          <Text style={[styles.numText, { color: info.accent }]}>{info.world}</Text>
-        </LinearGradient>
-        <View style={styles.worldMeta}>
+        <View style={styles.numBoxWrapper}>
+          <LinearGradient colors={info.numberBg as [string, string]} style={styles.numBox}>
+            <Text style={[styles.numText, { color: info.accent }]}>{info.world}</Text>
+          </LinearGradient>
+        </View>
+        <View style={styles.worldMetaOnImg}>
           <Text style={styles.worldName}>{info.name}</Text>
           <Text style={[styles.worldMetaLine, styles.worldMetaLineOnImg]}>
             {info.grid} grid · {recipeCount} combos
           </Text>
         </View>
-        <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
+        <View style={styles.chevronPill}>
+          <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
+        </View>
       </TouchableOpacity>
     </ImageBackground>
   ) : (
@@ -350,6 +354,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 12, paddingBottom: 12, paddingTop: 28,
     gap: 12,
+  },
+  numBoxWrapper: {
+    opacity: 0.72,
+    flexShrink: 0,
+  },
+  worldMetaOnImg: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.38)',
+    borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 4,
+  },
+  chevronPill: {
+    backgroundColor: 'rgba(0,0,0,0.38)',
+    borderRadius: 6,
+    paddingHorizontal: 7, paddingVertical: 4,
+    flexShrink: 0,
   },
   numBox: {
     width: 48, height: 48, borderRadius: 12,
