@@ -3,6 +3,7 @@ import {
   View,
   Text,
   Image,
+  ScrollView,
   StyleSheet,
   PanResponder,
 } from 'react-native';
@@ -44,7 +45,6 @@ const PaletteItem = memo(({ element, remaining, itemSize }: PaletteItemProps) =>
 
   const panResponder = useRef(
     PanResponder.create({
-      // Don't claim on finger-down — only claim once movement detected
       onStartShouldSetPanResponder: () => false,
       onStartShouldSetPanResponderCapture: () => false,
       onMoveShouldSetPanResponder: (_e, gs) =>
@@ -77,7 +77,7 @@ const PaletteItem = memo(({ element, remaining, itemSize }: PaletteItemProps) =>
   const emoji = ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0];
   const iconSize = itemSize * 0.62;
   const fontSize = itemSize * 0.44;
-  const labelFontSize = Math.max(9, itemSize * 0.19);
+  const labelFontSize = Math.max(8, itemSize * 0.19);
 
   return (
     <View
@@ -101,8 +101,6 @@ const PaletteItem = memo(({ element, remaining, itemSize }: PaletteItemProps) =>
         ) : (
           <Text style={{ fontSize }}>{emoji}</Text>
         )}
-
-        {/* Remaining count badge */}
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{remaining}</Text>
         </View>
@@ -121,9 +119,9 @@ const ElementPalette = memo(({ level, board }: ElementPaletteProps) => {
   const gridSize = level.size;
 
   const itemSize =
-    gridSize <= 4 ? 76 :
-    gridSize <= 5 ? 52 :
-    gridSize <= 6 ? 44 : 38;
+    gridSize <= 4 ? 72 :
+    gridSize <= 5 ? 62 :
+    gridSize <= 6 ? 56 : 52;
 
   const remaining = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -139,18 +137,41 @@ const ElementPalette = memo(({ level, board }: ElementPaletteProps) => {
     return result;
   }, [board, level.elements, gridSize]);
 
+  // Available elements first, exhausted ones last (stable relative order preserved)
+  const sortedElements = useMemo(
+    () =>
+      [...level.elements].sort((a, b) => {
+        const aEx = (remaining[a] ?? 0) === 0 ? 1 : 0;
+        const bEx = (remaining[b] ?? 0) === 0 ? 1 : 0;
+        return aEx - bEx;
+      }),
+    [level.elements, remaining],
+  );
+
+  const useScrollRow = gridSize > 5;
+
+  const items = sortedElements.map((el) => (
+    <PaletteItem
+      key={el}
+      element={el}
+      remaining={remaining[el] ?? 0}
+      itemSize={itemSize}
+    />
+  ));
+
   return (
     <View style={styles.container}>
-      <View style={styles.row}>
-        {level.elements.map((el) => (
-          <PaletteItem
-            key={el}
-            element={el}
-            remaining={remaining[el] ?? 0}
-            itemSize={itemSize}
-          />
-        ))}
-      </View>
+      {useScrollRow ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollRow}
+        >
+          {items}
+        </ScrollView>
+      ) : (
+        <View style={styles.row}>{items}</View>
+      )}
     </View>
   );
 });
@@ -170,6 +191,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-evenly',
+  },
+  scrollRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    gap: 10,
   },
   itemWrapper: {
     alignItems: 'center',

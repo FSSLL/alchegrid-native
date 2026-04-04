@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Platform,
   Image,
@@ -227,12 +226,18 @@ function GameContent() {
         <StarProgress elapsed={elapsedTime} thresholds={level.starThresholds} />
       </View>
 
-      {/* Grid */}
-      <ScrollView
-        contentContainerStyle={styles.gridScroll}
-        style={{ backgroundColor: 'transparent' }}
-        scrollEnabled
-      >
+      {/* Grid — static, no scroll */}
+      <View style={styles.gridArea}>
+        {/* Zone tooltip — absolute at bottom of grid area, above palette */}
+        {selectedZone && (
+          <View style={styles.tooltipOverlay}>
+            <ZoneTooltip
+              zone={selectedZone}
+              board={board}
+              onClose={() => setSelectedZone(null)}
+            />
+          </View>
+        )}
         <View
           ref={gridViewRef}
           style={[styles.gridContainer, { width: totalGridSize, height: totalGridSize }]}
@@ -282,15 +287,6 @@ function GameContent() {
             }),
           )}
         </View>
-      </ScrollView>
-
-      {/* Zone tooltip — shown when a cell is tapped */}
-      <View style={styles.tooltipRow}>
-        <ZoneTooltip
-          zone={selectedZone}
-          board={board}
-          onClose={() => setSelectedZone(null)}
-        />
       </View>
 
       {/* Element palette */}
@@ -420,21 +416,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
-  gridScroll: {
+  gridArea: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    flexGrow: 1,
     paddingVertical: 8,
   },
   gridContainer: {
     position: 'relative',
   },
-  tooltipRow: {
-    paddingHorizontal: 12,
-    paddingTop: 6,
-    paddingBottom: 2,
-    minHeight: 56,
-    justifyContent: 'center',
+  tooltipOverlay: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    bottom: 8,
+    zIndex: 200,
+    pointerEvents: 'box-none',
   },
   palette: {
     paddingHorizontal: 12,

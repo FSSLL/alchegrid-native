@@ -21,7 +21,7 @@ function buildMergedPerimeterPath(
   gap: number,
 ): string {
   const cellSet = new Set(cells.map((c) => `${c.row},${c.col}`));
-  const inset = 1;
+  const inset = 0;
   const segs: string[] = [];
 
   for (const { row, col } of cells) {

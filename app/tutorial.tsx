@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import {
   Animated,
+  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -27,6 +28,7 @@ import ElementPalette from '../components/ElementPalette';
 import ZoneTooltip from '../components/ZoneTooltip';
 import ElementIcon from '../components/ElementIcon';
 import { DragProvider, useDrag } from '../contexts/DragContext';
+import { GRID_BACKGROUNDS } from '../constants/assets';
 import type { Level } from '../lib/types';
 
 // ─── Tutorial practice level ──────────────────────────────────────────────────
@@ -303,6 +305,30 @@ function FloatingTipCard({ tip, tipIndex, total }: { tip: TipStep; tipIndex: num
   );
 }
 
+// ─── Tip overlay — floats above ALL content ───────────────────────────────────
+const TIP_TOP: Record<TipPosition, string> = {
+  'above-board':          '4%',
+  'over-board-top':       '4%',
+  'over-board-topleft':   '26%',
+  'over-board':           '30%',
+  'below-board':          '54%',
+  'below-board-arrow-up': '50%',
+  'above-inventory':      '54%',
+};
+function TipOverlay({ tip, tipIndex, total }: { tip: TipStep; tipIndex: number; total: number }) {
+  const arrowDown = ['above-board', 'over-board-top', 'above-inventory'].includes(tip.position);
+  const arrowUp   = tip.position === 'below-board-arrow-up';
+  return (
+    <View
+      style={{ position: 'absolute', top: TIP_TOP[tip.position] ?? '30%', left: 16, right: 16, zIndex: 300, alignItems: 'center', pointerEvents: 'box-none' }}
+    >
+      {arrowUp   && <BouncingArrow direction="up" />}
+      <FloatingTipCard tip={tip} tipIndex={tipIndex} total={total} />
+      {arrowDown && <BouncingArrow direction="down" />}
+    </View>
+  );
+}
+
 // ─── Practice board (inner content that can call useDrag) ─────────────────────
 function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
   const {
@@ -321,6 +347,7 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
   const [conflictDemoShown, setConflictDemoShown] = useState(false);
   const [hasPlaced,         setHasPlaced]         = useState(false);
   const [showWin,           setShowWin]           = useState(false);
+  const [paletteH,          setPaletteH]          = useState(100);
 
   // Init the tutorial board once
   useEffect(() => {
@@ -459,51 +486,27 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
     : Array.from({ length: 4 }, () => Array(4).fill(null));
 
   return (
-    <View style={{ flex: 1, alignItems: 'center' }} onTouchEnd={() => {
-      setTappedCells((p) => p + 1);
-      if (tipIndex === 5 && conflictDemoShown) handleConflictDismiss();
-    }}>
-
-      {/* ── "Over board top" tip: above grid area ── */}
-      {currentTip?.position === 'over-board-top' && (
-        <View style={[ss.tipAbove, { marginBottom: 4 }]}>
-          <BouncingArrow direction="up" />
-          <FloatingTipCard tip={currentTip} tipIndex={tipIndex} total={PRACTICE_TIPS.length} />
-        </View>
-      )}
-
-      {/* ── Board container ── */}
-      <View style={{ position: 'relative', alignItems: 'center', width: totalGridSize }}>
-
-        {/* Tip: above board */}
-        {currentTip?.position === 'above-board' && (
-          <View style={[ss.tipAbsoluteTop]}>
-            <FloatingTipCard tip={currentTip} tipIndex={tipIndex} total={PRACTICE_TIPS.length} />
-            <BouncingArrow direction="down" />
-          </View>
-        )}
-
-        {/* Tip: over board top-left */}
-        {currentTip?.position === 'over-board-topleft' && (
-          <View style={ss.tipTopLeft}>
-            <FloatingTipCard tip={currentTip} tipIndex={tipIndex} total={PRACTICE_TIPS.length} />
-            <BouncingArrow direction="down" />
-          </View>
-        )}
-
-        {/* Tip: center of board */}
-        {currentTip?.position === 'over-board' && (
-          <View style={ss.tipCenter}>
-            <FloatingTipCard tip={currentTip} tipIndex={tipIndex} total={PRACTICE_TIPS.length} />
-          </View>
-        )}
-
-        {/* The 4×4 grid */}
+    <View
+      style={{ flex: 1 }}
+      onTouchEnd={() => {
+        setTappedCells((p) => p + 1);
+        if (tipIndex === 5 && conflictDemoShown) handleConflictDismiss();
+      }}
+    >
+      {/* ── Grid — centered, static ── */}
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <View
           ref={gridViewRef}
           onLayout={handleGridLayout}
           style={{ width: totalGridSize, height: totalGridSize, position: 'relative' }}
         >
+          {/* Grid background */}
+          <Image
+            source={GRID_BACKGROUNDS[4]}
+            style={{ position: 'absolute', width: totalGridSize, height: totalGridSize }}
+            resizeMode="cover"
+          />
+          {/* Cells */}
           {safeBoard.map((row, r) =>
             row.map((cell, c) => {
               const key = `${r},${c}`;
@@ -541,41 +544,29 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
             selectedZone={selectedZone}
           />
         </View>
-
-        {/* Tip: below board, arrow points down (tooltip area) */}
-        {currentTip?.position === 'below-board' && (
-          <View style={ss.tipBelowDown}>
-            <FloatingTipCard tip={currentTip} tipIndex={tipIndex} total={PRACTICE_TIPS.length} />
-            <BouncingArrow direction="down" color="#ef4444" />
-          </View>
-        )}
-
-        {/* Tip: below board, arrow points up (conflict demo) */}
-        {currentTip?.position === 'below-board-arrow-up' && (
-          <View style={ss.tipBelowUp}>
-            <BouncingArrow direction="up" />
-            <FloatingTipCard tip={currentTip} tipIndex={tipIndex} total={PRACTICE_TIPS.length} />
-          </View>
-        )}
       </View>
 
-      {/* Zone tooltip */}
-      <ZoneTooltip zone={selectedZone} board={safeBoard} onClose={() => setSelectedZone(null)} />
-
-      {/* ── Element palette ── */}
-      <View style={{ position: 'relative', width: '100%', alignItems: 'center', marginTop: 8 }}>
-        {/* Tip: above inventory */}
-        {currentTip?.position === 'above-inventory' && (
-          <View style={ss.tipAboveInventory}>
-            <FloatingTipCard tip={currentTip} tipIndex={tipIndex} total={PRACTICE_TIPS.length} />
-            <BouncingArrow direction="down" />
-          </View>
-        )}
-        <ElementPalette
-          level={level ?? TUTORIAL_LEVEL}
-          board={safeBoard}
-        />
+      {/* ── Palette — always at bottom, measured ── */}
+      <View
+        style={{ paddingHorizontal: 12, paddingBottom: 12 }}
+        onLayout={(e) => setPaletteH(e.nativeEvent.layout.height)}
+      >
+        <ElementPalette level={level ?? TUTORIAL_LEVEL} board={safeBoard} />
       </View>
+
+      {/* ── Zone tooltip — absolute above palette ── */}
+      {selectedZone && (
+        <View
+          style={{ position: 'absolute', bottom: paletteH + 8, left: 12, right: 12, zIndex: 200, pointerEvents: 'box-none' }}
+        >
+          <ZoneTooltip zone={selectedZone} board={safeBoard} onClose={() => setSelectedZone(null)} />
+        </View>
+      )}
+
+      {/* ── Tip overlay — floats above everything ── */}
+      {currentTip && (
+        <TipOverlay tip={currentTip} tipIndex={tipIndex} total={PRACTICE_TIPS.length} />
+      )}
 
       {/* ── Win overlay ── */}
       {showWin && (
@@ -726,9 +717,9 @@ export default function TutorialScreen() {
           <Text style={ss.practiceSubtitle}>
             Try solving this level using everything you've learned!
           </Text>
-          <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: insets.bottom + 24 }}>
+          <View style={{ flex: 1 }}>
             <PracticeBoard onComplete={() => router.replace('/')} />
-          </ScrollView>
+          </View>
         </Animated.View>
       )}
 
