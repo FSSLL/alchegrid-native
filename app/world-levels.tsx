@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,12 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { WORLD_INFO, LEVELS_PER_WORLD, getWorldStars } from '../lib/levelRegistry';
 import { usePlayerStore } from '../store/playerStore';
+import WorldIntroCard from '../components/WorldIntroCard';
 
 const WORLD_ACCENT: string[] = [
   '#22c55e', '#d97706', '#3b82f6', '#f97316',
@@ -25,8 +25,20 @@ export default function WorldLevelsScreen() {
   const { worldNum } = useLocalSearchParams<{ worldNum: string }>();
   const worldIndex = Math.max(0, Math.min(7, parseInt(worldNum ?? '1', 10) - 1));
   const world = WORLD_INFO[worldIndex];
-  const { progressIndex, starsByLevel } = usePlayerStore();
+  const { progressIndex, starsByLevel, seenWorlds, markWorldSeen } = usePlayerStore();
   const accent = WORLD_ACCENT[worldIndex];
+
+  const isFirstVisit = !seenWorlds.includes(worldIndex);
+  const [showIntro, setShowIntro] = useState(false);
+
+  useEffect(() => {
+    if (isFirstVisit) setShowIntro(true);
+  }, [worldIndex]);
+
+  const handleCloseIntro = () => {
+    setShowIntro(false);
+    markWorldSeen(worldIndex);
+  };
 
   const totalStars = getWorldStars(worldIndex, starsByLevel);
   const maxStars = LEVELS_PER_WORLD * 3;
@@ -48,7 +60,7 @@ export default function WorldLevelsScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0e1117', '#111827', '#0e1117']} style={styles.bg}>
+    <View style={[styles.bg, { backgroundColor: 'transparent' }]}>
       <View style={[styles.header, { paddingTop: topPad + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -57,7 +69,9 @@ export default function WorldLevelsScreen() {
           <Text style={styles.title}>{world.name}</Text>
           <Text style={styles.subtitle}>{world.size}×{world.size} Grid • {world.elements.length} Elements</Text>
         </View>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity onPress={() => setShowIntro(true)} style={styles.infoBtn}>
+          <Text style={styles.infoIcon}>ⓘ</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Stars bar */}
@@ -110,7 +124,16 @@ export default function WorldLevelsScreen() {
         ))}
         <View style={{ height: Platform.OS === 'web' ? 20 : insets.bottom + 24, width: '100%' }} />
       </ScrollView>
-    </LinearGradient>
+
+      {showIntro && (
+        <WorldIntroCard
+          world={world}
+          prevWorldName={worldIndex > 0 ? WORLD_INFO[worldIndex - 1]?.name : undefined}
+          isFirstVisit={isFirstVisit}
+          onClose={handleCloseIntro}
+        />
+      )}
+    </View>
   );
 }
 
@@ -129,6 +152,11 @@ const styles = StyleSheet.create({
   headerCenter: { alignItems: 'center', flex: 1 },
   title: { fontSize: 20, fontWeight: '900', color: '#fff' },
   subtitle: { fontSize: 12, color: '#8e9ab0', marginTop: 2 },
+  infoBtn: {
+    width: 40, height: 40, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
+  },
+  infoIcon: { color: '#94a3b8', fontSize: 18 },
   starsBar: { paddingHorizontal: 16, marginBottom: 12, gap: 8 },
   starsBadge: {
     alignSelf: 'flex-start',
