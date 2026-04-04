@@ -82,9 +82,6 @@ function RootLayoutNav() {
   );
 }
 
-const BG_W = 886;
-const BG_H = 1773;
-
 function AppRoot() {
   const { width: sw, height: sh } = useWindowDimensions();
 
@@ -97,18 +94,11 @@ function AppRoot() {
     );
   }
 
-  // Compute "contain" scale: fit the full image inside the screen (no cropping).
-  const scale  = Math.min(sw / BG_W, sh / BG_H);
-  const imgW   = BG_W * scale;
-  const imgH   = BG_H * scale;
-  const left   = (sw - imgW) / 2;
-  const top    = (sh - imgH) / 2;
-
   return (
     <GestureHandlerRootView style={styles.root}>
       <Image
         source={BG}
-        style={{ position: 'absolute', width: imgW, height: imgH, left, top }}
+        style={{ position: 'absolute', width: sw, height: sh, left: 0, top: 0 }}
         resizeMode="stretch"
       />
       <View style={[StyleSheet.absoluteFill, styles.tint]} />
