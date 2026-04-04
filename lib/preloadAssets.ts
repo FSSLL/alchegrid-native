@@ -15,7 +15,7 @@ export const ALL_IMAGES = [
   require('../assets/images/air_PNG_1772164017110.png'),
   require('../assets/images/Alchegrid_logo_1772115867830.png'),
   require('../assets/images/ash_png_1772115452685.png'),
-  require('../assets/images/bg.png'),
+  require('../assets/images/bg.jpg'),
   require('../assets/images/BUMPER_PNG_1775175573822.png'),
   require('../assets/images/CABINET_PNG_1775175573823.png'),
   require('../assets/images/card_3_1772169104967.png'),

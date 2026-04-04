@@ -19,7 +19,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
-const BG = require('../assets/images/bg.png');
+const BG = require('../assets/images/bg.jpg');
 
 // React Navigation theme with fully transparent backgrounds so our own
 // background (body CSS on web, Image on native) shows through every screen.
@@ -33,7 +33,7 @@ const TRANSPARENT_NAV_THEME = {
 };
 
 // Web: inject CSS at module-load time (before React renders) so there is no
-// white flash. bg.png lives in public/ and is served at /bg.png by Metro.
+// white flash. bg.jpg lives in public/ and is served at /bg.jpg by Metro.
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   if (!document.getElementById('alchegrid-bg')) {
     const tag = document.createElement('style');
@@ -44,7 +44,7 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
         overflow: hidden;
         background:
           linear-gradient(rgba(8,11,18,0.72), rgba(8,11,18,0.72)),
-          url('/bg.png') center center / cover no-repeat;
+          url('/bg.jpg') center center / cover no-repeat;
       }
     `;
     document.head.appendChild(tag);
@@ -82,8 +82,8 @@ function RootLayoutNav() {
   );
 }
 
-const BG_W = 1024;
-const BG_H = 1536;
+const BG_W = 886;
+const BG_H = 1773;
 
 function AppRoot() {
   const { width: sw, height: sh } = useWindowDimensions();
