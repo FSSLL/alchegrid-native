@@ -95,7 +95,7 @@ function AppRoot() {
   // Native: background image + tint rendered in React Native.
   return (
     <GestureHandlerRootView style={styles.root}>
-      <Image source={BG} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      <Image source={BG} style={StyleSheet.absoluteFill} resizeMode="contain" />
       <View style={[StyleSheet.absoluteFill, styles.tint]} />
       <View style={styles.nav}>
         <RootLayoutNav />
