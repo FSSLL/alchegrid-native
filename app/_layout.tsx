@@ -74,6 +74,7 @@ function RootLayoutNav() {
         <Stack.Screen name="tutorial" options={{ ...SCREEN_OPTS, animation: 'slide_from_right' }} />
         <Stack.Screen name="catalog" options={{ ...SCREEN_OPTS, animation: 'slide_from_right' }} />
         <Stack.Screen name="settings" options={{ ...SCREEN_OPTS, animation: 'slide_from_right' }} />
+        <Stack.Screen name="endless" options={{ ...SCREEN_OPTS, animation: 'slide_from_bottom' }} />
       </Stack>
     </ThemeProvider>
   );

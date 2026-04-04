@@ -36,7 +36,7 @@ export default function HomeScreen() {
   const BANNERS = [
     { label: 'Select World', sub: 'Browse & replay levels', route: '/worlds' },
     { label: 'Tutorial', sub: 'Learn how to play', route: '/tutorial' },
-    { label: 'Endless Mode', sub: 'Adaptive difficulty, chase high scores', route: '/settings' },
+    { label: 'Endless Mode', sub: 'Adaptive difficulty, chase high scores', route: '/endless' },
   ];
 
   return (
