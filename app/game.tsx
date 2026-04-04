@@ -260,6 +260,8 @@ function GameContent() {
                     position: 'absolute',
                     left: c * (cellSize + gap),
                     top: r * (cellSize + gap),
+                    width: cellSize,
+                    height: cellSize,
                   }}
                 >
                   <GameCell

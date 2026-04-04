@@ -50,6 +50,7 @@ function buildMergedPerimeterPath(
 
 const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBordersProps) => {
   const totalSize = size * cellSize + (size - 1) * gap;
+  const h = gap / 2; // same half-gap used in path generation
 
   // Group zones by recipeName — adjacent same-recipe zones share no internal border
   const groupPaths = useMemo(() => {
@@ -71,11 +72,15 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
     [selectedZone, cellSize, gap],
   );
 
+  // SVG must be h px larger on every side so edge borders (which extend to
+  // -h and totalSize+h in path coordinates) are not clipped.
+  const svgSize = totalSize + gap; // = totalSize + 2*h
   return (
     <Svg
-      width={totalSize}
-      height={totalSize}
-      style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+      width={svgSize}
+      height={svgSize}
+      viewBox={`${-h} ${-h} ${svgSize} ${svgSize}`}
+      style={{ position: 'absolute', top: -h, left: -h, pointerEvents: 'none' }}
     >
       <Defs>
         <Filter id="zone-glow" x="-40%" y="-40%" width="180%" height="180%">

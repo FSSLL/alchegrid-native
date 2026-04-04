@@ -523,6 +523,8 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
                     position: 'absolute',
                     left: c * (CELL_SIZE + GRID_GAP),
                     top: r * (CELL_SIZE + GRID_GAP),
+                    width: CELL_SIZE,
+                    height: CELL_SIZE,
                   }}
                 >
                   <GameCell
