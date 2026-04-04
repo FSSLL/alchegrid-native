@@ -36,6 +36,7 @@ export default function HomeScreen() {
   const BANNERS = [
     { label: 'Select World', sub: 'Browse & replay levels', route: '/worlds' },
     { label: 'Tutorial', sub: 'Learn how to play', route: '/tutorial' },
+    { label: '🧭 Community', sub: 'Play & share player-built levels', route: '/community' },
     { label: 'Endless Mode', sub: 'Adaptive difficulty, chase high scores', route: '/endless' },
   ];
 
@@ -117,16 +118,6 @@ export default function HomeScreen() {
           <Image source={BANNER_BG} style={styles.bannerBg} resizeMode="contain" />
           <View style={[StyleSheet.absoluteFill, styles.bannerContent]}>
             <Text style={styles.bannerTitle}>Catalog</Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.halfWrap}
-          activeOpacity={0.85}
-          onPress={() => router.push('/community')}
-        >
-          <Image source={BANNER_BG} style={styles.bannerBg} resizeMode="contain" />
-          <View style={[StyleSheet.absoluteFill, styles.bannerContent]}>
-            <Text style={styles.bannerTitle}>🧭 Community</Text>
           </View>
         </TouchableOpacity>
         <TouchableOpacity
