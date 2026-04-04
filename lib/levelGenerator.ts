@@ -754,12 +754,12 @@ export function generateLevel(worldNum: number, levelInWorld: number): Level {
     }
   }
 
-  const rawZones: Zone[] = [];
+  const zones: Zone[] = [];
   let zoneIndex = 0;
   for (const [, cells] of zoneGroups) {
     const ingredients = [...new Set(cells.map(([r, c]) => solution[r][c]))].sort();
     const recipeName = findRecipe(worldNum, ingredients) ?? getFallbackName(ingredients);
-    rawZones.push({
+    zones.push({
       id: `z${zoneIndex}`,
       recipeName,
       ingredients,
@@ -767,8 +767,6 @@ export function generateLevel(worldNum: number, levelInWorld: number): Level {
     });
     zoneIndex++;
   }
-
-  const zones = enforceUniqueness(rawZones, solution, elements, gridSize, worldNum);
 
   const numStr = levelInWorld.toString().padStart(2, '0');
   return {
