@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -13,8 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { WORLD_INFO } from '../lib/levelRegistry';
 import { WORLD_RECIPES } from '../lib/levelGenerator';
-import { ELEMENT_EMOJIS } from '../lib/elementEmojis';
-import { ELEMENT_PNGS } from '../constants/assets';
+import ElementIcon from '../components/ElementIcon';
 
 export default function CatalogScreen() {
   const insets = useSafeAreaInsets();
@@ -60,20 +58,14 @@ export default function CatalogScreen() {
 
       <Text style={styles.worldName}>{world?.name}</Text>
 
-      {/* Elements */}
+      {/* Base elements for this world */}
       <View style={styles.elementsRow}>
-        {world?.elements.map((el) => {
-          const png = ELEMENT_PNGS[el.toLowerCase()];
-          return (
-            <View key={el} style={styles.elementChip}>
-              {png
-                ? <Image source={png} style={styles.elementIcon} resizeMode="contain" />
-                : <Text style={styles.elementEmoji}>{ELEMENT_EMOJIS[el.toLowerCase()] ?? '●'}</Text>
-              }
-              <Text style={styles.elementName}>{el}</Text>
-            </View>
-          );
-        })}
+        {world?.elements.map((el) => (
+          <View key={el} style={styles.elementChip}>
+            <ElementIcon name={el} size={20} />
+            <Text style={styles.elementName}>{el}</Text>
+          </View>
+        ))}
       </View>
 
       <Text style={styles.countLine}>
@@ -81,36 +73,25 @@ export default function CatalogScreen() {
       </Text>
 
       <ScrollView contentContainerStyle={styles.recipeList}>
-        {recipes.map((r) => {
-          const recipePng = ELEMENT_PNGS[r.name.toLowerCase()];
-          return (
-            <View key={r.name} style={[styles.recipeCard, { borderLeftColor: ingredientColor(r.ingredients.length) }]}>
-              <View style={styles.recipeHeader}>
-                {recipePng && (
-                  <Image source={recipePng} style={styles.recipeIcon} resizeMode="contain" />
-                )}
-                <Text style={styles.recipeName}>{r.name}</Text>
-              </View>
-              <View style={styles.ingredientRow}>
-                {r.ingredients.map((el, i) => {
-                  const elPng = ELEMENT_PNGS[el.toLowerCase()];
-                  return (
-                    <React.Fragment key={el}>
-                      {i > 0 && <Text style={styles.plus}>+</Text>}
-                      <View style={styles.ingredientChip}>
-                        {elPng
-                          ? <Image source={elPng} style={styles.ingredientIcon} resizeMode="contain" />
-                          : <Text style={styles.ingredientEmoji}>{ELEMENT_EMOJIS[el.toLowerCase()] ?? '●'}</Text>
-                        }
-                        <Text style={styles.ingredientName}>{el}</Text>
-                      </View>
-                    </React.Fragment>
-                  );
-                })}
-              </View>
+        {recipes.map((r) => (
+          <View key={r.name} style={[styles.recipeCard, { borderLeftColor: ingredientColor(r.ingredients.length) }]}>
+            <View style={styles.recipeHeader}>
+              <ElementIcon name={r.name} size={32} />
+              <Text style={styles.recipeName}>{r.name}</Text>
             </View>
-          );
-        })}
+            <View style={styles.ingredientRow}>
+              {r.ingredients.map((el, i) => (
+                <React.Fragment key={el}>
+                  {i > 0 && <Text style={styles.plus}>+</Text>}
+                  <View style={styles.ingredientChip}>
+                    <ElementIcon name={el} size={16} />
+                    <Text style={styles.ingredientName}>{el}</Text>
+                  </View>
+                </React.Fragment>
+              ))}
+            </View>
+          </View>
+        ))}
         <View style={{ height: Platform.OS === 'web' ? 34 : insets.bottom + 20 }} />
       </ScrollView>
     </LinearGradient>
@@ -164,8 +145,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 4,
     borderWidth: 1, borderColor: '#242e42',
   },
-  elementIcon: { width: 20, height: 20 },
-  elementEmoji: { fontSize: 14 },
   elementName: { color: '#8e9ab0', fontSize: 11, fontWeight: '600' },
   countLine: {
     color: '#8e9ab0', fontSize: 12, paddingHorizontal: 16,
@@ -178,7 +157,6 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
   },
   recipeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  recipeIcon: { width: 32, height: 32 },
   recipeName: { fontSize: 15, fontWeight: '700', color: '#eef1f5', flex: 1 },
   ingredientRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
   plus: { color: '#4b5563', fontSize: 12, fontWeight: '700', marginHorizontal: 1 },
@@ -187,7 +165,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#1e2535', borderRadius: 6,
     paddingHorizontal: 6, paddingVertical: 3,
   },
-  ingredientIcon: { width: 16, height: 16 },
-  ingredientEmoji: { fontSize: 12 },
   ingredientName: { color: '#64748b', fontSize: 10, fontWeight: '600' },
 });

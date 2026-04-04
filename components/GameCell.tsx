@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useRef } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, PanResponder } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, PanResponder } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -7,9 +7,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import type { ElementID } from '../lib/types';
-import { ELEMENT_EMOJIS, RECIPE_EMOJIS } from '../lib/elementEmojis';
-import { ELEMENT_PNGS } from '../constants/assets';
 import { useDrag } from '../contexts/DragContext';
+import ElementIcon from './ElementIcon';
 
 interface GameCellProps {
   row: number;
@@ -27,15 +26,6 @@ interface GameCellProps {
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-function getElementSource(name: string) {
-  return ELEMENT_PNGS[name.toLowerCase()] ?? ELEMENT_PNGS[name] ?? null;
-}
-
-function getGhostSource(recipeName: string) {
-  const key = recipeName.toLowerCase();
-  return ELEMENT_PNGS[key] ?? ELEMENT_PNGS[recipeName] ?? null;
-}
-
 const GameCell = memo(({
   row,
   col,
@@ -46,7 +36,6 @@ const GameCell = memo(({
   isSelected,
   ghostElement,
   ghostOpacity,
-  ghostGrayscale,
   onPress,
 }: GameCellProps) => {
   const { startDrag, moveDrag, endDrag, cancelDrag } = useDrag();
@@ -69,7 +58,6 @@ const GameCell = memo(({
     onPress(row, col);
   }, [row, col, onPress]);
 
-  // Refs so PanResponder callbacks always see current values
   const elementRef = useRef(element);
   elementRef.current = element;
   const rowRef = useRef(row);
@@ -81,7 +69,6 @@ const GameCell = memo(({
 
   const panResponder = useRef(
     PanResponder.create({
-      // Only steal the gesture once element is present and finger has moved
       onStartShouldSetPanResponder: () => false,
       onStartShouldSetPanResponderCapture: () => false,
       onMoveShouldSetPanResponder: (_e, gs) =>
@@ -117,30 +104,15 @@ const GameCell = memo(({
   ).current;
 
   const iconSize = cellSize * 0.62;
-  const fontSize = cellSize * 0.42;
   const labelFontSize = cellSize * 0.18;
+  const showLabel = cellSize >= 38;
 
-  const borderColor = isConflict
-    ? '#ee0000'
-    : isHinted
-    ? '#3aa7ff'
-    : 'transparent';
-
+  const borderColor = isConflict ? '#ee0000' : isHinted ? '#3aa7ff' : 'transparent';
   const borderWidth = isConflict ? 7 : isHinted ? 2 : 0;
   const shadowColor = isConflict ? '#ee0000' : isHinted ? '#3aa7ff' : 'transparent';
   const shadowOpacity = isConflict ? 0.5 : isHinted ? 0.6 : 0;
   const shadowRadius = isConflict ? 5 : isHinted ? 4 : 0;
   const cellBg = isSelected ? 'rgba(255,85,0,0.12)' : 'transparent';
-
-  const elementPng = element ? getElementSource(element) : null;
-  const elementEmoji = element
-    ? (ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0])
-    : '';
-
-  const ghostPng = ghostElement ? getGhostSource(ghostElement) : null;
-  const ghostEmoji = ghostElement
-    ? (RECIPE_EMOJIS[ghostElement.toLowerCase()] ?? ELEMENT_EMOJIS[ghostElement.toLowerCase()] ?? '✦')
-    : '';
 
   return (
     <AnimatedTouchable
@@ -168,41 +140,19 @@ const GameCell = memo(({
         ]}
       >
         {element ? (
-          elementPng ? (
-            <>
-              <Image
-                source={elementPng}
-                style={{ width: iconSize, height: iconSize }}
-                resizeMode="contain"
-              />
-              {cellSize >= 38 && (
-                <Text style={[styles.label, { fontSize: labelFontSize }]} numberOfLines={1}>
-                  {element.length > 6 ? element.substring(0, 4) : element}
-                </Text>
-              )}
-            </>
-          ) : (
-            <>
-              <Text style={[styles.emoji, { fontSize }]}>{elementEmoji}</Text>
-              {cellSize >= 38 && (
-                <Text style={[styles.label, { fontSize: labelFontSize }]} numberOfLines={1}>
-                  {element.length > 6 ? element.substring(0, 4) : element}
-                </Text>
-              )}
-            </>
-          )
+          <ElementIcon
+            name={element}
+            size={iconSize}
+            showLabel={showLabel}
+            labelFontSize={labelFontSize}
+          />
         ) : ghostElement ? (
-          ghostPng ? (
-            <Image
-              source={ghostPng}
-              style={{ width: iconSize, height: iconSize, opacity: ghostOpacity }}
-              resizeMode="contain"
-            />
-          ) : (
-            <Text style={[styles.emoji, { fontSize, opacity: ghostOpacity }]}>
-              {ghostEmoji}
-            </Text>
-          )
+          <ElementIcon
+            name={ghostElement}
+            size={iconSize}
+            showLabel={false}
+            opacity={ghostOpacity}
+          />
         ) : null}
       </View>
     </AnimatedTouchable>
@@ -217,15 +167,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-  },
-  emoji: {
-    textAlign: 'center',
-  },
-  label: {
-    color: 'rgba(255,255,255,0.75)',
-    fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 1,
   },
 });
 

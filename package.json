@@ -59,6 +59,7 @@
     "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo-google-fonts/space-mono": "^0.4.2",
     "expo-asset": "^55.0.12",
+    "expo-av": "^16.0.8",
     "react-native-confetti-cannon": "^1.5.2",
     "zustand": "^4.5.7"
   }
