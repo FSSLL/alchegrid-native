@@ -211,10 +211,13 @@ function WorldCard({
     <ImageBackground
       source={cardImage}
       resizeMode="cover"
-      style={styles.worldHeader}
+      style={styles.worldHeaderImg}
     >
-      <View style={styles.cardOverlay} />
-      <TouchableOpacity onPress={onToggle} activeOpacity={0.8} style={styles.worldHeaderInner}>
+      <LinearGradient
+        colors={['transparent', 'rgba(6,9,18,0.92)']}
+        style={styles.imgGradient}
+      />
+      <TouchableOpacity onPress={onToggle} activeOpacity={0.85} style={styles.worldHeaderImgContent}>
         <LinearGradient colors={info.numberBg as [string, string]} style={styles.numBox}>
           <Text style={[styles.numText, { color: info.accent }]}>{info.world}</Text>
         </LinearGradient>
@@ -327,18 +330,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f1623',
     overflow: 'hidden',
   },
-  cardOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(8,12,22,0.62)',
-    borderRadius: 14,
-  },
-  worldMetaLineOnImg: { color: 'rgba(255,255,255,0.55)' },
+  worldMetaLineOnImg: { color: 'rgba(255,255,255,0.65)' },
   worldHeader: {
     flexDirection: 'row', alignItems: 'center',
     padding: 12, gap: 12,
   },
-  worldHeaderInner: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12,
+  // Image-backed world card header
+  worldHeaderImg: {
+    aspectRatio: 1.5,
+    overflow: 'hidden',
+  },
+  imgGradient: {
+    ...StyleSheet.absoluteFillObject,
+    // gradient is applied via colors prop (transparent → dark)
+  },
+  worldHeaderImgContent: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 12, paddingBottom: 12, paddingTop: 28,
+    gap: 12,
   },
   numBox: {
     width: 48, height: 48, borderRadius: 12,
