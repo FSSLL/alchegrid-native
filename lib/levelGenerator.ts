@@ -604,6 +604,35 @@ function findFirstAmbiguousCell(
   return null;
 }
 
+function getConnectedComponents(
+  cells: { row: number; col: number }[]
+): { row: number; col: number }[][] {
+  const cellSet = new Set(cells.map((c) => `${c.row},${c.col}`));
+  const visited = new Set<string>();
+  const components: { row: number; col: number }[][] = [];
+
+  for (const start of cells) {
+    const key = `${start.row},${start.col}`;
+    if (visited.has(key)) continue;
+    const component: { row: number; col: number }[] = [];
+    const queue = [start];
+    visited.add(key);
+    while (queue.length) {
+      const { row, col } = queue.shift()!;
+      component.push({ row, col });
+      for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as [number, number][]) {
+        const nk = `${row + dr},${col + dc}`;
+        if (cellSet.has(nk) && !visited.has(nk)) {
+          visited.add(nk);
+          queue.push({ row: row + dr, col: col + dc });
+        }
+      }
+    }
+    components.push(component);
+  }
+  return components;
+}
+
 export function enforceUniqueness(
   zones: { id: string; recipeName: string; ingredients: string[]; cells: { row: number; col: number }[] }[],
   solution: string[][],
@@ -628,18 +657,38 @@ export function enforceUniqueness(
     const z = result[zIdx];
     const remaining = z.cells.filter((cell) => !(cell.row === r && cell.col === c));
 
+    // Always add the pinned cell as its own single-element zone
+    result.push({
+      id: `z${nextId++}`,
+      recipeName: canonEl,
+      ingredients: [canonEl],
+      cells: [{ row: r, col: c }],
+    });
+
     if (remaining.length === 0) {
-      result[zIdx] = { ...z, cells: [{ row: r, col: c }], ingredients: [canonEl] };
+      // Remove the original zone entirely
+      result.splice(zIdx, 1);
     } else {
-      const newIngredients = [...new Set(remaining.map((cell) => solution[cell.row][cell.col]))].sort();
-      const newRecipeName = findRecipe(worldNum, newIngredients) ?? getFallbackName(newIngredients);
-      result[zIdx] = { ...z, cells: remaining, ingredients: newIngredients, recipeName: newRecipeName };
-      result.push({
-        id: `z${nextId++}`,
-        recipeName: canonEl,
-        ingredients: [canonEl],
-        cells: [{ row: r, col: c }],
-      });
+      // Split remaining cells into connected components (removing pinned cell may disconnect)
+      const components = getConnectedComponents(remaining);
+      // Replace original zone with first component
+      const firstIng = [...new Set(components[0].map((cell) => solution[cell.row][cell.col]))].sort();
+      result[zIdx] = {
+        ...z,
+        cells: components[0],
+        ingredients: firstIng,
+        recipeName: findRecipe(worldNum, firstIng) ?? getFallbackName(firstIng),
+      };
+      // Add extra zones for any additional components
+      for (let i = 1; i < components.length; i++) {
+        const ing = [...new Set(components[i].map((cell) => solution[cell.row][cell.col]))].sort();
+        result.push({
+          id: `z${nextId++}`,
+          recipeName: findRecipe(worldNum, ing) ?? getFallbackName(ing),
+          ingredients: ing,
+          cells: components[i],
+        });
+      }
     }
   }
 
