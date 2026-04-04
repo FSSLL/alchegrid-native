@@ -232,7 +232,7 @@ function HardcoreGameContent() {
           <Image
             source={GRID_BACKGROUNDS[level.size]}
             style={StyleSheet.absoluteFill}
-            resizeMode="stretch"
+            resizeMode="cover"
           />
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
           {level.zones.map((zone) =>

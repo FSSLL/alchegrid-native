@@ -247,7 +247,7 @@ function GameContent() {
           <Image
             source={gridBgSource}
             style={{ position: 'absolute', width: totalGridSize, height: totalGridSize }}
-            resizeMode="stretch"
+            resizeMode="cover"
           />
           <ZoneBorders
             zones={level.zones}
