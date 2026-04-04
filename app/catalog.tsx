@@ -212,7 +212,7 @@ function WorldCard({
     <TouchableOpacity onPress={onToggle} activeOpacity={0.88} style={styles.worldHeaderImg}>
       <ImageBackground
         source={cardImage}
-        resizeMode="cover"
+        resizeMode="stretch"
         style={StyleSheet.absoluteFill}
       />
       <LinearGradient
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   },
   // Image-backed world card header
   worldHeaderImg: {
-    aspectRatio: 1.5,
+    height: 120,
     overflow: 'hidden',
   },
   imgGradient: {
