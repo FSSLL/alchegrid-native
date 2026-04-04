@@ -36,7 +36,7 @@ export const GRID_BACKGROUNDS: Record<number, ReturnType<typeof require>> = {
   8:  require('../assets/images/8x8_grid_1775164830288.png'),
   9:  require('../assets/images/9x9_grid_1775164830288.png'),
   10: require('../assets/images/10x10_1775164830288.png'),
-  11: require('../assets/images/10x10_1775164830288.png'),
+  11: require('../assets/images/w8_cell_bg.png'),
 };
 
 // ── World 1 element PNGs ─────────────────────────────────────────────────────
