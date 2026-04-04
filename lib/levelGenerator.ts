@@ -486,7 +486,7 @@ export function splitZonesByUniqueness(
     }
   }
 
-  for (const [zId, cells] of zoneGroups) {
+  for (const [, cells] of zoneGroups) {
     const seen = new Set<string>();
     const needSplit: [number, number][] = [];
 
@@ -501,6 +501,145 @@ export function splitZonesByUniqueness(
 
     for (const [r, c] of needSplit) {
       result[r][c] = nextId++;
+    }
+  }
+
+  return result;
+}
+
+function popcount(n: number): number {
+  let c = 0;
+  while (n) { c += n & 1; n >>>= 1; }
+  return c;
+}
+
+function buildAllowMasks(
+  zones: { ingredients: string[]; cells: { row: number; col: number }[] }[],
+  elements: string[],
+  size: number
+): number[][] {
+  const elIdx: Record<string, number> = {};
+  elements.forEach((e, i) => (elIdx[e] = i));
+  const full = (1 << elements.length) - 1;
+  const allow = Array.from({ length: size }, () => Array(size).fill(full));
+  for (const z of zones) {
+    let ing = 0;
+    for (const e of z.ingredients) ing |= 1 << elIdx[e];
+    for (const { row, col } of z.cells) allow[row][col] = ing;
+  }
+  return allow;
+}
+
+function countSolutionsUpTo(
+  allow: number[][],
+  size: number,
+  limit: number
+): number {
+  let count = 0;
+  const rowM = Array(size).fill(0);
+  const colM = Array(size).fill(0);
+  const board: number[][] = Array.from({ length: size }, () => Array(size).fill(-1));
+
+  function solve() {
+    if (count >= limit) return;
+    let bR = -1, bC = -1, bCnt = size + 1, bCands = 0;
+    outer: for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (board[r][c] !== -1) continue;
+        const cands = allow[r][c] & ~(rowM[r] | colM[c]);
+        const cnt = popcount(cands);
+        if (cnt === 0) return;
+        if (cnt < bCnt) { bR = r; bC = c; bCnt = cnt; bCands = cands; if (cnt === 1) break outer; }
+      }
+    }
+    if (bR === -1) { count++; return; }
+    let cands = bCands;
+    while (cands) {
+      const bit = cands & (-cands); cands &= ~bit;
+      board[bR][bC] = bit; rowM[bR] |= bit; colM[bC] |= bit;
+      solve();
+      rowM[bR] &= ~bit; colM[bC] &= ~bit; board[bR][bC] = -1;
+    }
+  }
+  solve();
+  return count;
+}
+
+function findFirstAmbiguousCell(
+  allow: number[][],
+  size: number
+): { r: number; c: number } | null {
+  const sols: number[][][] = [];
+  const rowM = Array(size).fill(0);
+  const colM = Array(size).fill(0);
+  const board: number[][] = Array.from({ length: size }, () => Array(size).fill(-1));
+
+  function solve() {
+    if (sols.length >= 2) return;
+    let bR = -1, bC = -1, bCnt = size + 1, bCands = 0;
+    outer: for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (board[r][c] !== -1) continue;
+        const cands = allow[r][c] & ~(rowM[r] | colM[c]);
+        const cnt = popcount(cands);
+        if (cnt === 0) return;
+        if (cnt < bCnt) { bR = r; bC = c; bCnt = cnt; bCands = cands; if (cnt === 1) break outer; }
+      }
+    }
+    if (bR === -1) { sols.push(board.map((row) => [...row])); return; }
+    let cands = bCands;
+    while (cands) {
+      const bit = cands & (-cands); cands &= ~bit;
+      board[bR][bC] = bit; rowM[bR] |= bit; colM[bC] |= bit;
+      solve();
+      rowM[bR] &= ~bit; colM[bC] &= ~bit; board[bR][bC] = -1;
+    }
+  }
+  solve();
+  if (sols.length < 2) return null;
+  const [s1, s2] = sols;
+  for (let r = 0; r < size; r++)
+    for (let c = 0; c < size; c++)
+      if (s1[r][c] !== s2[r][c]) return { r, c };
+  return null;
+}
+
+export function enforceUniqueness(
+  zones: { id: string; recipeName: string; ingredients: string[]; cells: { row: number; col: number }[] }[],
+  solution: string[][],
+  elements: string[],
+  size: number,
+  worldNum: number
+): typeof zones {
+  let result = zones.map((z) => ({ ...z, cells: [...z.cells], ingredients: [...z.ingredients] }));
+  let nextId = Math.max(...result.map((z) => parseInt(z.id.slice(1)) || 0)) + 1;
+
+  for (let iter = 0; iter < 60; iter++) {
+    const allow = buildAllowMasks(result, elements, size);
+    if (countSolutionsUpTo(allow, size, 2) <= 1) break;
+    const cell = findFirstAmbiguousCell(allow, size);
+    if (!cell) break;
+
+    const { r, c } = cell;
+    const canonEl = solution[r][c];
+    const zIdx = result.findIndex((z) => z.cells.some((cell) => cell.row === r && cell.col === c));
+    if (zIdx === -1) break;
+
+    const z = result[zIdx];
+    const remaining = z.cells.filter((cell) => !(cell.row === r && cell.col === c));
+
+    if (remaining.length === 0) {
+      result[zIdx] = { ...z, cells: [{ row: r, col: c }], ingredients: [canonEl] };
+    } else {
+      const newIngredients = [...new Set(remaining.map((cell) => solution[cell.row][cell.col]))].sort();
+      const newRecipeName = findRecipe(worldNum, newIngredients) ?? getFallbackName(newIngredients);
+      result[zIdx] = { ...z, cells: remaining, ingredients: newIngredients, recipeName: newRecipeName };
+      result.push({
+        id: `z${nextId++}`,
+        recipeName: canonEl,
+        ingredients: [canonEl],
+        cells: [{ row: r, col: c }],
+      });
     }
   }
 
@@ -566,12 +705,12 @@ export function generateLevel(worldNum: number, levelInWorld: number): Level {
     }
   }
 
-  const zones: Zone[] = [];
+  const rawZones: Zone[] = [];
   let zoneIndex = 0;
   for (const [, cells] of zoneGroups) {
     const ingredients = [...new Set(cells.map(([r, c]) => solution[r][c]))].sort();
     const recipeName = findRecipe(worldNum, ingredients) ?? getFallbackName(ingredients);
-    zones.push({
+    rawZones.push({
       id: `z${zoneIndex}`,
       recipeName,
       ingredients,
@@ -579,6 +718,8 @@ export function generateLevel(worldNum: number, levelInWorld: number): Level {
     });
     zoneIndex++;
   }
+
+  const zones = enforceUniqueness(rawZones, solution, elements, gridSize, worldNum);
 
   const numStr = levelInWorld.toString().padStart(2, '0');
   return {
