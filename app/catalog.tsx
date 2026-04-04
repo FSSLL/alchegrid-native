@@ -204,57 +204,43 @@ function WorldCard({
 
   const cardImage = WORLD_CARD_IMAGES[info.world] ?? null;
 
-  const cardInner = (
-    <>
-      {/* Dark overlay so text is always readable */}
-      {cardImage && (
-        <View style={styles.cardOverlay} />
-      )}
-
-      {/* Header */}
-      <TouchableOpacity onPress={onToggle} activeOpacity={0.8} style={styles.worldHeader}>
-        {/* Number box */}
-        <LinearGradient
-          colors={info.numberBg as [string, string]}
-          style={styles.numBox}
-        >
+  const header = cardImage ? (
+    <ImageBackground
+      source={cardImage}
+      resizeMode="cover"
+      style={styles.worldHeader}
+    >
+      <View style={styles.cardOverlay} />
+      <TouchableOpacity onPress={onToggle} activeOpacity={0.8} style={styles.worldHeaderInner}>
+        <LinearGradient colors={info.numberBg as [string, string]} style={styles.numBox}>
           <Text style={[styles.numText, { color: info.accent }]}>{info.world}</Text>
         </LinearGradient>
-
-        {/* Name + meta */}
         <View style={styles.worldMeta}>
           <Text style={styles.worldName}>{info.name}</Text>
-          <Text style={[styles.worldMetaLine, cardImage ? styles.worldMetaLineOnImg : null]}>
+          <Text style={[styles.worldMetaLine, styles.worldMetaLineOnImg]}>
             {info.grid} grid · {recipeCount} combos
           </Text>
         </View>
-
-        {/* Chevron */}
-        <Text style={[styles.chevron, { color: info.accent }]}>
-          {isOpen ? '▲' : '▼'}
-        </Text>
+        <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
       </TouchableOpacity>
-
-      {/* Expanded body */}
-      {isOpen && <WorldBody info={info} onTap={onTap} />}
-    </>
+    </ImageBackground>
+  ) : (
+    <TouchableOpacity onPress={onToggle} activeOpacity={0.8} style={styles.worldHeader}>
+      <LinearGradient colors={info.numberBg as [string, string]} style={styles.numBox}>
+        <Text style={[styles.numText, { color: info.accent }]}>{info.world}</Text>
+      </LinearGradient>
+      <View style={styles.worldMeta}>
+        <Text style={styles.worldName}>{info.name}</Text>
+        <Text style={styles.worldMetaLine}>{info.grid} grid · {recipeCount} combos</Text>
+      </View>
+      <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
+    </TouchableOpacity>
   );
-
-  if (cardImage) {
-    return (
-      <ImageBackground
-        source={cardImage}
-        resizeMode="cover"
-        style={[styles.worldCard, { borderColor: info.border }]}
-      >
-        {cardInner}
-      </ImageBackground>
-    );
-  }
 
   return (
     <View style={[styles.worldCard, { borderColor: info.border }]}>
-      {cardInner}
+      {header}
+      {isOpen && <WorldBody info={info} onTap={onTap} />}
     </View>
   );
 }
@@ -347,6 +333,9 @@ const styles = StyleSheet.create({
   worldHeader: {
     flexDirection: 'row', alignItems: 'center',
     padding: 12, gap: 12,
+  },
+  worldHeaderInner: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12,
   },
   numBox: {
     width: 48, height: 48, borderRadius: 12,
