@@ -23,6 +23,7 @@ import * as Haptics from 'expo-haptics';
 import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
 import GameCell from '../components/GameCell';
+import GridLines from '../components/GridLines';
 import ZoneBorders from '../components/ZoneBorders';
 import ElementPalette from '../components/ElementPalette';
 import ZoneTooltip from '../components/ZoneTooltip';
@@ -510,6 +511,8 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
             style={{ position: 'absolute', width: totalGridSize, height: totalGridSize }}
             resizeMode="cover"
           />
+          {/* Cell separator lines */}
+          <GridLines gridSize={4} cellSize={CELL_SIZE} gap={GRID_GAP} totalGridPx={totalGridSize} />
           {/* Cells */}
           {safeBoard.map((row, r) =>
             row.map((cell, c) => {
