@@ -1,5 +1,5 @@
-import React, { memo, useCallback, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, PanResponder } from 'react-native';
+import React, { memo, useRef } from 'react';
+import { View, StyleSheet, PanResponder } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -24,7 +24,7 @@ interface GameCellProps {
   onPress: (row: number, col: number) => void;
 }
 
-const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+const TAP_THRESHOLD = 6;
 
 const GameCell = memo(({
   row,
@@ -40,23 +40,11 @@ const GameCell = memo(({
 }: GameCellProps) => {
   const { startDrag, moveDrag, endDrag, cancelDrag } = useDrag();
   const scale = useSharedValue(1);
+  const isDragging = useRef(false);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
-
-  const handlePressIn = useCallback(() => {
-    scale.value = withSpring(0.90, { stiffness: 400, damping: 25 });
-  }, [scale]);
-
-  const handlePressOut = useCallback(() => {
-    scale.value = withSpring(1.0, { stiffness: 400, damping: 25 });
-  }, [scale]);
-
-  const handlePress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onPress(row, col);
-  }, [row, col, onPress]);
 
   const elementRef = useRef(element);
   elementRef.current = element;
@@ -66,39 +54,60 @@ const GameCell = memo(({
   colRef.current = col;
   const isHintedRef = useRef(isHinted);
   isHintedRef.current = isHinted;
+  const onPressRef = useRef(onPress);
+  onPressRef.current = onPress;
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponder: () => true,
       onStartShouldSetPanResponderCapture: () => false,
-      onMoveShouldSetPanResponder: (_e, gs) =>
-        !!elementRef.current &&
-        !isHintedRef.current &&
-        (Math.abs(gs.dx) > 6 || Math.abs(gs.dy) > 6),
+      onMoveShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponderCapture: () => false,
-      onPanResponderGrant: (e) => {
-        if (!elementRef.current || isHintedRef.current) return;
-        scale.value = withSpring(0.88, { stiffness: 400, damping: 20 });
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        startDrag(
-          elementRef.current,
-          'cell',
-          e.nativeEvent.pageX,
-          e.nativeEvent.pageY,
-          rowRef.current,
-          colRef.current,
-        );
+
+      onPanResponderGrant: () => {
+        isDragging.current = false;
+        scale.value = withSpring(0.90, { stiffness: 400, damping: 25 });
       },
-      onPanResponderMove: (e) => {
-        moveDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
+
+      onPanResponderMove: (e, gs) => {
+        const moved = Math.abs(gs.dx) + Math.abs(gs.dy);
+
+        if (!isDragging.current && moved > TAP_THRESHOLD && elementRef.current && !isHintedRef.current) {
+          isDragging.current = true;
+          scale.value = withSpring(0.88, { stiffness: 400, damping: 20 });
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          startDrag(
+            elementRef.current,
+            'cell',
+            e.nativeEvent.pageX,
+            e.nativeEvent.pageY,
+            rowRef.current,
+            colRef.current,
+          );
+        }
+
+        if (isDragging.current) {
+          moveDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
+        }
       },
+
       onPanResponderRelease: (e) => {
         scale.value = withSpring(1.0, { stiffness: 400, damping: 25 });
-        endDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
+        if (isDragging.current) {
+          isDragging.current = false;
+          endDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
+        } else {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onPressRef.current(rowRef.current, colRef.current);
+        }
       },
+
       onPanResponderTerminate: () => {
         scale.value = withSpring(1.0, { stiffness: 400, damping: 25 });
-        cancelDrag();
+        if (isDragging.current) {
+          isDragging.current = false;
+          cancelDrag();
+        }
       },
     }),
   ).current;
@@ -115,14 +124,7 @@ const GameCell = memo(({
   const cellBg = isSelected ? 'rgba(255,85,0,0.12)' : 'transparent';
 
   return (
-    <AnimatedTouchable
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      onPress={handlePress}
-      activeOpacity={1}
-      style={[animatedStyle]}
-      {...panResponder.panHandlers}
-    >
+    <Animated.View style={animatedStyle} {...panResponder.panHandlers}>
       <View
         style={[
           styles.cell,
@@ -155,7 +157,7 @@ const GameCell = memo(({
           />
         ) : null}
       </View>
-    </AnimatedTouchable>
+    </Animated.View>
   );
 });
 
