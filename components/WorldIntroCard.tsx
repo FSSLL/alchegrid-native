@@ -1,7 +1,12 @@
 import React, { useRef, useEffect } from 'react';
+import Pressable from './Pressable';
 import {
-  Modal, View, Text, TouchableOpacity, StyleSheet,
-  Animated, ScrollView,
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  ScrollView,
 } from 'react-native';
 import type { WorldInfo } from '../lib/types';
 import ElementIcon from './ElementIcon';
@@ -30,13 +35,13 @@ export default function WorldIntroCard({ world, prevWorldName, isFirstVisit, onC
   return (
     <Modal transparent animationType="none" visible onRequestClose={onClose}>
       <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
-        <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
         <Animated.View style={[styles.card, { transform: [{ translateY: slideAnim }] }]}>
           {/* Header band */}
           <View style={styles.headerBand}>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+            <Pressable style={styles.closeBtn} onPress={onClose}>
               <Text style={styles.closeBtnText}>✕</Text>
-            </TouchableOpacity>
+            </Pressable>
             <View style={styles.headerRow}>
               <View style={styles.iconBox}>
                 <Text style={styles.iconText}>{isUnlockState ? '✨' : '🌐'}</Text>
@@ -83,11 +88,11 @@ export default function WorldIntroCard({ world, prevWorldName, isFirstVisit, onC
           </View>
 
           {/* CTA */}
-          <TouchableOpacity style={styles.ctaBtn} onPress={onClose} activeOpacity={0.85}>
+          <Pressable style={styles.ctaBtn} onPress={onClose} activeOpacity={0.85}>
             <Text style={styles.ctaBtnText}>
               {isUnlockState ? "Let's Explore!" : 'Got it'}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
       </Animated.View>
     </Modal>
