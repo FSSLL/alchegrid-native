@@ -42,6 +42,7 @@ interface EndlessState {
   completeLevel: () => number;
   recordMistake: () => void;
   surrender: () => void;
+  bumpActivity: () => void;
   checkInactivity: () => boolean;
   refreshLeaderboard: () => Promise<void>;
   submitScore: (playerName: string) => Promise<void>;
@@ -212,6 +213,8 @@ export const useEndlessStore = create<EndlessState>((set, get) => ({
   surrender: () => {
     set({ runActive: false, gameOverReason: 'surrender', showGameOver: true });
   },
+
+  bumpActivity: () => set({ lastActivityTime: Date.now() }),
 
   checkInactivity: () => {
     const { lastActivityTime, runActive } = get();
