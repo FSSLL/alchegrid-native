@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Pressable from '../components/Pressable';
 import {
   View,
   Text,
@@ -7,7 +8,7 @@ import {
   Platform,
   useWindowDimensions,
 } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -70,16 +71,16 @@ export default function WorldLevelsScreen() {
     <View style={[styles.bg, { backgroundColor: 'transparent' }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 8 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.title}>{world.name}</Text>
           <Text style={styles.subtitle}>{world.size}×{world.size} Grid • {world.elements.length} Elements</Text>
         </View>
-        <TouchableOpacity onPress={() => setShowIntro(true)} style={styles.infoBtn}>
+        <Pressable onPress={() => setShowIntro(true)} style={styles.infoBtn}>
           <Text style={styles.infoIcon}>ⓘ</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Stars bar */}
@@ -96,7 +97,7 @@ export default function WorldLevelsScreen() {
 
       <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
         {levels.map(({ levelInWorld, globalLevel, stars, isCompleted, isCurrent, isLocked }) => (
-          <TouchableOpacity
+          <Pressable
             key={globalLevel}
             onPress={() => handleLevelPress(globalLevel, isLocked)}
             activeOpacity={isLocked ? 1 : 0.7}
@@ -128,7 +129,7 @@ export default function WorldLevelsScreen() {
               )}
               {isLocked && <Text style={styles.lockIcon}>🔒</Text>}
             </View>
-          </TouchableOpacity>
+          </Pressable>
         ))}
         <View style={{ height: Platform.OS === 'web' ? 20 : insets.bottom + 24, width: '100%' }} />
       </ScrollView>
