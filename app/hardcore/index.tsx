@@ -235,7 +235,7 @@ function RuleRow({ icon, text }: { icon: string; text: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent' },
+  container: { flex: 1, backgroundColor: 'rgba(8,11,18,0.97)' },
   content: { paddingHorizontal: 20, paddingBottom: 48 },
 
   header: {
