@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Platform,
   Image,
   Animated,
   useWindowDimensions,
 } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { GRID_BACKGROUNDS } from '../constants/assets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -138,6 +138,23 @@ function GameContent() {
     return () => { stopTimer(); };
   }, [globalLevelNum]);
 
+  // Always-correct level data — synchronously derived from the route param so it
+  // is never stale, even on the first render before initGame's useEffect fires.
+  const currentLevelData = useMemo(() => getLevelData(globalLevelNum), [globalLevelNum]);
+
+  // O(1) cell-to-zone lookup built from sync level data — always correct for this
+  // route even when the store's `level` still holds the previous level's object.
+  const cellZoneLookup = useMemo(() => {
+    const map: Record<string, NonNullable<ReturnType<typeof getLevelData>>['zones'][number]> = {};
+    if (!currentLevelData) return map;
+    currentLevelData.zones.forEach((zone) => {
+      zone.cells.forEach(({ row, col }) => {
+        map[`${row},${col}`] = zone;
+      });
+    });
+    return map;
+  }, [currentLevelData]);
+
   // Wire drop handlers into DragContext.
   // cellZoneLookup is in the dep array so the handler always uses the map for
   // the current level — it changes only when globalLevelNum changes, so the
@@ -212,23 +229,6 @@ function GameContent() {
     });
     return map;
   }, [level]);
-
-  // Always-correct level data — synchronously derived from the route param so it
-  // is never stale, even on the first render before initGame's useEffect fires.
-  const currentLevelData = useMemo(() => getLevelData(globalLevelNum), [globalLevelNum]);
-
-  // O(1) cell-to-zone lookup built from sync level data — always correct for this
-  // route even when the store's `level` still holds the previous level's object.
-  const cellZoneLookup = useMemo(() => {
-    const map: Record<string, NonNullable<ReturnType<typeof getLevelData>>['zones'][number]> = {};
-    if (!currentLevelData) return map;
-    currentLevelData.zones.forEach((zone) => {
-      zone.cells.forEach(({ row, col }) => {
-        map[`${row},${col}`] = zone;
-      });
-    });
-    return map;
-  }, [currentLevelData]);
 
   // Guard: the store's selectedZone may still reference a zone from the previous
   // level on the first render (before initGame clears it). Only expose it once the
