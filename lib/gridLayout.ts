@@ -6,7 +6,7 @@
  * CELL_GAP  = gap between every pair of adjacent cells (px)
  */
 const SIDE_GAP = 4;
-const CELL_GAP = 4;
+const CELL_GAP = 8;
 
 export function computeGridLayout(
   gridSize: number,
