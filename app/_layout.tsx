@@ -55,6 +55,10 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 
 SplashScreen.preventAutoHideAsync();
 
+// Warm up levelData module in background — avoids first-load lag when user
+// navigates to any game screen, especially World 8 (240 levels to parse).
+import('@/lib/levelData').catch(() => {});
+
 const SCREEN_OPTS = {
   headerShown: false,
   contentStyle: { backgroundColor: 'transparent' },
@@ -78,9 +82,9 @@ function RootLayoutNav() {
         <Stack.Screen name="tutorial" options={{ ...SCREEN_OPTS, animation: 'slide_from_right' }} />
         <Stack.Screen name="catalog" options={{ ...SCREEN_OPTS, animation: 'slide_from_right' }} />
         <Stack.Screen name="settings" options={{ ...SCREEN_OPTS, animation: 'slide_from_right' }} />
-        <Stack.Screen name="endless" options={{ ...SCREEN_OPTS, animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="hardcore" options={{ ...SCREEN_OPTS, animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="community" options={{ ...SCREEN_OPTS, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="endless" options={{ ...SCREEN_OPTS, animation: 'fade' }} />
+        <Stack.Screen name="hardcore" options={{ ...SCREEN_OPTS, animation: 'fade' }} />
+        <Stack.Screen name="community" options={{ ...SCREEN_OPTS, animation: 'fade' }} />
       </Stack>
     </ThemeProvider>
   );
