@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import Pressable from './Pressable';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  Platform, ActivityIndicator,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -117,11 +122,11 @@ export default function CommunityExplore() {
           </View>
         )}
         <Text style={styles.remoteCount}>{serverStatus?.totalLevels ?? remoteLevels.length} remote</Text>
-        <TouchableOpacity onPress={handleRefresh} disabled={isSyncing} style={styles.refreshBtn}>
+        <Pressable onPress={handleRefresh} disabled={isSyncing} style={styles.refreshBtn}>
           {isSyncing
             ? <ActivityIndicator size="small" color="#60a5fa" />
             : <Text style={styles.refreshIcon}>↻</Text>}
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Stats row */}
@@ -134,13 +139,13 @@ export default function CommunityExplore() {
       {/* Filter tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterContent}>
         {([['all', `All (${allBrowsable.length})`], ['shared', `🌐 Shared (${sharedCount})`], ['liked', '❤ Liked'], ['mine', `👤 Mine (${myMineCount})`]] as [ActiveFilter, string][]).map(([f, label]) => (
-          <TouchableOpacity
+          <Pressable
             key={f}
             style={[styles.filterBtn, filter === f && styles.filterBtnActive[f]]}
             onPress={() => { setFilter(f); setConfirmDeleteId(null); }}
           >
             <Text style={[styles.filterBtnText, filter === f && styles.filterBtnTextActive]}>{label}</Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -235,19 +240,19 @@ function LevelCard({
 
         {/* Right: actions */}
         <View style={styles.cardActions}>
-          <TouchableOpacity style={styles.actionBtn} onPress={onLike}>
+          <Pressable style={styles.actionBtn} onPress={onLike}>
             <Text style={[styles.actionIcon, isLiked && styles.likedIcon]}>
               {isLiked ? '❤' : '🤍'}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
           {showTrash && (
-            <TouchableOpacity style={styles.actionBtn} onPress={onTrash}>
+            <Pressable style={styles.actionBtn} onPress={onTrash}>
               <Text style={styles.actionIcon}>🗑</Text>
-            </TouchableOpacity>
+            </Pressable>
           )}
-          <TouchableOpacity style={styles.playBtn} onPress={onPlay}>
+          <Pressable style={styles.playBtn} onPress={onPlay}>
             <Text style={styles.playBtnText}>{isSolved ? 'Replay' : 'Play'}</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 
@@ -255,12 +260,12 @@ function LevelCard({
       {confirmDelete && (
         <View style={styles.confirmRow}>
           <Text style={styles.confirmText}>Delete this level permanently?</Text>
-          <TouchableOpacity style={styles.cancelBtn} onPress={onCancelDelete}>
+          <Pressable style={styles.cancelBtn} onPress={onCancelDelete}>
             <Text style={styles.cancelBtnText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteBtn} onPress={onConfirmDelete}>
+          </Pressable>
+          <Pressable style={styles.deleteBtn} onPress={onConfirmDelete}>
             <Text style={styles.deleteBtnText}>Delete</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       )}
     </View>
