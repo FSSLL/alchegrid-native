@@ -28,15 +28,17 @@ export const WORLD_BUTTONS = [
 ];
 
 // ── Grid background PNGs per board size ──────────────────────────────────────
+const STONE_TILE = require('../assets/images/stone_tile_bg.png');
+
 export const GRID_BACKGROUNDS: Record<number, ReturnType<typeof require>> = {
-  4:  require('../assets/images/4x4_cell_bg.png'),
-  5:  require('../assets/images/5x5_grid_1775164818218.png'),
-  6:  require('../assets/images/6x6_grid_1775164822535.png'),
-  7:  require('../assets/images/7x7_grid_1775164830287.png'),
-  8:  require('../assets/images/8x8_grid_1775164830288.png'),
-  9:  require('../assets/images/9x9_grid_1775164830288.png'),
-  10: require('../assets/images/10x10_1775164830288.png'),
-  11: require('../assets/images/w8_cell_bg.png'),
+  4:  STONE_TILE,
+  5:  STONE_TILE,
+  6:  STONE_TILE,
+  7:  STONE_TILE,
+  8:  STONE_TILE,
+  9:  STONE_TILE,
+  10: STONE_TILE,
+  11: STONE_TILE,
 };
 
 // ── World 1 element PNGs ─────────────────────────────────────────────────────
