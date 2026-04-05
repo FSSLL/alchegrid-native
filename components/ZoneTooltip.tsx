@@ -1,8 +1,8 @@
 import React, { memo, useEffect, useRef } from 'react';
+import Pressable from './Pressable';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   PanResponder,
 } from 'react-native';
@@ -117,9 +117,9 @@ const ZoneTooltip = memo(({ zone, board, onClose }: ZoneTooltipProps) => {
       ))}
 
       {/* Close */}
-      <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={8}>
+      <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={8}>
         <Text style={styles.closeText}>✕</Text>
-      </TouchableOpacity>
+      </Pressable>
     </Animated.View>
   );
 });
