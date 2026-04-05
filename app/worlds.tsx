@@ -1,10 +1,10 @@
 import React from 'react';
+import Pressable from '../components/Pressable';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Platform,
   Image,
 } from 'react-native';
@@ -25,9 +25,9 @@ export default function WorldsScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: topPad + 8 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
         <Text style={styles.title}>Select World</Text>
         <View style={{ width: 40 }} />
       </View>
@@ -42,7 +42,7 @@ export default function WorldsScreen() {
           const ptop = WORLD_TEXT_PADDING_TOP[idx];
 
           return (
-            <TouchableOpacity
+            <Pressable
               key={world.id}
               onPress={() => {
                 if (!unlocked) return;
@@ -76,7 +76,7 @@ export default function WorldsScreen() {
                   </View>
                 )}
               </View>
-            </TouchableOpacity>
+            </Pressable>
           );
         })}
         <View style={{ height: Platform.OS === 'web' ? 20 : insets.bottom + 24 }} />
