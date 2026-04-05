@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import type { ElementID } from '../lib/types';
 import { useDrag } from '../contexts/DragContext';
 import ElementIcon from './ElementIcon';
+import { tap } from '../lib/feedback';
 
 interface GameCellProps {
   row: number;
@@ -94,7 +95,7 @@ const GameCell = memo(({
           isDragging.current = false;
           endDrag(e.nativeEvent.pageX, e.nativeEvent.pageY);
         } else {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          tap();
           onPressRef.current(rowRef.current, colRef.current);
         }
       },
