@@ -169,27 +169,33 @@ function PlayContent() {
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
           {/* Overlay BEFORE cells so cells sit on top and always receive touches */}
           <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
-          {level.zones.map((zone) =>
-            zone.cells.map(({ row, col }) => (
-              <View
-                key={`${row}-${col}`}
-                style={[styles.cell, {
-                  top: row * (cellSize + cellGap),
-                  left: col * (cellSize + cellGap),
-                  width: cellSize, height: cellSize,
-                }]}
-              >
-                <GameCell
-                  element={board[row]?.[col] ?? null}
-                  isHinted={!!hintedCells[`${row},${col}`]}
-                  isConflict={conflicts.some((c) => c.row === row && c.col === col)}
-                  cellSize={cellSize}
-                  onPress={() => handleCellPress(row, col)}
-                  row={row}
-                  col={col}
-                />
-              </View>
-            )),
+          {board.map((rowArr, r) =>
+            rowArr.map((el, c) => {
+              const key = `${r},${c}`;
+              return (
+                <View
+                  key={key}
+                  style={{
+                    position: 'absolute',
+                    top: r * (cellSize + cellGap),
+                    left: c * (cellSize + cellGap),
+                    width: cellSize, height: cellSize,
+                  }}
+                >
+                  <GameCell
+                    row={r}
+                    col={c}
+                    element={el}
+                    cellSize={cellSize}
+                    isConflict={conflicts.some((cn) => cn.row === r && cn.col === c)}
+                    isHinted={!!hintedCells[key]}
+                    ghostElement={null}
+                    ghostOpacity={0.7}
+                    onPress={() => handleCellPress(r, c)}
+                  />
+                </View>
+              );
+            })
           )}
         </View>
       </View>
@@ -225,5 +231,4 @@ const styles = StyleSheet.create({
   hintIcon: { fontSize: 20 },
   gridSection: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   gridWrap: { position: 'relative' },
-  cell: { position: 'absolute' },
 });
