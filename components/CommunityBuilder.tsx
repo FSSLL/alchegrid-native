@@ -1,7 +1,14 @@
 import React, { useMemo, useState } from 'react';
+import Pressable from './Pressable';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, Platform, FlatList, Alert,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  Platform,
+  FlatList,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -248,7 +255,7 @@ export default function CommunityBuilder() {
       {/* Step nav */}
       <View style={styles.stepNav}>
         {(['setup', 'zones', 'publish'] as Step[]).map((s, idx) => (
-          <TouchableOpacity
+          <Pressable
             key={s}
             style={[styles.stepPill, step === s && styles.stepPillActive]}
             onPress={() => setStep(s)}
@@ -256,7 +263,7 @@ export default function CommunityBuilder() {
             <Text style={[styles.stepText, step === s && styles.stepTextActive]}>
               {idx + 1}. {s.charAt(0).toUpperCase() + s.slice(1)}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -276,7 +283,7 @@ export default function CommunityBuilder() {
           <Text style={styles.fieldLabel}>Board Size</Text>
           <View style={styles.sizeGrid}>
             {[4, 5, 6, 7, 8, 9, 10, 11].map((s) => (
-              <TouchableOpacity
+              <Pressable
                 key={s}
                 style={[styles.sizeBtn, draft.size === s && styles.sizeBtnActive]}
                 onPress={() => setDraftSize(s)}
@@ -284,7 +291,7 @@ export default function CommunityBuilder() {
                 <Text style={[styles.sizeBtnText, draft.size === s && styles.sizeBtnTextActive]}>
                   {s}×{s}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </View>
 
@@ -295,9 +302,9 @@ export default function CommunityBuilder() {
             <Text style={styles.infoText}>4. Publish to share with the community</Text>
           </View>
 
-          <TouchableOpacity style={styles.nextBtn} onPress={() => setStep('zones')}>
+          <Pressable style={styles.nextBtn} onPress={() => setStep('zones')}>
             <Text style={styles.nextBtnText}>Next: Draw Zones →</Text>
-          </TouchableOpacity>
+          </Pressable>
         </ScrollView>
       )}
 
@@ -332,9 +339,9 @@ export default function CommunityBuilder() {
                 <Text style={styles.pickerTitle}>
                   Pick recipe for {cellCount} cell{cellCount > 1 ? 's' : ''}
                 </Text>
-                <TouchableOpacity onPress={() => { setShowRecipePicker(false); setIsDrawingZone(true); }}>
+                <Pressable onPress={() => { setShowRecipePicker(false); setIsDrawingZone(true); }}>
                   <Text style={styles.pickerCancel}>← Back</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
               {availableRecipes.length === 0 ? (
                 <View style={styles.pickerEmpty}>
@@ -351,7 +358,7 @@ export default function CommunityBuilder() {
                   keyExtractor={(r) => r.ingredients.join('+')}
                   contentContainerStyle={styles.recipeList}
                   renderItem={({ item }) => (
-                    <TouchableOpacity style={styles.recipeRow} onPress={() => handlePickRecipe(item)}>
+                    <Pressable style={styles.recipeRow} onPress={() => handlePickRecipe(item)}>
                       <View style={styles.recipeIngredients}>
                         {item.ingredients.map((el) => (
                           <View key={el} style={[styles.elementPill, { backgroundColor: 'rgba(96,165,250,0.15)' }]}>
@@ -361,7 +368,7 @@ export default function CommunityBuilder() {
                         {item.ingredients.length > 1 && <Text style={styles.arrowText}>→</Text>}
                       </View>
                       <Text style={styles.recipeNameText}>{item.recipeName}</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                   )}
                 />
               )}
@@ -403,7 +410,7 @@ export default function CommunityBuilder() {
                     }
 
                     return (
-                      <TouchableOpacity
+                      <Pressable
                         key={`${row}-${col}`}
                         style={[
                           styles.gridCell,
@@ -428,7 +435,7 @@ export default function CommunityBuilder() {
                             {zid + 1}
                           </Text>
                         )}
-                      </TouchableOpacity>
+                      </Pressable>
                     );
                   }),
                 )}
@@ -437,10 +444,10 @@ export default function CommunityBuilder() {
               {/* Drawing controls */}
               {isDrawingZone ? (
                 <View style={styles.drawControls}>
-                  <TouchableOpacity style={styles.cancelDrawBtn} onPress={handleCancelDraw}>
+                  <Pressable style={styles.cancelDrawBtn} onPress={handleCancelDraw}>
                     <Text style={styles.cancelDrawText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </Pressable>
+                  <Pressable
                     style={[styles.finishDrawBtn, draft.currentZoneCells.length === 0 && styles.disabledBtn]}
                     onPress={handleFinishDrawing}
                     disabled={draft.currentZoneCells.length === 0}
@@ -448,12 +455,12 @@ export default function CommunityBuilder() {
                     <Text style={styles.finishDrawText}>
                       ✓ Pick Combination ({draft.currentZoneCells.length} cell{draft.currentZoneCells.length !== 1 ? 's' : ''})
                     </Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               ) : (
-                <TouchableOpacity style={styles.addZoneBtn} onPress={handleStartZone}>
+                <Pressable style={styles.addZoneBtn} onPress={handleStartZone}>
                   <Text style={styles.addZoneBtnText}>+ Add Zone</Text>
-                </TouchableOpacity>
+                </Pressable>
               )}
 
               {/* Zone list */}
@@ -473,12 +480,12 @@ export default function CommunityBuilder() {
                         ))}
                       </View>
                       <Text style={styles.zoneCellCount}>{zone.cells.length}c</Text>
-                      <TouchableOpacity style={styles.zoneActionBtn} onPress={() => handleEditZone(i)}>
+                      <Pressable style={styles.zoneActionBtn} onPress={() => handleEditZone(i)}>
                         <Text style={styles.zoneActionText}>✏</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.zoneActionBtn} onPress={() => handleRemoveZone(i)}>
+                      </Pressable>
+                      <Pressable style={styles.zoneActionBtn} onPress={() => handleRemoveZone(i)}>
                         <Text style={[styles.zoneActionText, { color: '#f87171' }]}>🗑</Text>
-                      </TouchableOpacity>
+                      </Pressable>
                     </View>
                   ))}
                 </View>
@@ -487,19 +494,19 @@ export default function CommunityBuilder() {
               {/* Bottom action bar */}
               {!isDrawingZone && (
                 <View style={styles.zoneActions}>
-                  <TouchableOpacity
+                  <Pressable
                     style={[styles.testPlayBtn, (usedCells < totalCells || draft.zones.length === 0) && styles.disabledBtn]}
                     onPress={handleTestPlay}
                     disabled={usedCells < totalCells || draft.zones.length === 0}
                   >
                     <Text style={styles.testPlayText}>▶ Test Play</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </Pressable>
+                  <Pressable
                     style={styles.nextStepBtn}
                     onPress={() => setStep('publish')}
                   >
                     <Text style={styles.nextStepText}>Review & Publish →</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               )}
 
@@ -536,22 +543,22 @@ export default function CommunityBuilder() {
           )}
 
           {!draft.solvedAfterLastEdit && (
-            <TouchableOpacity style={styles.testSolveBtn} onPress={handleTestPlay}>
+            <Pressable style={styles.testSolveBtn} onPress={handleTestPlay}>
               <Text style={styles.testSolveBtnText}>▶ Test & Solve</Text>
-            </TouchableOpacity>
+            </Pressable>
           )}
 
-          <TouchableOpacity
+          <Pressable
             style={[styles.publishBtn, !validation.ok && styles.disabledBtn]}
             onPress={handlePublish}
             disabled={!validation.ok}
           >
             <Text style={styles.publishBtnText}>🚀 Publish Level</Text>
-          </TouchableOpacity>
+          </Pressable>
 
-          <TouchableOpacity style={styles.resetBtn} onPress={handleReset}>
+          <Pressable style={styles.resetBtn} onPress={handleReset}>
             <Text style={styles.resetBtnText}>Reset & Start Over</Text>
-          </TouchableOpacity>
+          </Pressable>
         </ScrollView>
       )}
     </View>
