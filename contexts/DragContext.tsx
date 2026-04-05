@@ -8,8 +8,6 @@ import React, {
 } from 'react';
 import {
   View,
-  Image,
-  Text,
   PanResponder,
   StyleSheet,
 } from 'react-native';
@@ -18,8 +16,7 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import type { ElementID } from '../lib/types';
-import { ELEMENT_PNGS } from '../constants/assets';
-import { ELEMENT_EMOJIS } from '../lib/elementEmojis';
+import ElementIcon from '../components/ElementIcon';
 
 export interface GridInfo {
   pageX: number;
@@ -206,19 +203,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
 }
 
 function GhostIcon({ element, size }: { element: ElementID; size: number }) {
-  const png =
-    ELEMENT_PNGS[element.toLowerCase()] ?? ELEMENT_PNGS[element] ?? null;
-  const emoji = ELEMENT_EMOJIS[element.toLowerCase()] ?? element[0];
-  if (png) {
-    return (
-      <Image
-        source={png}
-        style={{ width: size * 0.7, height: size * 0.7 }}
-        resizeMode="contain"
-      />
-    );
-  }
-  return <Text style={{ fontSize: size * 0.44 }}>{emoji}</Text>;
+  return <ElementIcon name={element} size={size * 0.7} showLabel={false} />;
 }
 
 const styles = StyleSheet.create({

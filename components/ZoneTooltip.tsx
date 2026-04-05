@@ -2,7 +2,6 @@ import React, { memo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
   PanResponder,
@@ -15,24 +14,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import type { Zone, ElementID } from '../lib/types';
-import { ELEMENT_PNGS } from '../constants/assets';
-import { ELEMENT_EMOJIS, RECIPE_EMOJIS } from '../lib/elementEmojis';
 import { isZoneSatisfied } from '../lib/validators';
 import { useDrag } from '../contexts/DragContext';
+import ElementIcon from './ElementIcon';
 
 interface ZoneTooltipProps {
   zone: Zone | null;
   board: (ElementID | null)[][];
   onClose: () => void;
-}
-
-function getIcon(name: string) {
-  return ELEMENT_PNGS[name.toLowerCase()] ?? ELEMENT_PNGS[name] ?? null;
-}
-
-function getEmoji(name: string) {
-  const key = name.toLowerCase();
-  return RECIPE_EMOJIS[key] ?? ELEMENT_EMOJIS[key] ?? '◈';
 }
 
 // ─── Draggable ingredient chip (drag-only, no tap-to-select) ──────────────────
@@ -68,16 +57,9 @@ const IngredientChip = memo(({ element }: IngredientChipProps) => {
     }),
   ).current;
 
-  const png = getIcon(element);
-  const emoji = getEmoji(element);
-
   return (
     <View style={styles.ingredientBtn} {...panResponder.panHandlers}>
-      {png ? (
-        <Image source={png} style={styles.ingredientIcon} resizeMode="contain" />
-      ) : (
-        <Text style={styles.ingredientEmoji}>{emoji}</Text>
-      )}
+      <ElementIcon name={element} size={22} showLabel={false} />
     </View>
   );
 });
@@ -115,19 +97,13 @@ const ZoneTooltip = memo(({ zone, board, onClose }: ZoneTooltipProps) => {
   }
 
   const satisfied = isZoneSatisfied(zone, board);
-  const recipePng = zone.recipeName ? getIcon(zone.recipeName) : null;
-  const recipeEmoji = zone.recipeName ? getEmoji(zone.recipeName) : '◈';
   const recipeName = zone.recipeName ?? 'Unknown';
 
   return (
     <Animated.View style={[styles.container, animStyle]}>
       {/* Recipe product */}
       <View style={styles.recipeWrap}>
-        {recipePng ? (
-          <Image source={recipePng} style={styles.recipeIcon} resizeMode="contain" />
-        ) : (
-          <Text style={styles.recipeEmoji}>{recipeEmoji}</Text>
-        )}
+        <ElementIcon name={recipeName} size={28} showLabel={false} />
         <Text style={[styles.recipeName, satisfied && styles.recipeNameDone]}>
           {satisfied ? '✓ ' : ''}{recipeName}
         </Text>
