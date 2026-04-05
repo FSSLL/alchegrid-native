@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
+import Pressable from '../../components/Pressable';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
   TextInput,
   Platform,
@@ -88,9 +88,9 @@ export default function EndlessLobby() {
         contentContainerStyle={[styles.content, { paddingTop: topPad + 16 }]}
         keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
 
         <Text style={styles.gameOverTitle}>
           {gameOverReason === 'timer' ? '⏱ Timed Out' : '🏳 Run Ended'}
@@ -119,7 +119,7 @@ export default function EndlessLobby() {
               returnKeyType="done"
               onSubmitEditing={handleSubmit}
             />
-            <TouchableOpacity
+            <Pressable
               style={[styles.submitBtn, (!playerName.trim() || submitting) && styles.submitBtnDisabled]}
               onPress={handleSubmit}
               disabled={!playerName.trim() || submitting}
@@ -127,7 +127,7 @@ export default function EndlessLobby() {
               {submitting
                 ? <ActivityIndicator color="#fff" size="small" />
                 : <Text style={styles.submitBtnText}>Submit Score</Text>}
-            </TouchableOpacity>
+            </Pressable>
           </View>
         )}
 
@@ -136,12 +136,12 @@ export default function EndlessLobby() {
         )}
 
         <View style={styles.gameOverButtons}>
-          <TouchableOpacity style={styles.playAgainBtn} onPress={handlePlayAgain}>
+          <Pressable style={styles.playAgainBtn} onPress={handlePlayAgain}>
             <Text style={styles.playAgainText}>▶  Play Again</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.homeBtn} onPress={() => { dismissGameOver(); router.back(); }}>
+          </Pressable>
+          <Pressable style={styles.homeBtn} onPress={() => { dismissGameOver(); router.back(); }}>
             <Text style={styles.homeBtnText}>← Home</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </ScrollView>
     );
@@ -152,27 +152,27 @@ export default function EndlessLobby() {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 8 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
         <Text style={styles.title}>Endless Mode</Text>
         <View style={{ width: 40 }} />
       </View>
 
       {/* Tabs */}
       <View style={styles.tabs}>
-        <TouchableOpacity
+        <Pressable
           style={[styles.tab, tab === 'start' && styles.tabActive]}
           onPress={() => setTab('start')}
         >
           <Text style={[styles.tabText, tab === 'start' && styles.tabTextActive]}>Start</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </Pressable>
+        <Pressable
           style={[styles.tab, tab === 'leaderboard' && styles.tabActive]}
           onPress={() => { setTab('leaderboard'); refreshLeaderboard(); }}
         >
           <Text style={[styles.tabText, tab === 'leaderboard' && styles.tabTextActive]}>Leaderboard</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {tab === 'start' ? (
@@ -197,9 +197,9 @@ export default function EndlessLobby() {
             </View>
           )}
 
-          <TouchableOpacity style={styles.startBtn} onPress={handleStartRun} activeOpacity={0.85}>
+          <Pressable style={styles.startBtn} onPress={handleStartRun} activeOpacity={0.85}>
             <Text style={styles.startBtnText}>Start Endless Run</Text>
-          </TouchableOpacity>
+          </Pressable>
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={styles.lbContent} showsVerticalScrollIndicator={false}>
