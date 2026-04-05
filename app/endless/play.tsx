@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
 import { GRID_BACKGROUNDS } from '../../constants/assets';
 import { useGameStore } from '../../store/gameStore';
 import { useEndlessStore } from '../../store/endlessStore';
@@ -26,6 +25,7 @@ import ElementPalette from '../../components/ElementPalette';
 import ZoneTooltip from '../../components/ZoneTooltip';
 import ZoneLabels from '../../components/ZoneLabels';
 import { DragProvider, useDrag } from '../../contexts/DragContext';
+import { tap } from '../../lib/feedback';
 import type { CellCoord } from '../../lib/types';
 
 export default function EndlessGameScreen() {
@@ -41,9 +41,6 @@ function formatTime(sec: number): string {
   const s = sec % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
-
-const CELL_SIZES: Record<number, number> = { 4: 80, 5: 52, 6: 44, 7: 38, 8: 34, 9: 30, 10: 27, 11: 24 };
-const CELL_GAPS: Record<number, number> = { 4: 10, 5: 4, 6: 4, 7: 4, 8: 4, 9: 4, 10: 4, 11: 4 };
 
 function EndlessGameContent() {
   const insets = useSafeAreaInsets();
@@ -63,9 +60,25 @@ function EndlessGameContent() {
     [conflicts],
   );
 
+  // ── ghost elements (zone recipe hints shown in empty cells) ──────────────
+  const cellGhostInfo = useMemo(() => {
+    const map: Record<string, { element: string; opacity: number; grayscale: boolean }> = {};
+    if (!level) return map;
+    level.zones.forEach((zone) => {
+      if (!zone.recipeName || zone.cells.length < 2) return;
+      const opacity = zone.cells.length === 2 ? 0.45 : 0.70;
+      const grayscale = zone.cells.length === 2;
+      zone.cells.forEach(({ row, col }) => {
+        map[`${row},${col}`] = { element: zone.recipeName!, opacity, grayscale };
+      });
+    });
+    return map;
+  }, [level]);
+
   const { hintBalance, unlimitedHints, usePaidHint, hasDailyFreeHint, useDailyFreeHint } = usePlayerStore();
 
   const handleHintPress = useCallback(() => {
+    tap();
     if (hintMode) {
       toggleHintMode();
       return;
@@ -75,7 +88,6 @@ function EndlessGameContent() {
     if (!canUse && !dailyFree) return;
     if (dailyFree && !canUse) { useDailyFreeHint(); }
     if (!unlimitedHints) { usePaidHint(); }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     toggleHintMode();
   }, [hintMode, unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, toggleHintMode]);
 
@@ -154,7 +166,6 @@ function EndlessGameContent() {
       return;
     }
 
-    // Find newly placed cell (compare to previous)
     let placedRow = -1, placedCol = -1;
     outer: for (let r = 0; r < board.length; r++) {
       for (let c = 0; c < board[r].length; c++) {
@@ -172,7 +183,6 @@ function EndlessGameContent() {
         recordMistake();
         setFlashMistake(true);
         setTimeout(() => setFlashMistake(false), 400);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       }
     }
 
@@ -194,7 +204,6 @@ function EndlessGameContent() {
   useEffect(() => {
     setDropHandlers(
       (element, row, col) => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         placeSpecificElement(element, row, col);
         if (level) {
           const zone = level.zones.find((z) => z.cells.some((c) => c.row === row && c.col === col));
@@ -222,7 +231,7 @@ function EndlessGameContent() {
   }, [placeElement, hintedCells, cellZoneLookup, setSelectedZone]);
 
   const handleSurrender = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    tap();
     stopTimer();
     surrender();
   };
@@ -288,12 +297,12 @@ function EndlessGameContent() {
           />
           <GridLines gridSize={level.size} cellSize={cellSize} gap={cellGap} totalGridPx={gridPx} />
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
-          <ZoneLabels zones={level.zones} cellSize={cellSize} gap={cellGap} />
-          {/* Overlay BEFORE cells so cells sit on top and always receive touches */}
+          <ZoneLabels zones={level.zones} cellSize={cellSize} gap={cellGap} minZoneCells={2} />
           <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
           {board.map((rowArr, r) =>
             rowArr.map((el, c) => {
               const key = `${r},${c}`;
+              const ghost = cellGhostInfo[key];
               return (
                 <View
                   key={key}
@@ -312,8 +321,8 @@ function EndlessGameContent() {
                     cellSize={cellSize}
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
-                    ghostElement={null}
-                    ghostOpacity={0.7}
+                    ghostElement={el === null ? (ghost?.element ?? null) : null}
+                    ghostOpacity={ghost?.opacity ?? 0.7}
                     onPress={() => handleCellPress(r, c)}
                   />
                 </View>
