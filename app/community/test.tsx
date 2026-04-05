@@ -1,6 +1,11 @@
 import React, { useEffect, useCallback, useRef, useMemo } from 'react';
+import Pressable from '../../components/Pressable';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Platform, Image,
+  View,
+  Text,
+  StyleSheet,
+  Platform,
+  Image,
   useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -106,12 +111,12 @@ function TestContent() {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad }]}>
-        <TouchableOpacity
+        <Pressable
           style={styles.backBtn}
           onPress={() => { stopTimer(); router.replace('/community?tab=build'); }}
         >
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.title}>Test Play</Text>
           <Text style={styles.sub}>
