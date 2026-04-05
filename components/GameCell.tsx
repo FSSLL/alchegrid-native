@@ -109,9 +109,9 @@ const GameCell = memo(({
     }),
   ).current;
 
-  const iconSize = cellSize * 0.80;
+  const iconSize = cellSize;
   const labelFontSize = cellSize * 0.18;
-  const showLabel = cellSize >= 38;
+  const showLabel = false;
 
   const borderColor = isConflict ? '#ee0000' : isHinted ? '#3aa7ff' : 'transparent';
   const borderWidth = isConflict ? 7 : isHinted ? 2 : 0;
