@@ -29,7 +29,7 @@ export const WORLD_BUTTONS = [
 
 // ── Grid background PNGs per board size ──────────────────────────────────────
 export const GRID_BACKGROUNDS: Record<number, ReturnType<typeof require>> = {
-  4:  require('../assets/images/4x4_grid_1772147269726.png'),
+  4:  require('../assets/images/4x4_cell_bg.png'),
   5:  require('../assets/images/5x5_grid_1775164818218.png'),
   6:  require('../assets/images/6x6_grid_1775164822535.png'),
   7:  require('../assets/images/7x7_grid_1775164830287.png'),
