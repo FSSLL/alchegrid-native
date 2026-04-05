@@ -127,18 +127,16 @@ export default function IntroScreen() {
         onError={goHome}
       />
 
-      {/* Fade mask — top: black → transparent, ~20% of screen */}
+      {/* Fade mask — top: black → transparent */}
       <LinearGradient
-        colors={['#000000', 'transparent']}
+        colors={['rgba(0,0,0,1)', 'rgba(0,0,0,0)']}
         style={styles.fadeTop}
-        pointerEvents="none"
       />
 
-      {/* Fade mask — bottom: transparent → black, ~20% of screen */}
+      {/* Fade mask — bottom: transparent → black */}
       <LinearGradient
-        colors={['transparent', '#000000']}
+        colors={['rgba(0,0,0,0)', 'rgba(0,0,0,1)']}
         style={styles.fadeBottom}
-        pointerEvents="none"
       />
 
       {/* Full-screen tap area */}
@@ -169,12 +167,12 @@ const styles = StyleSheet.create({
   fadeTop: {
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: '22%',
+    height: '30%',
   },
   fadeBottom: {
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
-    height: '22%',
+    height: '30%',
   },
   skipCorner:   { position: 'absolute', right: 20 },
   skipIOS:      { top: 58 },
