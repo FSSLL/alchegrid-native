@@ -25,12 +25,14 @@ interface ZoneLabelsProps {
   zones: Zone[];
   cellSize: number;
   gap: number;
+  minZoneCells?: number;
 }
 
-const ZoneLabels = memo(({ zones, cellSize, gap }: ZoneLabelsProps) => {
+const ZoneLabels = memo(({ zones, cellSize, gap, minZoneCells = 1 }: ZoneLabelsProps) => {
   const labels = useMemo(
     () =>
       zones.flatMap((zone) => {
+        if (zone.cells.length < minZoneCells) return [];
         const emoji = getEmoji(zone.recipeName ?? '');
         if (!emoji) return [];
         const cell = topLeftCell(zone.cells);
