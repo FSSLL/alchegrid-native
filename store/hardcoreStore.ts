@@ -29,6 +29,7 @@ interface HardcoreState {
   completeLevel: () => void;
   recordMistake: () => boolean;
   surrender: () => void;
+  bumpActivity: () => void;
   checkInactivity: () => boolean;
   refreshLeaderboard: () => Promise<void>;
   submitScore: (playerName: string) => Promise<void>;
@@ -131,6 +132,8 @@ export const useHardcoreStore = create<HardcoreState>((set, get) => ({
       bestLevel: Math.max(bestLevel, currentLevel - 1),
     });
   },
+
+  bumpActivity: () => set({ lastActivityTime: Date.now() }),
 
   checkInactivity: () => {
     const { lastActivityTime, runActive } = get();
