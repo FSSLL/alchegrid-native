@@ -86,17 +86,16 @@ function TestContent() {
     setSelectedZone(cellZoneLookup[`${row},${col}`] ?? null);
   }, [placeElement, cellZoneLookup, setSelectedZone]);
 
-  useEffect(() => {
-    if (!gridViewRef.current) return;
-    gridViewRef.current.measure((_x, _y, w, h, px, py) => {
-      registerGrid({ x: px, y: py, width: w, height: h });
-    });
-  });
-
   const { width: screenWidth } = useWindowDimensions();
   if (!level) return null;
 
   const { cellSize, gap: cellGap, totalGridPx: gridPx } = computeGridLayout(level.size, screenWidth);
+
+  const handleGridLayout = () => {
+    gridViewRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
+      registerGrid({ pageX, pageY, cellSize, gap: cellGap, gridN: level.size });
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -126,7 +125,7 @@ function TestContent() {
 
       {/* Grid */}
       <View style={styles.gridSection}>
-        <View style={[styles.gridWrap, { width: gridPx, height: gridPx }]} ref={gridViewRef}>
+        <View style={[styles.gridWrap, { width: gridPx, height: gridPx }]} ref={gridViewRef} onLayout={handleGridLayout}>
           {GRID_BACKGROUNDS[level.size] && (
             <Image
               source={GRID_BACKGROUNDS[level.size]}
