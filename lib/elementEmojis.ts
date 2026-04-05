@@ -20,7 +20,7 @@ export const RECIPE_EMOJIS: Record<string, string> = {
   // World 4
   brine: '🧂', vapor: '💨', ink: '🖊️', rust: '🪝', blight: '🍂',
   alkali: '🧴', 'arc plasma': '⚡', smog: '🌫️', ingot: '🏅', 'acid cloud': '🌫️',
-  slag: '🏔️', oxide: '🔴', salt: '🧂', char: '🖤', alloy: '⚙️',
+  slag: '🏔️', oxide: '🔴', salt: '🧂', char: '🖤', alloy: '⚙️', patina: '🟢',
   plasma: '☀️', polymer: '🧬', catalyst: '⚗️',
   // World 5
   photon: '✨', ion: '⚛️', pulse: '🌊', aura: '🔮', arc: '⚡',
