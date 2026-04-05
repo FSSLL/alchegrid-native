@@ -1,9 +1,9 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
+import Pressable from '../components/Pressable';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   StatusBar,
   Platform,
 } from 'react-native';
@@ -140,7 +140,7 @@ export default function IntroScreen() {
       />
 
       {/* Full-screen tap area */}
-      <TouchableOpacity
+      <Pressable
         style={StyleSheet.absoluteFill}
         onPress={handlePress}
         activeOpacity={1}
