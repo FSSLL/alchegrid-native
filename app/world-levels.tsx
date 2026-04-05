@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +23,7 @@ const WORLD_ACCENT: string[] = [
 export default function WorldLevelsScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 20 : insets.top;
+  const { width: screenWidth } = useWindowDimensions();
   const { worldNum } = useLocalSearchParams<{ worldNum: string }>();
   const worldIndex = Math.max(0, Math.min(7, parseInt(worldNum ?? '1', 10) - 1));
   const world = WORLD_INFO[worldIndex];
@@ -39,6 +41,11 @@ export default function WorldLevelsScreen() {
     setShowIntro(false);
     markWorldSeen(worldIndex);
   };
+
+  const COLS = 5;
+  const CELL_GAP = 8;
+  const GRID_H_PAD = 24; // 12 each side
+  const cellWidth = (screenWidth - GRID_H_PAD - (COLS - 1) * CELL_GAP) / COLS;
 
   const totalStars = getWorldStars(worldIndex, starsByLevel);
   const maxStars = LEVELS_PER_WORLD * 3;
@@ -93,7 +100,7 @@ export default function WorldLevelsScreen() {
             key={globalLevel}
             onPress={() => handleLevelPress(globalLevel, isLocked)}
             activeOpacity={isLocked ? 1 : 0.7}
-            style={styles.levelCell}
+            style={[styles.levelCell, { width: cellWidth }]}
           >
             <View style={[
               styles.levelBtn,
@@ -174,7 +181,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     gap: 8,
   },
-  levelCell: { width: '18%' },
+  levelCell: {},
 
   /* ── Level button base — opaque enough to read against the BG image ── */
   levelBtn: {
