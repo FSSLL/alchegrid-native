@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
+import Pressable from '../components/Pressable';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   TextInput,
   Platform,
   Alert,
@@ -151,9 +151,9 @@ export default function SettingsScreen() {
   return (
     <LinearGradient colors={['#0e1117', '#111827', '#0e1117']} style={[styles.container, { paddingTop: topPad }]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
         <Text style={styles.title}>Settings</Text>
         <View style={{ width: 36 }} />
       </View>
@@ -170,13 +170,13 @@ export default function SettingsScreen() {
             <View style={styles.separator} />
             <View style={styles.row}>
               <Text style={styles.rowLabel}>📳 Haptics</Text>
-              <TouchableOpacity
+              <Pressable
                 style={[styles.toggle, hapticsEnabled && styles.toggleOn]}
                 onPress={() => setHapticsEnabled(!hapticsEnabled)}
                 activeOpacity={0.7}
               >
                 <View style={[styles.toggleThumb, hapticsEnabled && styles.toggleThumbOn]} />
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -209,9 +209,9 @@ export default function SettingsScreen() {
               placeholderTextColor="#8e9ab0"
               autoCapitalize="characters"
             />
-            <TouchableOpacity style={styles.redeemBtn} onPress={handleRedeemCode}>
+            <Pressable style={styles.redeemBtn} onPress={handleRedeemCode}>
               <Text style={styles.redeemBtnText}>Redeem</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
 
@@ -219,7 +219,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🛠 Dev Tools</Text>
           <View style={styles.card}>
-            <TouchableOpacity
+            <Pressable
               style={[styles.redeemBtn, { backgroundColor: '#16a34a' }]}
               onPress={() => {
                 unlockAll();
@@ -227,8 +227,8 @@ export default function SettingsScreen() {
               }}
             >
               <Text style={styles.redeemBtnText}>🔓 Unlock All Levels</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
               style={[styles.redeemBtn, { backgroundColor: '#dc2626' }]}
               onPress={() =>
                 Alert.alert('Reset Progress', 'This will reset all stars, coins, and level progress.', [
@@ -245,7 +245,7 @@ export default function SettingsScreen() {
               }
             >
               <Text style={styles.redeemBtnText}>🔄 Reset All Progress</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
 
