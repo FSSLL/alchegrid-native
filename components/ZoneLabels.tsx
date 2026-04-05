@@ -8,9 +8,9 @@ function normKey(name: string): string {
   return name.toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
-function getEmoji(recipeName: string): string {
+function getEmoji(recipeName: string): string | null {
   const k = normKey(recipeName);
-  return RECIPE_EMOJIS[k] ?? ELEMENT_EMOJIS[k] ?? '?';
+  return RECIPE_EMOJIS[k] ?? ELEMENT_EMOJIS[k] ?? null;
 }
 
 function topLeftCell(cells: { row: number; col: number }[]): { row: number; col: number } {
@@ -30,12 +30,13 @@ interface ZoneLabelsProps {
 const ZoneLabels = memo(({ zones, cellSize, gap }: ZoneLabelsProps) => {
   const labels = useMemo(
     () =>
-      zones.map((zone) => {
-        const cell = topLeftCell(zone.cells);
+      zones.flatMap((zone) => {
         const emoji = getEmoji(zone.recipeName ?? '');
+        if (!emoji) return [];
+        const cell = topLeftCell(zone.cells);
         const x = cell.col * (cellSize + gap);
         const y = cell.row * (cellSize + gap);
-        return { key: zone.id, x, y, emoji, recipeName: zone.recipeName ?? '' };
+        return [{ key: zone.id, x, y, emoji }];
       }),
     [zones, cellSize, gap],
   );
