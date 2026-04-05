@@ -51,7 +51,7 @@ export function generateEndlessLevel(
 
   // Fallback coverage: add uncovered cells as single-cell zones
   const coveredKeys = new Set(zones.flatMap((z) => z.cells.map((c) => `${c.row},${c.col}`)));
-  let fzId = zones.length;
+  let fzId = zones.length + 1;
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
       if (!coveredKeys.has(`${r},${c}`)) {
