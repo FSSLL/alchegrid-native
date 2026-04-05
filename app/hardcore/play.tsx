@@ -16,7 +16,6 @@ import ZoneBorders from '../../components/ZoneBorders';
 import ZoneHighlightOverlay from '../../components/ZoneHighlightOverlay';
 import GridLines from '../../components/GridLines';
 import ElementPalette from '../../components/ElementPalette';
-import ZoneLabels from '../../components/ZoneLabels';
 import ZoneTooltip from '../../components/ZoneTooltip';
 import { DragProvider, useDrag } from '../../contexts/DragContext';
 import { tap } from '../../lib/feedback';
@@ -61,9 +60,9 @@ function HardcoreGameContent() {
     const map: Record<string, { element: string; opacity: number; grayscale: boolean }> = {};
     if (!level) return map;
     level.zones.forEach((zone) => {
-      if (!zone.recipeName || zone.cells.length < 2) return;
-      const opacity = zone.cells.length === 2 ? 0.45 : 0.70;
-      const grayscale = zone.cells.length === 2;
+      if (!zone.recipeName) return;
+      const opacity = zone.cells.length === 1 ? 0.45 : 0.70;
+      const grayscale = zone.cells.length === 1;
       zone.cells.forEach(({ row, col }) => {
         map[`${row},${col}`] = { element: zone.recipeName!, opacity, grayscale };
       });
@@ -294,7 +293,6 @@ function HardcoreGameContent() {
           />
           <GridLines gridSize={level.size} cellSize={cellSize} gap={cellGap} totalGridPx={gridPx} />
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
-          <ZoneLabels zones={level.zones} cellSize={cellSize} gap={cellGap} minZoneCells={2} />
           <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
           {board.map((rowArr, r) =>
             rowArr.map((el, c) => {
