@@ -11,10 +11,10 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
 import type { Level, ElementID } from '../lib/types';
 import { useDrag } from '../contexts/DragContext';
 import ElementIcon from './ElementIcon';
+import { tap } from '../lib/feedback';
 
 interface ElementPaletteProps {
   level: Level;
@@ -51,7 +51,7 @@ const PaletteItem = memo(({ element, remaining, itemSize }: PaletteItemProps) =>
       onPanResponderGrant: (e) => {
         isDraggingRef.current = true;
         scale.value = withSpring(1.15, { stiffness: 400, damping: 20 });
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        tap();
         startDrag(elementRef.current, 'palette', e.nativeEvent.pageX, e.nativeEvent.pageY);
       },
       onPanResponderMove: (e) => {
