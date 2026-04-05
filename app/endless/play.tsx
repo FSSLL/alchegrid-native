@@ -278,7 +278,7 @@ function EndlessGameContent() {
         <View style={[styles.gridWrap, { width: gridPx, height: gridPx }]} ref={gridViewRef}>
           <Image
             source={GRID_BACKGROUNDS[level.size]}
-            style={StyleSheet.absoluteFill}
+            style={{ position: 'absolute', width: gridPx, height: gridPx }}
             resizeMode="cover"
           />
           <GridLines gridSize={level.size} cellSize={cellSize} gap={cellGap} totalGridPx={gridPx} />
