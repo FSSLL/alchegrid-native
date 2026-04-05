@@ -65,6 +65,14 @@ class AudioManager {
     } catch {}
   }
 
+  async playClick() {
+    if (Platform.OS === 'web' || !this.drop || this.sfxVol === 0) return;
+    try {
+      await this.drop.setPositionAsync(0);
+      await this.drop.playAsync();
+    } catch {}
+  }
+
   async setMusicVolume(vol: number) {
     this.musicVol = vol;
     if (Platform.OS === 'web' || !this.music || !this.musicStarted) return;
