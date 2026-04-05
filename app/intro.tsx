@@ -66,8 +66,11 @@ export default function IntroScreen() {
   const [showRing, setShowRing] = useState(false);
   const canSkip  = posMs >= SKIP_DELAY;
   const progress = posMs / SKIP_DELAY;
+  const gone     = useRef(false);
 
   const goHome = useCallback(() => {
+    if (gone.current) return;
+    gone.current = true;
     audioManager.startMusic().catch(() => {});
     router.replace('/(tabs)');
   }, []);
@@ -76,9 +79,19 @@ export default function IntroScreen() {
     if (Platform.OS === 'web') goHome();
   }, [goHome]);
 
+  // Hard safety timeout — if video hasn't moved after 5 s, skip to home
+  useEffect(() => {
+    const t = setTimeout(goHome, 5000);
+    return () => clearTimeout(t);
+  }, [goHome]);
+
   const handleStatus = useCallback(
     (status: AVPlaybackStatus) => {
-      if (!status.isLoaded) return;
+      if (!status.isLoaded) {
+        // expo-av sets isLoaded:false with an error field when loading fails
+        if ((status as any).error) goHome();
+        return;
+      }
       setPosMs(status.positionMillis ?? 0);
       if (status.didJustFinish) goHome();
     },
@@ -111,6 +124,7 @@ export default function IntroScreen() {
         isMuted={musicVolume === 0}
         volume={musicVolume}
         onPlaybackStatusUpdate={handleStatus}
+        onError={goHome}
       />
 
       {/* Fade mask — top: black → transparent, ~20% of screen */}
