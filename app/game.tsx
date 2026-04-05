@@ -6,6 +6,8 @@ import {
   Platform,
   Image,
   Animated,
+  ActivityIndicator,
+  InteractionManager,
   useWindowDimensions,
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
@@ -135,8 +137,14 @@ function GameContent() {
 
   useEffect(() => {
     const levelData = getLevelData(globalLevelNum);
-    if (levelData) initGame(levelData);
-    return () => { stopTimer(); };
+    if (!levelData) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      initGame(levelData);
+    });
+    return () => {
+      task.cancel();
+      stopTimer();
+    };
   }, [globalLevelNum]);
 
   // Always-correct level data — synchronously derived from the route param so it
@@ -241,7 +249,7 @@ function GameContent() {
   if (!level) {
     return (
       <View style={[styles.loading, { backgroundColor: '#0f1117' }]}>
-        <Text style={{ color: '#eef1f5' }}>Loading…</Text>
+        <ActivityIndicator size="large" color="#a78bfa" />
       </View>
     );
   }
