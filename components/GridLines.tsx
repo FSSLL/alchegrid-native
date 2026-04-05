@@ -42,8 +42,7 @@ const GridLines = memo(({ gridSize, cellSize, gap, totalGridPx }: GridLinesProps
         locations={PIPE_STOPS as unknown as number[]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
-        style={{ position: 'absolute', left: offset, top: 0, width: gap, height: totalGridPx }}
-        pointerEvents="none"
+        style={{ position: 'absolute', left: offset, top: 0, width: gap, height: totalGridPx, pointerEvents: 'none' }}
       />,
     );
 
@@ -55,8 +54,7 @@ const GridLines = memo(({ gridSize, cellSize, gap, totalGridPx }: GridLinesProps
         locations={PIPE_STOPS as unknown as number[]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={{ position: 'absolute', top: offset, left: 0, height: gap, width: totalGridPx }}
-        pointerEvents="none"
+        style={{ position: 'absolute', top: offset, left: 0, height: gap, width: totalGridPx, pointerEvents: 'none' }}
       />,
     );
   }
@@ -76,8 +74,7 @@ const GridLines = memo(({ gridSize, cellSize, gap, totalGridPx }: GridLinesProps
           locations={PIPE_STOPS as unknown as number[]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
-          style={{ position: 'absolute', top, left, width: gap, height: gap }}
-          pointerEvents="none"
+          style={{ position: 'absolute', top, left, width: gap, height: gap, pointerEvents: 'none' }}
         />,
       );
 
@@ -89,15 +86,14 @@ const GridLines = memo(({ gridSize, cellSize, gap, totalGridPx }: GridLinesProps
           locations={PIPE_STOPS as unknown as number[]}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
-          style={{ position: 'absolute', top, left, width: gap, height: gap, opacity: 0.55 }}
-          pointerEvents="none"
+          style={{ position: 'absolute', top, left, width: gap, height: gap, opacity: 0.55, pointerEvents: 'none' }}
         />,
       );
     }
   }
 
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0 }}>
+    <View style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
       {separators}
       {junctions}
     </View>
