@@ -89,12 +89,10 @@ function GameContent() {
     return () => { stopTimer(); };
   }, [globalLevelNum]);
 
-  // Keep a ref to cellZoneLookup so the drop handler always sees the latest map
-  // without needing it in the effect dependency array.
-  const cellZoneLookupRef = useRef(cellZoneLookup);
-  cellZoneLookupRef.current = cellZoneLookup;
-
-  // Wire drop handlers into DragContext
+  // Wire drop handlers into DragContext.
+  // cellZoneLookup is in the dep array so the handler always uses the map for
+  // the current level — it changes only when globalLevelNum changes, so the
+  // extra re-registration is cheap and correct.
   useEffect(() => {
     setDropHandlers(
       (element, row, col) => {
@@ -102,8 +100,8 @@ function GameContent() {
         placeSpecificElement(element, row, col, (earnedStars) => {
           completeLevel(globalLevelNum, earnedStars);
         });
-        // Auto-select the zone of the dropped cell using the always-fresh ref
-        const zone = cellZoneLookupRef.current[`${row},${col}`] ?? null;
+        // Auto-select the zone of the dropped cell
+        const zone = cellZoneLookup[`${row},${col}`] ?? null;
         setSelectedZone(zone);
       },
       (row, col) => {
@@ -111,7 +109,7 @@ function GameContent() {
         clearCell(row, col);
       },
     );
-  }, [setDropHandlers, placeSpecificElement, clearCell, completeLevel, globalLevelNum, setSelectedZone]);
+  }, [setDropHandlers, placeSpecificElement, clearCell, completeLevel, globalLevelNum, setSelectedZone, cellZoneLookup]);
 
   // Cell tap only opens zone tooltip — placement is drag-only
   const handleCellPress = useCallback(
