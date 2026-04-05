@@ -92,8 +92,25 @@ export function generateHardcoreLevel(levelNum: number): Level {
       zones = candidate;
       break;
     }
-    // Keep last attempt; no fallback insert in Hardcore per spec
+    // Keep best attempt
     if (attempt === 19) zones = candidate;
+  }
+
+  // Fallback: guarantee every cell is covered (matches web behaviour)
+  const coveredKeys = new Set(zones.flatMap((z) => z.cells.map((c) => `${c.row},${c.col}`)));
+  let fzId = zones.length + 1;
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (!coveredKeys.has(`${r},${c}`)) {
+        const el = solution[r][c];
+        zones.push({
+          id: `hz${fzId++}`,
+          recipeName: el,
+          ingredients: [el],
+          cells: [{ row: r, col: c }],
+        });
+      }
+    }
   }
 
   return {
