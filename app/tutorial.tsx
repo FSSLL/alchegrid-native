@@ -1,11 +1,11 @@
 import React, {
-import Pressable from '../components/Pressable';
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
+import Pressable from '../components/Pressable';
 import {
   Animated,
   Image,
