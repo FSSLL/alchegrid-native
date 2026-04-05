@@ -1,4 +1,5 @@
 import React, {
+import Pressable from '../components/Pressable';
   useCallback,
   useEffect,
   useMemo,
@@ -12,7 +13,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -596,12 +596,12 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
               })}
             </View>
             <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
-              <TouchableOpacity style={[ss.winBtn, ss.winBtnOutline]} onPress={handleRetry}>
+              <Pressable style={[ss.winBtn, ss.winBtnOutline]} onPress={handleRetry}>
                 <Text style={{ color: '#fff', fontWeight: '700' }}>Try Again</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[ss.winBtn, ss.winBtnPrimary]} onPress={onComplete}>
+              </Pressable>
+              <Pressable style={[ss.winBtn, ss.winBtnPrimary]} onPress={onComplete}>
                 <Text style={{ color: '#fff', fontWeight: '700' }}>Done</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -652,7 +652,7 @@ export default function TutorialScreen() {
     <View style={[ss.container, { paddingTop: topPad }]}>
       {/* Header */}
       <View style={ss.header}>
-        <TouchableOpacity
+        <Pressable
           onPress={() => {
             if (isPractice) goTo(SLIDES.length - 1);
             else if (step > 0) goTo(step - 1);
@@ -661,14 +661,14 @@ export default function TutorialScreen() {
           style={ss.headerBtn}
         >
           <Text style={ss.headerBtnText}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
         <Text style={ss.headerTitle}>{isPractice ? 'Practice Level' : 'Tutorial'}</Text>
-        <TouchableOpacity
+        <Pressable
           onPress={() => isPractice ? router.replace('/') : goTo(SLIDES.length)}
           style={ss.headerBtn}
         >
           <Text style={[ss.headerBtnText, { fontSize: 13, fontWeight: '600' }]}>Skip</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Slides phase */}
@@ -691,24 +691,24 @@ export default function TutorialScreen() {
             {/* Nav buttons */}
             <View style={ss.navRow}>
               {step > 0 && (
-                <TouchableOpacity style={ss.navBtn} onPress={() => goTo(step - 1)}>
+                <Pressable style={ss.navBtn} onPress={() => goTo(step - 1)}>
                   <Text style={ss.navBtnText}>← Back</Text>
-                </TouchableOpacity>
+                </Pressable>
               )}
-              <TouchableOpacity
+              <Pressable
                 style={[ss.navBtn, { flex: 2, backgroundColor: 'rgba(255,255,255,0.12)' }]}
                 onPress={() => goTo(step + 1)}
               >
                 <Text style={ss.navBtnText}>
                   {step === SLIDES.length - 1 ? 'Start Practice →' : 'Next →'}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             {/* "Let's Practice!" shortcut */}
-            <TouchableOpacity style={ss.practiceBtn} onPress={handleLetsPractice}>
+            <Pressable style={ss.practiceBtn} onPress={handleLetsPractice}>
               <Text style={ss.practiceBtnText}>🎮  Let's Practice!</Text>
-            </TouchableOpacity>
+            </Pressable>
 
             <View style={{ height: insets.bottom + 16 }} />
           </ScrollView>
