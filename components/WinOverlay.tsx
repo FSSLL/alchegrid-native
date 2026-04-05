@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
+import Pressable from './Pressable';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Animated,
   Dimensions,
 } from 'react-native';
@@ -48,12 +48,12 @@ export default function WinOverlay({ stars, elapsed, coinsEarned, onNext, onRepl
         <Text style={styles.coins}>+{coinsEarned} coins 🪙</Text>
 
         <View style={styles.buttons}>
-          <TouchableOpacity style={styles.replayBtn} onPress={onReplay}>
+          <Pressable style={styles.replayBtn} onPress={onReplay}>
             <Text style={styles.replayText}>Replay</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.nextBtn} onPress={onNext}>
+          </Pressable>
+          <Pressable style={styles.nextBtn} onPress={onNext}>
             <Text style={styles.nextText}>Next Level →</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </Animated.View>
     </Animated.View>
