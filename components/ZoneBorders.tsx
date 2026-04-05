@@ -33,48 +33,40 @@ function buildMergedPerimeterPath(
     const x2 = x + cellSize;
     const y2 = y + cellSize;
 
-    // Horizontal edges: line runs across the full cell width + half-gap on each side
-    // Vertical edges:   line runs the full cell height + half-gap on each side
     if (!cellSet.has(`${row - 1},${col}`))
-      segs.push(`M ${x - h} ${y - h} L ${x2 + h} ${y - h}`);     // top
+      segs.push(`M ${x - h} ${y - h} L ${x2 + h} ${y - h}`);
     if (!cellSet.has(`${row + 1},${col}`))
-      segs.push(`M ${x - h} ${y2 + h} L ${x2 + h} ${y2 + h}`);   // bottom
+      segs.push(`M ${x - h} ${y2 + h} L ${x2 + h} ${y2 + h}`);
     if (!cellSet.has(`${row},${col - 1}`))
-      segs.push(`M ${x - h} ${y - h} L ${x - h} ${y2 + h}`);      // left
+      segs.push(`M ${x - h} ${y - h} L ${x - h} ${y2 + h}`);
     if (!cellSet.has(`${row},${col + 1}`))
-      segs.push(`M ${x2 + h} ${y - h} L ${x2 + h} ${y2 + h}`);   // right
+      segs.push(`M ${x2 + h} ${y - h} L ${x2 + h} ${y2 + h}`);
   }
 
   return segs.join(' ');
 }
 
-const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBordersProps) => {
-  const totalSize = size * cellSize + (size - 1) * gap;
-  const h = gap / 2; // same half-gap used in path generation
+// ─── Static yellow borders ────────────────────────────────────────────────────
+// Props: zones / cellSize / gap / svgSize / h
+// This component is fully memoised: it never re-renders when selectedZone
+// changes, preventing a costly SVG repaint on every cell tap.
+interface StaticBordersProps {
+  zones: Zone[];
+  cellSize: number;
+  gap: number;
+  svgSize: number;
+  h: number;
+}
 
-  // Group zones by recipeName — adjacent same-recipe zones share no internal border
-  const groupPaths = useMemo(() => {
-    const groups: Record<string, { row: number; col: number }[]> = {};
-    for (const zone of zones) {
-      const key = zone.recipeName ?? zone.id;
-      if (!groups[key]) groups[key] = [];
-      for (const c of zone.cells) groups[key].push(c);
-    }
-    return Object.entries(groups).map(([key, cells]) => ({
-      key,
-      path: buildMergedPerimeterPath(cells, cellSize, gap),
-    }));
-  }, [zones, cellSize, gap]);
-
-  // Selected zone highlight (individual zone, per tap)
-  const selectedPath = useMemo(
-    () => (selectedZone ? buildMergedPerimeterPath(selectedZone.cells, cellSize, gap) : ''),
-    [selectedZone, cellSize, gap],
+const StaticBorders = memo(({ zones, cellSize, gap, svgSize, h }: StaticBordersProps) => {
+  const paths = useMemo(
+    () => zones.map((zone) => ({
+      key: zone.id,
+      path: buildMergedPerimeterPath(zone.cells, cellSize, gap),
+    })),
+    [zones, cellSize, gap],
   );
 
-  // SVG must be h px larger on every side so edge borders (which extend to
-  // -h and totalSize+h in path coordinates) are not clipped.
-  const svgSize = totalSize + gap; // = totalSize + 2*h
   return (
     <Svg
       width={svgSize}
@@ -92,22 +84,9 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
             <FeMergeNode in="SourceGraphic" />
           </FeMerge>
         </Filter>
-
-        <Filter id="sel-glow" x="-30%" y="-30%" width="160%" height="160%">
-          <FeGaussianBlur in="SourceGraphic" stdDeviation={1.5} result="blur1" />
-          <FeGaussianBlur in="SourceGraphic" stdDeviation={1.5} result="blur2" />
-          <FeGaussianBlur in="SourceGraphic" stdDeviation={1.5} result="blur3" />
-          <FeMerge>
-            <FeMergeNode in="blur1" />
-            <FeMergeNode in="blur2" />
-            <FeMergeNode in="blur3" />
-            <FeMergeNode in="SourceGraphic" />
-          </FeMerge>
-        </Filter>
       </Defs>
 
-      {/* Zone borders — same-recipe groups share no internal edge */}
-      {groupPaths.map(({ key, path }) => {
+      {paths.map(({ key, path }) => {
         if (!path) return null;
         return (
           <Path
@@ -123,20 +102,88 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
           />
         );
       })}
-
-      {/* Selected zone — green neon glow */}
-      {selectedPath ? (
-        <Path
-          d={selectedPath}
-          stroke="#22c55e"
-          strokeWidth={5.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-          filter="url(#sel-glow)"
-        />
-      ) : null}
     </Svg>
+  );
+});
+
+StaticBorders.displayName = 'StaticBorders';
+
+// ─── Selection overlay ────────────────────────────────────────────────────────
+// Only this lightweight SVG re-renders when selectedZone changes.
+interface SelectionOverlayProps {
+  selectedZone: Zone | null;
+  cellSize: number;
+  gap: number;
+  svgSize: number;
+  h: number;
+}
+
+const SelectionOverlay = memo(({ selectedZone, cellSize, gap, svgSize, h }: SelectionOverlayProps) => {
+  const path = useMemo(
+    () => (selectedZone ? buildMergedPerimeterPath(selectedZone.cells, cellSize, gap) : ''),
+    [selectedZone, cellSize, gap],
+  );
+
+  if (!path) return null;
+
+  return (
+    <Svg
+      width={svgSize}
+      height={svgSize}
+      viewBox={`${-h} ${-h} ${svgSize} ${svgSize}`}
+      style={{ position: 'absolute', top: -h, left: -h, pointerEvents: 'none' }}
+    >
+      <Defs>
+        <Filter id="sel-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <FeGaussianBlur in="SourceGraphic" stdDeviation={1.5} result="blur1" />
+          <FeGaussianBlur in="SourceGraphic" stdDeviation={1.5} result="blur2" />
+          <FeGaussianBlur in="SourceGraphic" stdDeviation={1.5} result="blur3" />
+          <FeMerge>
+            <FeMergeNode in="blur1" />
+            <FeMergeNode in="blur2" />
+            <FeMergeNode in="blur3" />
+            <FeMergeNode in="SourceGraphic" />
+          </FeMerge>
+        </Filter>
+      </Defs>
+      <Path
+        d={path}
+        stroke="#22c55e"
+        strokeWidth={5.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+        filter="url(#sel-glow)"
+      />
+    </Svg>
+  );
+});
+
+SelectionOverlay.displayName = 'SelectionOverlay';
+
+// ─── Public component ─────────────────────────────────────────────────────────
+const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBordersProps) => {
+  const totalSize = size * cellSize + (size - 1) * gap;
+  const h = gap / 2;
+  const svgSize = totalSize + gap; // = totalSize + 2*h
+
+  return (
+    <>
+      <StaticBorders
+        zones={zones}
+        cellSize={cellSize}
+        gap={gap}
+        svgSize={svgSize}
+        h={h}
+      />
+      <SelectionOverlay
+        selectedZone={selectedZone}
+        cellSize={cellSize}
+        gap={gap}
+        svgSize={svgSize}
+        h={h}
+      />
+    </>
   );
 });
 
