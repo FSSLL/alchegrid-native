@@ -124,11 +124,11 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
         );
       })}
 
-      {/* Selected zone — orange neon glow */}
+      {/* Selected zone — green neon glow */}
       {selectedPath ? (
         <Path
           d={selectedPath}
-          stroke="#ff5500"
+          stroke="#22c55e"
           strokeWidth={5.5}
           strokeLinecap="round"
           strokeLinejoin="round"

@@ -22,7 +22,7 @@ const colors = {
     // Game-specific
     cellBg: '#1a2030',
     zoneBorder: '#FFD700',
-    zoneSelected: '#ff5500',
+    zoneSelected: '#22c55e',
     hintBorder: '#3aa7ff',
     conflictColor: '#ee0000',
     brandOrange: '#ff6a00',

@@ -21,7 +21,7 @@ const ZoneHighlightOverlay = memo(({ zone, cellSize, gap }: ZoneHighlightOverlay
             left: col * (cellSize + gap),
             width: cellSize,
             height: cellSize,
-            backgroundColor: 'rgba(255,85,0,0.12)',
+            backgroundColor: 'rgba(34,197,94,0.12)',
             borderRadius: 10,
             pointerEvents: 'box-none',
           }}
