@@ -15,6 +15,7 @@ import { computeGridLayout } from '../../lib/gridLayout';
 import GameCell from '../../components/GameCell';
 import ZoneBorders from '../../components/ZoneBorders';
 import ElementPalette from '../../components/ElementPalette';
+import ZoneLabels from '../../components/ZoneLabels';
 import { DragProvider, useDrag } from '../../contexts/DragContext';
 
 export default function HardcoreGameScreen() {
@@ -266,6 +267,7 @@ function HardcoreGameContent() {
             resizeMode="cover"
           />
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
+          <ZoneLabels zones={level.zones} cellSize={cellSize} gap={cellGap} />
           {board.map((rowArr, r) =>
             rowArr.map((el, c) => {
               const key = `${r},${c}`;
