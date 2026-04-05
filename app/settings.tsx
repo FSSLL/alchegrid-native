@@ -29,6 +29,7 @@ function VolumeSlider({
   accent?: string;
 }) {
   const trackW = useRef(0);
+  const trackPageX = useRef(0);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
@@ -37,11 +38,12 @@ function VolumeSlider({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (e) => {
+        trackPageX.current = e.nativeEvent.pageX - e.nativeEvent.locationX;
         const v = Math.max(0, Math.min(1, e.nativeEvent.locationX / (trackW.current || 1)));
         onChangeRef.current(v);
       },
-      onPanResponderMove: (e) => {
-        const v = Math.max(0, Math.min(1, e.nativeEvent.locationX / (trackW.current || 1)));
+      onPanResponderMove: (_e, gs) => {
+        const v = Math.max(0, Math.min(1, (gs.moveX - trackPageX.current) / (trackW.current || 1)));
         onChangeRef.current(v);
       },
     })
