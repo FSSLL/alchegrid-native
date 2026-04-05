@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef, useState } from 'react';
+import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Platform, Image,
   useWindowDimensions,
@@ -12,6 +12,7 @@ import { useCommunityStore, communityLevelToGameLevel } from '../../../store/com
 import { computeGridLayout } from '../../../lib/gridLayout';
 import GameCell from '../../../components/GameCell';
 import ZoneBorders from '../../../components/ZoneBorders';
+import ZoneHighlightOverlay from '../../../components/ZoneHighlightOverlay';
 import ElementPalette from '../../../components/ElementPalette';
 import ZoneTooltip from '../../../components/ZoneTooltip';
 import { DragProvider, useDrag } from '../../../contexts/DragContext';
@@ -102,15 +103,21 @@ function PlayContent() {
     );
   }, [setDropHandlers, placeSpecificElement, clearCell, level, setSelectedZone]);
 
+  const cellZoneLookup = useMemo(() => {
+    const map: Record<string, NonNullable<typeof level>['zones'][number]> = {};
+    if (!level) return map;
+    level.zones.forEach((zone) => {
+      zone.cells.forEach(({ row, col }) => { map[`${row},${col}`] = zone; });
+    });
+    return map;
+  }, [level]);
+
   const handleCellPress = useCallback((row: number, col: number) => {
     const key = `${row},${col}`;
     if (hintedCells[key]) return;
     placeElement(row, col);
-    if (level) {
-      const zone = level.zones.find((z) => z.cells.some((c) => c.row === row && c.col === col));
-      setSelectedZone(zone ?? null);
-    }
-  }, [placeElement, hintedCells, level, setSelectedZone]);
+    setSelectedZone(cellZoneLookup[key] ?? null);
+  }, [placeElement, hintedCells, cellZoneLookup, setSelectedZone]);
 
   useEffect(() => {
     if (!gridViewRef.current) return;
@@ -172,7 +179,6 @@ function PlayContent() {
                   element={board[row]?.[col] ?? null}
                   isHinted={!!hintedCells[`${row},${col}`]}
                   isConflict={conflicts.some((c) => c.row === row && c.col === col)}
-                  isInSelectedZone={selectedZone?.cells.some((c) => c.row === row && c.col === col) ?? false}
                   cellSize={cellSize}
                   onPress={() => handleCellPress(row, col)}
                   row={row}
@@ -181,6 +187,7 @@ function PlayContent() {
               </View>
             )),
           )}
+          <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
         </View>
       </View>
 

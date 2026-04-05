@@ -534,7 +534,6 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
                     cellSize={CELL_SIZE}
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
-                    isSelected={inSelZone}
                     ghostElement={ghost?.element ?? null}
                     onPress={handleCellPress}
                   />

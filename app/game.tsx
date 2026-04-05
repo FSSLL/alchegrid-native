@@ -20,6 +20,7 @@ import { getLevelData, globalToWorld } from '../lib/levelRegistry';
 import { computeGridLayout } from '../lib/gridLayout';
 import GameCell from '../components/GameCell';
 import ZoneBorders from '../components/ZoneBorders';
+import ZoneHighlightOverlay from '../components/ZoneHighlightOverlay';
 import ElementPalette from '../components/ElementPalette';
 import ZoneTooltip from '../components/ZoneTooltip';
 import StarProgress from '../components/StarProgress';
@@ -114,13 +115,10 @@ function GameContent() {
   // Cell tap only opens zone tooltip — placement is drag-only
   const handleCellPress = useCallback(
     (row: number, col: number) => {
-      if (!level) return;
-      const zone = level.zones.find((z) =>
-        z.cells.some((c) => c.row === row && c.col === col),
-      );
-      setSelectedZone(zone ?? null);
+      const zone = cellZoneLookup[`${row},${col}`] ?? null;
+      setSelectedZone(zone);
     },
-    [level, setSelectedZone],
+    [cellZoneLookup, setSelectedZone],
   );
 
   const handleHintPress = useCallback(() => {
@@ -162,6 +160,18 @@ function GameContent() {
       const grayscale = zone.cells.length === 1;
       zone.cells.forEach(({ row, col }) => {
         map[`${row},${col}`] = { element: zone.recipeName!, opacity, grayscale };
+      });
+    });
+    return map;
+  }, [level]);
+
+  // O(1) cell-to-zone lookup so handleCellPress never scans the whole zone list
+  const cellZoneLookup = useMemo(() => {
+    const map: Record<string, (typeof level.zones)[number]> = {};
+    if (!level) return map;
+    level.zones.forEach((zone) => {
+      zone.cells.forEach(({ row, col }) => {
+        map[`${row},${col}`] = zone;
       });
     });
     return map;
@@ -293,18 +303,16 @@ function GameContent() {
                     cellSize={cellSize}
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
-                    isSelected={
-                      selectedZone?.cells.some((cc) => cc.row === r && cc.col === c) ?? false
-                    }
                     ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
                     ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.7}
-                    ghostGrayscale={cellGhostInfo[key]?.grayscale ?? false}
                     onPress={handleCellPress}
                   />
                 </View>
               );
             }),
           )}
+          {/* Zone highlight overlay — separate from cells so cells never re-render on zone selection */}
+          <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={gap} />
         </View>
       </View>
 

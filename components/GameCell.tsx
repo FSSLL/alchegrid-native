@@ -17,10 +17,8 @@ interface GameCellProps {
   cellSize: number;
   isConflict: boolean;
   isHinted: boolean;
-  isSelected: boolean;
   ghostElement: string | null;
   ghostOpacity: number;
-  ghostGrayscale: boolean;
   onPress: (row: number, col: number) => void;
 }
 
@@ -33,7 +31,6 @@ const GameCell = memo(({
   cellSize,
   isConflict,
   isHinted,
-  isSelected,
   ghostElement,
   ghostOpacity,
   onPress,
@@ -121,7 +118,6 @@ const GameCell = memo(({
   const shadowColor = isConflict ? '#ee0000' : isHinted ? '#3aa7ff' : 'transparent';
   const shadowOpacity = isConflict ? 0.5 : isHinted ? 0.6 : 0;
   const shadowRadius = isConflict ? 5 : isHinted ? 4 : 0;
-  const cellBg = isSelected ? 'rgba(255,85,0,0.12)' : 'transparent';
 
   return (
     <Animated.View style={animatedStyle} {...panResponder.panHandlers}>
@@ -131,7 +127,6 @@ const GameCell = memo(({
           {
             width: cellSize,
             height: cellSize,
-            backgroundColor: cellBg,
             borderColor,
             borderWidth,
             shadowColor,

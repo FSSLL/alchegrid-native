@@ -276,7 +276,6 @@ function HardcoreGameContent() {
                   element={board[row]?.[col] ?? null}
                   isHinted={!!hintedCells[`${row},${col}`]}
                   isConflict={conflicts.some((c) => c.row === row && c.col === col)}
-                  isInSelectedZone={false}
                   cellSize={cellSize}
                   onPress={() => handleCellPress(row, col)}
                   row={row}
