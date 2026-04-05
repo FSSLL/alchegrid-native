@@ -1,9 +1,9 @@
 import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react';
+import Pressable from '../../components/Pressable';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Platform,
   Image,
   Animated,
@@ -24,7 +24,6 @@ import GridLines from '../../components/GridLines';
 import ElementPalette from '../../components/ElementPalette';
 import ZoneTooltip from '../../components/ZoneTooltip';
 import { DragProvider, useDrag } from '../../contexts/DragContext';
-import { tap } from '../../lib/feedback';
 
 export default function EndlessGameScreen() {
   return (
@@ -76,7 +75,6 @@ function EndlessGameContent() {
   const { hintBalance, unlimitedHints, usePaidHint, hasDailyFreeHint, useDailyFreeHint } = usePlayerStore();
 
   const handleHintPress = useCallback(() => {
-    tap();
     if (hintMode) {
       toggleHintMode();
       return;
@@ -229,7 +227,6 @@ function EndlessGameContent() {
   }, [placeElement, hintedCells, cellZoneLookup, setSelectedZone]);
 
   const handleSurrender = () => {
-    tap();
     stopTimer();
     surrender();
   };
@@ -249,22 +246,22 @@ function EndlessGameContent() {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={handleSurrender}>
+        <Pressable style={styles.backBtn} onPress={handleSurrender}>
           <Text style={styles.backIcon}>🏳</Text>
-        </TouchableOpacity>
+        </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.levelLabel}>Level {levelsCompleted + 1} · {level.size}×{level.size}</Text>
           <Text style={styles.diffLabel}>
             {totalScore.toLocaleString()} pts{levelMistakes > 0 ? ` · ⚠${levelMistakes}` : ''}
           </Text>
         </View>
-        <TouchableOpacity
+        <Pressable
           style={[styles.hintBtn, hintMode && styles.hintBtnActive]}
           onPress={handleHintPress}
         >
           <Text style={styles.hintIcon}>💡</Text>
           <Text style={styles.hintCount}>{unlimitedHints ? '∞' : hintBalance}</Text>
-        </TouchableOpacity>
+        </Pressable>
 
         <View style={styles.timerBadge}>
           <Text style={styles.timerText}>{formatTime(elapsedDisplay)}</Text>
