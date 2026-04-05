@@ -61,6 +61,7 @@ export default function WorldLevelsScreen() {
 
   return (
     <View style={[styles.bg, { backgroundColor: 'transparent' }]}>
+      {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -91,13 +92,13 @@ export default function WorldLevelsScreen() {
           <TouchableOpacity
             key={globalLevel}
             onPress={() => handleLevelPress(globalLevel, isLocked)}
-            activeOpacity={isLocked ? 1 : 0.75}
+            activeOpacity={isLocked ? 1 : 0.7}
             style={styles.levelCell}
           >
             <View style={[
               styles.levelBtn,
               isCompleted && styles.levelBtnCompleted,
-              isCurrent && { borderColor: accent, borderWidth: 2.5 },
+              isCurrent && [styles.levelBtnCurrent, { borderColor: accent }],
               isLocked && styles.levelBtnLocked,
             ]}>
               <Text style={[
@@ -111,7 +112,7 @@ export default function WorldLevelsScreen() {
               {isCompleted && (
                 <View style={styles.starsRow}>
                   {[1, 2, 3].map((s) => (
-                    <Text key={s} style={[styles.starIcon, { opacity: s <= stars ? 1 : 0.25 }]}>★</Text>
+                    <Text key={s} style={[styles.starIcon, { opacity: s <= stars ? 1 : 0.3 }]}>★</Text>
                   ))}
                 </View>
               )}
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     width: 40, height: 40, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 12,
   },
   backIcon: { color: '#94a3b8', fontSize: 20, fontWeight: '700' },
   headerCenter: { alignItems: 'center', flex: 1 },
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 12, color: '#8e9ab0', marginTop: 2 },
   infoBtn: {
     width: 40, height: 40, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 12,
   },
   infoIcon: { color: '#94a3b8', fontSize: 18 },
   starsBar: { paddingHorizontal: 16, marginBottom: 12, gap: 8 },
@@ -162,10 +163,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     borderWidth: 1.5, borderRadius: 12,
     paddingHorizontal: 12, paddingVertical: 5,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.07)',
   },
   starsBadgeText: { fontSize: 13, fontWeight: '700' },
-  starsBarBg: { height: 4, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' },
+  starsBarBg: { height: 4, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 2, overflow: 'hidden' },
   starsBarFill: { height: '100%', borderRadius: 2 },
   grid: {
     flexDirection: 'row',
@@ -174,28 +175,35 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   levelCell: { width: '18%' },
+
+  /* ── Level button base — opaque enough to read against the BG image ── */
   levelBtn: {
     aspectRatio: 1,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#171c26',
+    backgroundColor: 'rgba(20, 26, 42, 0.88)',
     borderWidth: 1.5,
-    borderColor: '#222d3d',
+    borderColor: 'rgba(80, 100, 140, 0.5)',
     gap: 2,
   },
   levelBtnCompleted: {
-    backgroundColor: 'rgba(34,197,94,0.1)',
-    borderColor: 'rgba(34,197,94,0.4)',
+    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    borderColor: 'rgba(34, 197, 94, 0.65)',
+  },
+  levelBtnCurrent: {
+    backgroundColor: 'rgba(30, 32, 50, 0.92)',
+    borderWidth: 2.5,
   },
   levelBtnLocked: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderColor: '#1a2030',
-    opacity: 0.5,
+    backgroundColor: 'rgba(12, 16, 26, 0.75)',
+    borderColor: 'rgba(50, 65, 90, 0.4)',
+    opacity: 0.65,
   },
+
   levelNum: { fontSize: 16, fontWeight: '900', color: '#eef1f5' },
   levelNumCompleted: { color: '#34d399', fontSize: 14 },
-  levelNumLocked: { color: '#4a5568' },
+  levelNumLocked: { color: '#5a6880' },
   starsRow: { flexDirection: 'row', gap: 1 },
   starIcon: { fontSize: 9, color: '#fbbf24' },
   currentDot: { width: 6, height: 6, borderRadius: 3 },
