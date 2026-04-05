@@ -1,5 +1,6 @@
 import React, { memo, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import Pressable from './Pressable';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import type { Zone, Level, ElementID } from '../lib/types';
 import { isZoneSatisfied } from '../lib/validators';
 import colors from '../constants/colors';
@@ -26,7 +27,7 @@ const ZonePanel = memo(({ level, board, selectedZone, onSelectZone }: ZonePanelP
         const tint = colors.zoneTints[i % colors.zoneTints.length];
 
         return (
-          <TouchableOpacity
+          <Pressable
             key={zone.id}
             onPress={() => onSelectZone(isSelected ? null : zone)}
             activeOpacity={0.7}
@@ -53,7 +54,7 @@ const ZonePanel = memo(({ level, board, selectedZone, onSelectZone }: ZonePanelP
                 ))}
               </View>
             </View>
-          </TouchableOpacity>
+          </Pressable>
         );
       })}
     </ScrollView>
