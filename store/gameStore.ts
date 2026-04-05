@@ -110,7 +110,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const conflicts = getConflicts(newBoard, level.size);
 
-    const won = checkWin(level, newBoard);
+    const won = checkWin(level, newBoard, conflicts);
 
     if (won) {
       const { elapsedTime, timerInterval } = get();
@@ -146,7 +146,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     newBoard[row][col] = element;
 
     const conflicts = getConflicts(newBoard, level.size);
-    const won = checkWin(level, newBoard);
+    const won = checkWin(level, newBoard, conflicts);
 
     if (won) {
       const { elapsedTime, timerInterval } = get();
@@ -199,7 +199,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const newHinted = { ...hintedCells, [hintKey]: answer };
     const conflicts = getConflicts(newBoard, level.size);
-    const won = checkWin(level, newBoard);
+    const won = checkWin(level, newBoard, conflicts);
 
     if (won) {
       const { elapsedTime, timerInterval } = get();

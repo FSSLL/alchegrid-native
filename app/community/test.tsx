@@ -45,6 +45,11 @@ function TestContent() {
     clearCell, setActiveElement, setSelectedZone, stopTimer,
   } = useGameStore();
 
+  const conflictSet = useMemo(
+    () => new Set(conflicts.map((c) => `${c.row},${c.col}`)),
+    [conflicts],
+  );
+
   const { setSolution, markSolved } = useCommunityStore();
 
   // ── win detection: save solution ──────────────────────────────────────────
@@ -156,7 +161,7 @@ function TestContent() {
                     col={c}
                     element={el}
                     cellSize={cellSize}
-                    isConflict={conflicts.some((cn) => cn.row === r && cn.col === c)}
+                    isConflict={conflictSet.has(key)}
                     isHinted={false}
                     ghostElement={null}
                     ghostOpacity={0.7}

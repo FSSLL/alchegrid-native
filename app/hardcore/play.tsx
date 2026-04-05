@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef, useState } from 'react';
+import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Platform, Image, Animated,
   useWindowDimensions,
@@ -48,6 +48,11 @@ function HardcoreGameContent() {
     initGame, placeElement, placeSpecificElement,
     clearCell, setActiveElement, setSelectedZone, stopTimer,
   } = useGameStore();
+
+  const conflictSet = useMemo(
+    () => new Set(conflicts.map((c) => `${c.row},${c.col}`)),
+    [conflicts],
+  );
 
   const { hintBalance, unlimitedHints, usePaidHint, hasDailyFreeHint, useDailyFreeHint } = usePlayerStore();
 
@@ -280,7 +285,7 @@ function HardcoreGameContent() {
                     col={c}
                     element={el}
                     cellSize={cellSize}
-                    isConflict={conflicts.some((cn) => cn.row === r && cn.col === c)}
+                    isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
                     ghostElement={null}
                     ghostOpacity={0.7}

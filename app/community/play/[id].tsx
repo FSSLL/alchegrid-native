@@ -48,6 +48,11 @@ function PlayContent() {
     clearCell, setActiveElement, setSelectedZone, stopTimer, toggleHintMode,
   } = useGameStore();
 
+  const conflictSet = useMemo(
+    () => new Set(conflicts.map((c) => `${c.row},${c.col}`)),
+    [conflicts],
+  );
+
   const { getLevelById, markLevelSolved, incrementPlays } = useCommunityStore();
 
   // ── load level ─────────────────────────────────────────────────────────────
@@ -186,7 +191,7 @@ function PlayContent() {
                     col={c}
                     element={el}
                     cellSize={cellSize}
-                    isConflict={conflicts.some((cn) => cn.row === r && cn.col === c)}
+                    isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
                     ghostElement={null}
                     ghostOpacity={0.7}

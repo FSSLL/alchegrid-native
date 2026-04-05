@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef, memo } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { useGameStore } from '../store/gameStore';
 import { usePlayerStore } from '../store/playerStore';
 import { getLevelData, globalToWorld } from '../lib/levelRegistry';
 import { computeGridLayout } from '../lib/gridLayout';
+import type { ElementID } from '../lib/types';
 import GameCell from '../components/GameCell';
 import ZoneBorders from '../components/ZoneBorders';
 import ZoneHighlightOverlay from '../components/ZoneHighlightOverlay';
@@ -27,6 +28,53 @@ import ZoneTooltip from '../components/ZoneTooltip';
 import StarProgress from '../components/StarProgress';
 import WinOverlay from '../components/WinOverlay';
 import { DragProvider, useDrag } from '../contexts/DragContext';
+
+// ─── Memoized cell grid — does NOT receive selectedZone, so zone changes ──────
+// ─── never trigger re-renders of this subtree (N² cells stay frozen). ─────────
+interface BoardCellsProps {
+  board: (ElementID | null)[][];
+  cellSize: number;
+  gap: number;
+  conflictSet: Set<string>;
+  hintedCells: Record<string, ElementID>;
+  cellGhostInfo: Record<string, { element: string; opacity: number }>;
+  onPress: (row: number, col: number) => void;
+}
+
+const BoardCells = memo(({ board, cellSize, gap, conflictSet, hintedCells, cellGhostInfo, onPress }: BoardCellsProps) => (
+  <>
+    {board.map((rowArr, r) =>
+      rowArr.map((el, c) => {
+        const key = `${r},${c}`;
+        return (
+          <View
+            key={key}
+            style={{
+              position: 'absolute',
+              left: c * (cellSize + gap),
+              top: r * (cellSize + gap),
+              width: cellSize,
+              height: cellSize,
+            }}
+          >
+            <GameCell
+              row={r}
+              col={c}
+              element={el}
+              cellSize={cellSize}
+              isConflict={conflictSet.has(key)}
+              isHinted={!!hintedCells[key]}
+              ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
+              ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.7}
+              onPress={onPress}
+            />
+          </View>
+        );
+      })
+    )}
+  </>
+));
+BoardCells.displayName = 'BoardCells';
 
 // ─── Outer shell: provides DragProvider ──────────────────────────────────────
 export default function GameScreen() {
@@ -295,35 +343,15 @@ function GameContent() {
           />
           {/* Overlay BEFORE cells so cells are on top and always receive touches */}
           <ZoneHighlightOverlay zone={displaySelectedZone} cellSize={cellSize} gap={gap} />
-          {board.map((row, r) =>
-            row.map((el, c) => {
-              const key = `${r},${c}`;
-              return (
-                <View
-                  key={key}
-                  style={{
-                    position: 'absolute',
-                    left: c * (cellSize + gap),
-                    top: r * (cellSize + gap),
-                    width: cellSize,
-                    height: cellSize,
-                  }}
-                >
-                  <GameCell
-                    row={r}
-                    col={c}
-                    element={el}
-                    cellSize={cellSize}
-                    isConflict={conflictSet.has(key)}
-                    isHinted={!!hintedCells[key]}
-                    ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
-                    ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.7}
-                    onPress={handleCellPress}
-                  />
-                </View>
-              );
-            }),
-          )}
+          <BoardCells
+            board={board}
+            cellSize={cellSize}
+            gap={gap}
+            conflictSet={conflictSet}
+            hintedCells={hintedCells}
+            cellGhostInfo={cellGhostInfo}
+            onPress={handleCellPress}
+          />
         </View>
       </View>
 

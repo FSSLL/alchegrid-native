@@ -31,7 +31,6 @@ export function getConflicts(board: (ElementID | null)[][], size: number): CellC
     }
   }
 
-  // Deduplicate
   const keys = new Set<string>();
   return conflicts.filter((cc) => {
     const k = `${cc.row},${cc.col}`;
@@ -53,14 +52,22 @@ export function isZoneSatisfied(zone: Zone, board: (ElementID | null)[][]): bool
   return true;
 }
 
-export function checkWin(level: Level, board: (ElementID | null)[][]): boolean {
-  // 1. All cells filled
+/**
+ * Pass preComputedConflicts to avoid running getConflicts a second time when
+ * the caller already has a fresh conflicts array.
+ */
+export function checkWin(
+  level: Level,
+  board: (ElementID | null)[][],
+  preComputedConflicts?: CellCoord[],
+): boolean {
+  // 1. All cells filled — cheapest check first
   for (const row of board) {
     if (row.some((el) => el === null)) return false;
   }
 
-  // 2. No conflicts
-  const conflicts = getConflicts(board, level.size);
+  // 2. No conflicts — reuse pre-computed result when available
+  const conflicts = preComputedConflicts ?? getConflicts(board, level.size);
   if (conflicts.length > 0) return false;
 
   // 3. All zones satisfied
