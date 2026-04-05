@@ -39,7 +39,7 @@ export const RECIPE_EMOJIS: Record<string, string> = {
   library: '📚', palace: '🏰', pyramid: '🏛️', bridge: '🌉',
   empire: '👑', civilization: '🏛️', fleet: '⛵',
   // Fallback recipe names (from getFallbackName in levelGenerator)
-  blend: '⬡', mix: '🌀', fusion: '💫', alloy: '⚗️', bond: '🔗',
+  blend: '🔮', mix: '🌀', fusion: '💫', alloy: '⚗️', bond: '🔗',
   compound: '⚗️', mixture: '🧪', amalgam: '🌀', infusion: '🍵', synthesis: '⚗️',
   formula: '⚗️', concoction: '🧪', tincture: '🧪', elixir: '✨', essence: '✨',
   // World 8
