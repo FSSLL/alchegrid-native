@@ -25,6 +25,7 @@ import ZoneHighlightOverlay from '../components/ZoneHighlightOverlay';
 import GridLines from '../components/GridLines';
 import ElementPalette from '../components/ElementPalette';
 import ZoneTooltip from '../components/ZoneTooltip';
+import ZoneLabels from '../components/ZoneLabels';
 import StarProgress from '../components/StarProgress';
 import WinOverlay from '../components/WinOverlay';
 import { DragProvider, useDrag } from '../contexts/DragContext';
@@ -341,6 +342,7 @@ function GameContent() {
             gap={gap}
             selectedZone={displaySelectedZone}
           />
+          <ZoneLabels zones={level.zones} cellSize={cellSize} gap={gap} />
           {/* Overlay BEFORE cells so cells are on top and always receive touches */}
           <ZoneHighlightOverlay zone={displaySelectedZone} cellSize={cellSize} gap={gap} />
           <BoardCells
