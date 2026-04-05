@@ -91,7 +91,7 @@ function EndlessGameContent() {
   const {
     runActive, levelsCompleted, totalScore, levelMistakes,
     levelStartTime, completeLevel, recordMistake,
-    surrender, checkInactivity,
+    surrender, checkInactivity, bumpActivity,
   } = useEndlessStore();
 
   const levelLoadedRef = useRef(-1);
@@ -200,6 +200,7 @@ function EndlessGameContent() {
   useEffect(() => {
     setDropHandlers(
       (element, row, col) => {
+        bumpActivity();
         placeSpecificElement(element, row, col);
         if (level) {
           const zone = level.zones.find((z) => z.cells.some((c) => c.row === row && c.col === col));
@@ -208,7 +209,7 @@ function EndlessGameContent() {
       },
       (row, col) => clearCell(row, col),
     );
-  }, [setDropHandlers, placeSpecificElement, clearCell, level, setSelectedZone]);
+  }, [setDropHandlers, placeSpecificElement, clearCell, level, setSelectedZone, bumpActivity]);
 
   const cellZoneLookup = useMemo(() => {
     const map: Record<string, NonNullable<typeof level>['zones'][number]> = {};
@@ -222,9 +223,10 @@ function EndlessGameContent() {
   const handleCellPress = useCallback((row: number, col: number) => {
     const key = `${row},${col}`;
     if (hintedCells[key]) return;
+    bumpActivity();
     placeElement(row, col);
     setSelectedZone(cellZoneLookup[key] ?? null);
-  }, [placeElement, hintedCells, cellZoneLookup, setSelectedZone]);
+  }, [placeElement, hintedCells, cellZoneLookup, setSelectedZone, bumpActivity]);
 
   const handleSurrender = () => {
     stopTimer();
