@@ -14,7 +14,9 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import { ALL_IMAGES } from '@/lib/preloadAssets';
-import { StyleSheet, View, Image, Platform, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, Image, Platform, useWindowDimensions, AppState } from 'react-native';
+import { audioManager } from '@/lib/audioManager';
+import { useAudioStore } from '@/store/audioStore';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -67,6 +69,8 @@ function RootLayoutNav() {
           contentStyle: { backgroundColor: 'transparent' },
         }}
       >
+        <Stack.Screen name="index"  options={{ ...SCREEN_OPTS, animation: 'none' }} />
+        <Stack.Screen name="intro"  options={{ ...SCREEN_OPTS, animation: 'none' }} />
         <Stack.Screen name="(tabs)" options={SCREEN_OPTS} />
         <Stack.Screen name="game" options={{ ...SCREEN_OPTS, animation: 'slide_from_right' }} />
         <Stack.Screen name="worlds" options={{ ...SCREEN_OPTS, animation: 'slide_from_right' }} />
@@ -125,6 +129,33 @@ export default function RootLayout() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
   }, [ready]);
+
+  // Audio manager — init once on mount, sync volume on store changes
+  useEffect(() => {
+    const { musicVolume, sfxVolume } = useAudioStore.getState();
+    audioManager.init(musicVolume, sfxVolume).catch(() => {});
+
+    const unsub = useAudioStore.subscribe((state) => {
+      audioManager.setMusicVolume(state.musicVolume).catch(() => {});
+      audioManager.setSfxVolume(state.sfxVolume).catch(() => {});
+    });
+
+    // Pause music when app goes to background
+    const appSub = AppState.addEventListener('change', (nextState) => {
+      if (Platform.OS === 'web') return;
+      if (nextState === 'background' || nextState === 'inactive') {
+        audioManager.setMusicVolume(0).catch(() => {});
+      } else if (nextState === 'active') {
+        audioManager.setMusicVolume(useAudioStore.getState().musicVolume).catch(() => {});
+      }
+    });
+
+    return () => {
+      unsub();
+      appSub.remove();
+      audioManager.unload().catch(() => {});
+    };
+  }, []);
 
   if (!ready) return null;
 
