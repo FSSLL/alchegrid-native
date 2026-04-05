@@ -21,6 +21,7 @@ import { computeGridLayout } from '../lib/gridLayout';
 import GameCell from '../components/GameCell';
 import ZoneBorders from '../components/ZoneBorders';
 import ZoneHighlightOverlay from '../components/ZoneHighlightOverlay';
+import GridLines from '../components/GridLines';
 import ElementPalette from '../components/ElementPalette';
 import ZoneTooltip from '../components/ZoneTooltip';
 import StarProgress from '../components/StarProgress';
@@ -284,6 +285,7 @@ function GameContent() {
             style={{ position: 'absolute', width: totalGridSize, height: totalGridSize }}
             resizeMode="cover"
           />
+          <GridLines gridSize={gridSize} cellSize={cellSize} gap={gap} totalGridPx={totalGridSize} />
           <ZoneBorders
             zones={level.zones}
             size={gridSize}

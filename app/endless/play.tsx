@@ -21,6 +21,7 @@ import { computeGridLayout } from '../../lib/gridLayout';
 import GameCell from '../../components/GameCell';
 import ZoneBorders from '../../components/ZoneBorders';
 import ZoneHighlightOverlay from '../../components/ZoneHighlightOverlay';
+import GridLines from '../../components/GridLines';
 import ElementPalette from '../../components/ElementPalette';
 import ZoneTooltip from '../../components/ZoneTooltip';
 import { DragProvider, useDrag } from '../../contexts/DragContext';
@@ -280,6 +281,7 @@ function EndlessGameContent() {
             style={StyleSheet.absoluteFill}
             resizeMode="cover"
           />
+          <GridLines gridSize={level.size} cellSize={cellSize} gap={cellGap} totalGridPx={gridPx} />
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
           {/* Overlay BEFORE cells so cells sit on top and always receive touches */}
           <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
