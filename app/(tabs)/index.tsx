@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import Pressable from '../../components/Pressable';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Platform,
   Image,
 } from 'react-native';
@@ -17,10 +17,25 @@ import {
   LOGO, CARD_BG, PLAY_BTN, BANNER_BG, HARDCORE_BG,
   LOGO_ASPECT, CARD_ASPECT, PLAY_BTN_ASPECT, BANNER_ASPECT, HARDCORE_ASPECT,
 } from '../../constants/assets';
+import { TutorialPopup } from '../../components/TutorialPopup';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { progressIndex, coins, hintBalance, unlimitedHints } = usePlayerStore();
+  const { progressIndex, coins, hintBalance, unlimitedHints, tutorialDismissed, dismissTutorial } = usePlayerStore();
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Show tutorial popup once home screen is mounted, if not dismissed
+  useEffect(() => {
+    if (!tutorialDismissed) {
+      const t = setTimeout(() => setShowTutorial(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [tutorialDismissed]);
+
+  const handleCloseTutorial = (neverShowAgain: boolean) => {
+    setShowTutorial(false);
+    if (neverShowAgain) dismissTutorial();
+  };
   const topPad = Platform.OS === 'web' ? 20 : insets.top;
 
   const nextGlobalLevel = Math.min(progressIndex + 1, 240);
@@ -41,6 +56,7 @@ export default function HomeScreen() {
   ];
 
   return (
+    <>
     <ScrollView
       style={styles.container}
       contentContainerStyle={[styles.content, { paddingTop: topPad + 12 }]}
@@ -53,7 +69,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Continue Journey card */}
-      <TouchableOpacity onPress={handlePlay} activeOpacity={0.88} style={styles.cardWrap}>
+      <Pressable onPress={handlePlay} activeOpacity={0.88} style={styles.cardWrap}>
         <Image source={CARD_BG} style={styles.cardBg} resizeMode="cover" />
         <View style={[StyleSheet.absoluteFill, styles.cardContent]}>
           <Text style={styles.cardDesc}>
@@ -85,11 +101,11 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Banner buttons */}
       {BANNERS.map((item) => (
-        <TouchableOpacity
+        <Pressable
           key={item.route}
           onPress={() => { Haptics.selectionAsync(); router.push(item.route as any); }}
           activeOpacity={0.85}
@@ -100,17 +116,17 @@ export default function HomeScreen() {
             <Text style={styles.bannerTitle}>{item.label}</Text>
             <Text style={styles.bannerSub}>{item.sub}</Text>
           </View>
-        </TouchableOpacity>
+        </Pressable>
       ))}
 
       {/* Hardcore button */}
-      <TouchableOpacity activeOpacity={0.85} style={styles.hardcoreWrap} onPress={() => router.push('/hardcore')}>
+      <Pressable activeOpacity={0.85} style={styles.hardcoreWrap} onPress={() => router.push('/hardcore')}>
         <Image source={HARDCORE_BG} style={styles.hardcoreBg} resizeMode="contain" />
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Bottom row */}
       <View style={styles.bottomRow}>
-        <TouchableOpacity
+        <Pressable
           style={styles.halfWrap}
           activeOpacity={0.85}
           onPress={() => router.push('/catalog')}
@@ -119,8 +135,8 @@ export default function HomeScreen() {
           <View style={[StyleSheet.absoluteFill, styles.bannerContent]}>
             <Text style={styles.bannerTitle}>Catalog</Text>
           </View>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </Pressable>
+        <Pressable
           style={styles.halfWrap}
           activeOpacity={0.85}
           onPress={() => router.push('/settings')}
@@ -129,11 +145,14 @@ export default function HomeScreen() {
           <View style={[StyleSheet.absoluteFill, styles.bannerContent]}>
             <Text style={styles.bannerTitle}>⚙ Settings</Text>
           </View>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <View style={{ height: Platform.OS === 'web' ? 20 : insets.bottom + 24 }} />
     </ScrollView>
+
+    <TutorialPopup show={showTutorial} onClose={handleCloseTutorial} />
+    </>
   );
 }
 
