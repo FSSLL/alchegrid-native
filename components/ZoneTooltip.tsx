@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     maxWidth: 80,
   },
   recipeNameDone: {
-    color: '#10b981',
+    color: '#FFD700',
   },
   divider: {
     width: 1,

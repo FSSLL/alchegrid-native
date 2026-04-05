@@ -11,7 +11,7 @@ const StarProgress = memo(({ elapsed, thresholds }: StarProgressProps) => {
   const maxDisplay = thresholds.two * 1.5;
   const pct = Math.min(elapsed / maxDisplay, 1);
 
-  let color = '#10b981'; // green — 3-star pace
+  let color = '#FFD700'; // yellow — 3-star pace
   if (elapsed > thresholds.three) color = '#f59e0b'; // amber — 2-star pace
   if (elapsed > thresholds.two) color = '#ef4444';   // red — 1-star pace
 

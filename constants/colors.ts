@@ -21,7 +21,7 @@ const colors = {
 
     // Game-specific
     cellBg: '#1a2030',
-    zoneBorder: '#00ff55',
+    zoneBorder: '#FFD700',
     zoneSelected: '#ff5500',
     hintBorder: '#3aa7ff',
     conflictColor: '#ee0000',
@@ -29,7 +29,7 @@ const colors = {
     brandBlue: '#3aa7ff',
     coin: '#fbbf24',
     hint: '#34d399',
-    starPace3: '#10b981',
+    starPace3: '#FFD700',
     starPace2: '#f59e0b',
     starPace1: '#ef4444',
   },

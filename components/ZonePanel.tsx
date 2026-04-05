@@ -35,13 +35,13 @@ const ZonePanel = memo(({ level, board, selectedZone, onSelectZone }: ZonePanelP
               style={[
                 styles.zoneCard,
                 {
-                  borderColor: isSelected ? '#ff5500' : satisfied ? '#10b981' : tint,
+                  borderColor: isSelected ? '#ff5500' : satisfied ? '#FFD700' : tint,
                   backgroundColor: `${tint}20`,
                 },
               ]}
             >
               <View style={styles.cardHeader}>
-                <Text style={[styles.recipeName, { color: satisfied ? '#10b981' : '#eef1f5' }]}>
+                <Text style={[styles.recipeName, { color: satisfied ? '#FFD700' : '#eef1f5' }]}>
                   {satisfied ? '✓ ' : ''}{zone.recipeName ?? 'Unknown'}
                 </Text>
               </View>
