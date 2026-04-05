@@ -10,13 +10,17 @@ import {
   View,
   PanResponder,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import type { ElementID } from '../lib/types';
 import ElementIcon from '../components/ElementIcon';
+import { audioManager } from '../lib/audioManager';
+import { useAudioStore } from '../store/audioStore';
 
 export interface GridInfo {
   pageX: number;
@@ -105,6 +109,9 @@ export function DragProvider({ children }: { children: ReactNode }) {
       setDragState(state);
       ghostX.value = x;
       ghostY.value = y;
+      if (Platform.OS !== 'web' && useAudioStore.getState().hapticsEnabled) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      }
     },
     [ghostX, ghostY],
   );
@@ -137,6 +144,10 @@ export function DragProvider({ children }: { children: ReactNode }) {
 
         if (inBounds) {
           onDropRef.current(ds.element, row, col);
+          audioManager.playDrop().catch(() => {});
+          if (Platform.OS !== 'web' && useAudioStore.getState().hapticsEnabled) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+          }
         } else if (
           ds.source === 'cell' &&
           ds.sourceRow !== undefined &&
