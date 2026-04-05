@@ -1,6 +1,11 @@
 import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react';
+import Pressable from '../../../components/Pressable';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Platform, Image,
+  View,
+  Text,
+  StyleSheet,
+  Platform,
+  Image,
   useWindowDimensions,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -140,9 +145,9 @@ function PlayContent() {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => { stopTimer(); router.replace('/community'); }}>
+        <Pressable style={styles.backBtn} onPress={() => { stopTimer(); router.replace('/community'); }}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.levelName} numberOfLines={1}>{level.id}</Text>
           <Text style={styles.levelMeta}>
@@ -151,12 +156,12 @@ function PlayContent() {
             {status === 'won' ? '  ·  ✓ Solved!' : ''}
           </Text>
         </View>
-        <TouchableOpacity
+        <Pressable
           style={[styles.hintBtn, hintMode && styles.hintBtnActive]}
           onPress={toggleHintMode}
         >
           <Text style={styles.hintIcon}>💡</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Grid */}
