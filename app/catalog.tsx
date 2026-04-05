@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import Pressable from '../components/Pressable';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   ImageBackground,
   Platform,
@@ -70,9 +70,9 @@ const DefinitionPopup = React.memo(function DefinitionPopup({
             <Text style={styles.defName}>{active?.name}</Text>
             <Text style={styles.defDesc}>{active?.definition}</Text>
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.defClose} hitSlop={8}>
+          <Pressable onPress={onClose} style={styles.defClose} hitSlop={8}>
             <Text style={styles.defCloseIcon}>✕</Text>
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
       </View>
     </Modal>
@@ -97,14 +97,14 @@ function RecipeRow({
   return (
     <View style={styles.recipeRow}>
       {/* Left: icon + name */}
-      <TouchableOpacity
+      <Pressable
         onPress={() => onTap(name)}
         style={styles.recipeLeft}
         activeOpacity={0.7}
       >
         <ElementIcon name={name} size={24} />
         <Text style={styles.recipeRowName} numberOfLines={1}>{name}</Text>
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Equals */}
       <Text style={styles.equals}>=</Text>
@@ -114,14 +114,14 @@ function RecipeRow({
         {ingredients.map((ing, i) => (
           <React.Fragment key={ing + i}>
             {i > 0 && <Text style={styles.plus}>+</Text>}
-            <TouchableOpacity
+            <Pressable
               onPress={() => onTap(ing)}
               style={styles.ingPill}
               activeOpacity={0.7}
             >
               <ElementIcon name={ing} size={16} />
               <Text style={styles.ingName} numberOfLines={1}>{ing}</Text>
-            </TouchableOpacity>
+            </Pressable>
           </React.Fragment>
         ))}
       </View>
@@ -153,7 +153,7 @@ function WorldBody({
       <Text style={[styles.tapLabel, { color: info.badgeText }]}>Tap to learn</Text>
       <View style={styles.badgeRow}>
         {info.elements.map((el) => (
-          <TouchableOpacity
+          <Pressable
             key={el}
             onPress={() => onTap(el)}
             activeOpacity={0.7}
@@ -161,7 +161,7 @@ function WorldBody({
           >
             <ElementIcon name={el} size={14} />
             <Text style={[styles.badgeText, { color: info.badgeText }]}>{el}</Text>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
@@ -210,7 +210,7 @@ function WorldCard({
   const cardImage = WORLD_CARD_IMAGES[info.world] ?? null;
 
   const header = cardImage ? (
-    <TouchableOpacity onPress={onToggle} activeOpacity={0.88} style={styles.worldHeaderImg}>
+    <Pressable onPress={onToggle} activeOpacity={0.88} style={styles.worldHeaderImg}>
       <ImageBackground
         source={cardImage}
         resizeMode="stretch"
@@ -236,9 +236,9 @@ function WorldCard({
           <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   ) : (
-    <TouchableOpacity onPress={onToggle} activeOpacity={0.8} style={styles.worldHeader}>
+    <Pressable onPress={onToggle} activeOpacity={0.8} style={styles.worldHeader}>
       <LinearGradient colors={info.numberBg as [string, string]} style={styles.numBox}>
         <Text style={[styles.numText, { color: info.accent }]}>{info.world}</Text>
       </LinearGradient>
@@ -247,7 +247,7 @@ function WorldCard({
         <Text style={styles.worldMetaLine}>{info.grid} grid · {recipeCount} combos</Text>
       </View>
       <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   return (
@@ -280,9 +280,9 @@ export default function CatalogScreen() {
     <View style={[styles.root, { paddingTop: topPad }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
         <Text style={styles.title}>Recipe Catalog</Text>
         <View style={{ width: 36 }} />
       </View>
