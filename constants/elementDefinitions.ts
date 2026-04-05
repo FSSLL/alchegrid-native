@@ -187,6 +187,7 @@ export const ELEMENT_DEFINITIONS: Record<string, string> = {
   Lotion:        'A thin liquid applied to skin for cleansing or therapeutic treatment.',
   Rinse:         'A wash of water or liquid used to remove chemical residue.',
   Antidote:      'A substance that counteracts the toxic effect of a poison or acid.',
+  Patina:        'A green or blue-gray coating that forms on copper and brass through prolonged chemical oxidation.',
   Tarnish:       'A thin layer of corrosion dulling a metal\'s surface over time.',
   Calciner:      'An industrial furnace for chemically decomposing materials using intense heat.',
   Vinegar:       'A dilute acetic acid solution produced by fermentation.',
