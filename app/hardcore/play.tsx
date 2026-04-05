@@ -93,7 +93,7 @@ function HardcoreGameContent() {
   // ── hardcore store ──────────────────────────────────────────────────────
   const {
     runActive, currentLevel, mistakesLeft, totalTimeMs, levelStartTime,
-    completeLevel, recordMistake, surrender, checkInactivity,
+    completeLevel, recordMistake, surrender, checkInactivity, bumpActivity,
   } = useHardcoreStore();
 
   const levelLoadedRef = useRef(-1);
@@ -201,6 +201,7 @@ function HardcoreGameContent() {
   useEffect(() => {
     setDropHandlers(
       (element, row, col) => {
+        bumpActivity();
         placeSpecificElement(element, row, col);
         if (level) {
           const zone = level.zones.find((z) => z.cells.some((c) => c.row === row && c.col === col));
@@ -209,7 +210,7 @@ function HardcoreGameContent() {
       },
       (row, col) => clearCell(row, col),
     );
-  }, [setDropHandlers, placeSpecificElement, clearCell, level, setSelectedZone]);
+  }, [setDropHandlers, placeSpecificElement, clearCell, level, setSelectedZone, bumpActivity]);
 
   const cellZoneLookup = useMemo(() => {
     const map: Record<string, NonNullable<typeof level>['zones'][number]> = {};
@@ -221,10 +222,11 @@ function HardcoreGameContent() {
   }, [level]);
 
   const handleCellPress = useCallback((row: number, col: number) => {
+    bumpActivity();
     placeElement(row, col);
     const key = `${row},${col}`;
     setSelectedZone(cellZoneLookup[key] ?? null);
-  }, [placeElement, setSelectedZone, cellZoneLookup]);
+  }, [placeElement, setSelectedZone, cellZoneLookup, bumpActivity]);
 
   const handleSurrender = () => {
     stopTimer();
