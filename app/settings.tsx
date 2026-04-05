@@ -29,36 +29,47 @@ function VolumeSlider({
   accent?: string;
 }) {
   const trackW = useRef(0);
-
-  const clamp = (x: number) => Math.max(0, Math.min(1, x / (trackW.current || 1)));
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (e) => onChange(clamp(e.nativeEvent.locationX)),
-      onPanResponderMove: (e) => onChange(clamp(e.nativeEvent.locationX)),
+      onPanResponderGrant: (e) => {
+        const v = Math.max(0, Math.min(1, e.nativeEvent.locationX / (trackW.current || 1)));
+        onChangeRef.current(v);
+      },
+      onPanResponderMove: (e) => {
+        const v = Math.max(0, Math.min(1, e.nativeEvent.locationX / (trackW.current || 1)));
+        onChangeRef.current(v);
+      },
     })
   ).current;
 
   const filled = Math.round(value * 100);
   const muted  = value === 0;
+  const fillColor = muted ? '#4b5563' : accent;
 
   return (
     <View style={sl.row}>
       <Text style={sl.label}>{label}</Text>
       <View style={sl.right}>
-        {/* track */}
+        {/* hit area — 44px tall so the thumb is always touchable */}
         <View
-          style={sl.track}
+          style={sl.hitArea}
           onLayout={(e) => { trackW.current = e.nativeEvent.layout.width; }}
           {...pan.panHandlers}
         >
-          <View style={[sl.fill, { width: `${filled}%`, backgroundColor: muted ? '#4b5563' : accent }]} />
+          {/* track rail */}
+          <View style={sl.track}>
+            <View style={[sl.fill, { width: `${filled}%`, backgroundColor: fillColor }]} />
+          </View>
+          {/* thumb */}
           <View
             style={[
               sl.thumb,
-              { left: `${filled}%`, borderColor: muted ? '#4b5563' : accent },
+              { left: `${filled}%`, borderColor: fillColor, backgroundColor: muted ? '#2a3244' : '#1a2030' },
             ]}
           />
         </View>
@@ -75,26 +86,29 @@ const sl = StyleSheet.create({
   row:      { flexDirection: 'row', alignItems: 'center', gap: 12 },
   label:    { color: '#eef1f5', fontSize: 14, fontWeight: '600', width: 52 },
   right:    { flex: 1, gap: 4 },
+  hitArea:  {
+    height: 44,
+    justifyContent: 'center',
+  },
   track:    {
-    height: 8,
+    height: 6,
     backgroundColor: '#242e42',
-    borderRadius: 4,
-    overflow: 'visible',
+    borderRadius: 3,
+    overflow: 'hidden',
   },
   fill:     {
     position: 'absolute',
     top: 0, left: 0,
-    height: 8,
-    borderRadius: 4,
+    height: '100%',
+    borderRadius: 3,
   },
   thumb:    {
     position: 'absolute',
-    top: -6,
-    marginLeft: -10,
-    width: 20, height: 20,
-    borderRadius: 10,
-    backgroundColor: '#1a2030',
-    borderWidth: 2,
+    top: (44 - 22) / 2,
+    marginLeft: -11,
+    width: 22, height: 22,
+    borderRadius: 11,
+    borderWidth: 2.5,
   },
   muteHint: { fontSize: 11, fontWeight: '600' },
 });
