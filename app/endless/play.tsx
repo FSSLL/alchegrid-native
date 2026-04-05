@@ -281,6 +281,8 @@ function EndlessGameContent() {
             resizeMode="cover"
           />
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
+          {/* Overlay BEFORE cells so cells sit on top and always receive touches */}
+          <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
           {level.zones.map((zone) =>
             zone.cells.map(({ row, col }) => (
               <View
@@ -304,13 +306,12 @@ function EndlessGameContent() {
               </View>
             )),
           )}
-          <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
         </View>
       </View>
 
       {/* Zone tooltip */}
       {selectedZone && (
-        <ZoneTooltip zone={selectedZone} level={level} board={board} onClose={() => setSelectedZone(null)} />
+        <ZoneTooltip zone={selectedZone} board={board} onClose={() => setSelectedZone(null)} />
       )}
 
       {/* Palette */}

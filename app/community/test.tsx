@@ -134,6 +134,8 @@ function TestContent() {
             />
           )}
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
+          {/* Overlay BEFORE cells so cells sit on top and always receive touches */}
+          <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
           {level.zones.map((zone) =>
             zone.cells.map(({ row, col }) => (
               <View
@@ -157,12 +159,11 @@ function TestContent() {
               </View>
             )),
           )}
-          <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
         </View>
       </View>
 
       {selectedZone && (
-        <ZoneTooltip zone={selectedZone} level={level} board={board} onClose={() => setSelectedZone(null)} />
+        <ZoneTooltip zone={selectedZone} board={board} onClose={() => setSelectedZone(null)} />
       )}
 
       <ElementPalette level={level} board={board} activeElement={activeElement} onSelect={setActiveElement} />

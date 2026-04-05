@@ -89,6 +89,11 @@ function GameContent() {
     return () => { stopTimer(); };
   }, [globalLevelNum]);
 
+  // Keep a ref to cellZoneLookup so the drop handler always sees the latest map
+  // without needing it in the effect dependency array.
+  const cellZoneLookupRef = useRef(cellZoneLookup);
+  cellZoneLookupRef.current = cellZoneLookup;
+
   // Wire drop handlers into DragContext
   useEffect(() => {
     setDropHandlers(
@@ -97,20 +102,16 @@ function GameContent() {
         placeSpecificElement(element, row, col, (earnedStars) => {
           completeLevel(globalLevelNum, earnedStars);
         });
-        // Auto-select zone of the dropped cell
-        if (level) {
-          const zone = level.zones.find((z) =>
-            z.cells.some((c) => c.row === row && c.col === col),
-          );
-          setSelectedZone(zone ?? null);
-        }
+        // Auto-select the zone of the dropped cell using the always-fresh ref
+        const zone = cellZoneLookupRef.current[`${row},${col}`] ?? null;
+        setSelectedZone(zone);
       },
       (row, col) => {
         // dropped outside grid from a cell → erase that cell
         clearCell(row, col);
       },
     );
-  }, [setDropHandlers, placeSpecificElement, clearCell, completeLevel, globalLevelNum, level, setSelectedZone]);
+  }, [setDropHandlers, placeSpecificElement, clearCell, completeLevel, globalLevelNum, setSelectedZone]);
 
   // Cell tap only opens zone tooltip — placement is drag-only
   const handleCellPress = useCallback(
@@ -165,17 +166,27 @@ function GameContent() {
     return map;
   }, [level]);
 
-  // O(1) cell-to-zone lookup so handleCellPress never scans the whole zone list
+  // Always-correct level data — synchronously derived from the route param so it
+  // is never stale, even on the first render before initGame's useEffect fires.
+  const currentLevelData = useMemo(() => getLevelData(globalLevelNum), [globalLevelNum]);
+
+  // O(1) cell-to-zone lookup built from sync level data — always correct for this
+  // route even when the store's `level` still holds the previous level's object.
   const cellZoneLookup = useMemo(() => {
-    const map: Record<string, (typeof level.zones)[number]> = {};
-    if (!level) return map;
-    level.zones.forEach((zone) => {
+    const map: Record<string, NonNullable<ReturnType<typeof getLevelData>>['zones'][number]> = {};
+    if (!currentLevelData) return map;
+    currentLevelData.zones.forEach((zone) => {
       zone.cells.forEach(({ row, col }) => {
         map[`${row},${col}`] = zone;
       });
     });
     return map;
-  }, [level]);
+  }, [currentLevelData]);
+
+  // Guard: the store's selectedZone may still reference a zone from the previous
+  // level on the first render (before initGame clears it). Only expose it once the
+  // store's level actually matches the current route.
+  const displaySelectedZone = level?.id === currentLevelData?.id ? selectedZone : null;
 
   const { width: screenWidth } = useWindowDimensions();
 
@@ -256,10 +267,10 @@ function GameContent() {
       {/* Grid — static, no scroll */}
       <View style={styles.gridArea}>
         {/* Zone tooltip — absolute at bottom of grid area, above palette */}
-        {selectedZone && (
+        {displaySelectedZone && (
           <View style={styles.tooltipOverlay}>
             <ZoneTooltip
-              zone={selectedZone}
+              zone={displaySelectedZone}
               board={board}
               onClose={() => setSelectedZone(null)}
             />
@@ -280,8 +291,10 @@ function GameContent() {
             size={gridSize}
             cellSize={cellSize}
             gap={gap}
-            selectedZone={selectedZone}
+            selectedZone={displaySelectedZone}
           />
+          {/* Overlay BEFORE cells so cells are on top and always receive touches */}
+          <ZoneHighlightOverlay zone={displaySelectedZone} cellSize={cellSize} gap={gap} />
           {board.map((row, r) =>
             row.map((el, c) => {
               const key = `${r},${c}`;
@@ -311,8 +324,6 @@ function GameContent() {
               );
             }),
           )}
-          {/* Zone highlight overlay — separate from cells so cells never re-render on zone selection */}
-          <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={gap} />
         </View>
       </View>
 
