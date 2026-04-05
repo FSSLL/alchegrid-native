@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
 import { GRID_BACKGROUNDS } from '../../constants/assets';
 import { useGameStore } from '../../store/gameStore';
 import { useHardcoreStore } from '../../store/hardcoreStore';
@@ -14,9 +13,13 @@ import { getHardcoreLevel } from '../../lib/generateHardcoreLevel';
 import { computeGridLayout } from '../../lib/gridLayout';
 import GameCell from '../../components/GameCell';
 import ZoneBorders from '../../components/ZoneBorders';
+import ZoneHighlightOverlay from '../../components/ZoneHighlightOverlay';
+import GridLines from '../../components/GridLines';
 import ElementPalette from '../../components/ElementPalette';
 import ZoneLabels from '../../components/ZoneLabels';
+import ZoneTooltip from '../../components/ZoneTooltip';
 import { DragProvider, useDrag } from '../../contexts/DragContext';
+import { tap } from '../../lib/feedback';
 
 export default function HardcoreGameScreen() {
   return (
@@ -32,8 +35,6 @@ function formatTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-const CELL_SIZES: Record<number, number> = { 4: 80, 5: 52, 6: 44, 7: 38 };
-const CELL_GAPS: Record<number, number> = { 4: 10, 5: 4, 6: 4, 7: 4 };
 const MAX_LIVES = 3;
 
 function HardcoreGameContent() {
@@ -55,9 +56,25 @@ function HardcoreGameContent() {
     [conflicts],
   );
 
+  // ── ghost elements (zone recipe hints shown in empty cells) ──────────────
+  const cellGhostInfo = useMemo(() => {
+    const map: Record<string, { element: string; opacity: number; grayscale: boolean }> = {};
+    if (!level) return map;
+    level.zones.forEach((zone) => {
+      if (!zone.recipeName || zone.cells.length < 2) return;
+      const opacity = zone.cells.length === 2 ? 0.45 : 0.70;
+      const grayscale = zone.cells.length === 2;
+      zone.cells.forEach(({ row, col }) => {
+        map[`${row},${col}`] = { element: zone.recipeName!, opacity, grayscale };
+      });
+    });
+    return map;
+  }, [level]);
+
   const { hintBalance, unlimitedHints, usePaidHint, hasDailyFreeHint, useDailyFreeHint } = usePlayerStore();
 
   const handleHintPress = useCallback(() => {
+    tap();
     if (hintMode) {
       toggleHintMode();
       return;
@@ -67,7 +84,6 @@ function HardcoreGameContent() {
     if (!canUse && !dailyFree) return;
     if (dailyFree && !canUse) { useDailyFreeHint(); }
     if (!unlimitedHints) { usePaidHint(); }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     toggleHintMode();
   }, [hintMode, unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, toggleHintMode]);
 
@@ -141,7 +157,6 @@ function HardcoreGameContent() {
       return;
     }
 
-    // Find newly placed cell
     let placedRow = -1, placedCol = -1;
     outer: for (let r = 0; r < board.length; r++) {
       for (let c = 0; c < board[r].length; c++) {
@@ -157,7 +172,6 @@ function HardcoreGameContent() {
       const isConflict = conflicts.some((cc) => cc.row === placedRow && cc.col === placedCol);
       if (isConflict) {
         const alive = recordMistake();
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         if (alive) {
           const { mistakesLeft: ml } = useHardcoreStore.getState();
           triggerFlash(`Conflict! ${ml} ${ml === 1 ? 'life' : 'lives'} left`);
@@ -184,21 +198,33 @@ function HardcoreGameContent() {
   useEffect(() => {
     setDropHandlers(
       (element, row, col) => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         placeSpecificElement(element, row, col);
-        setSelectedZone(null);
+        if (level) {
+          const zone = level.zones.find((z) => z.cells.some((c) => c.row === row && c.col === col));
+          setSelectedZone(zone ?? null);
+        }
       },
       (row, col) => clearCell(row, col),
     );
-  }, [setDropHandlers, placeSpecificElement, clearCell, setSelectedZone]);
+  }, [setDropHandlers, placeSpecificElement, clearCell, level, setSelectedZone]);
+
+  const cellZoneLookup = useMemo(() => {
+    const map: Record<string, NonNullable<typeof level>['zones'][number]> = {};
+    if (!level) return map;
+    level.zones.forEach((zone) => {
+      zone.cells.forEach(({ row, col }) => { map[`${row},${col}`] = zone; });
+    });
+    return map;
+  }, [level]);
 
   const handleCellPress = useCallback((row: number, col: number) => {
     placeElement(row, col);
-    setSelectedZone(null);
-  }, [placeElement, setSelectedZone]);
+    const key = `${row},${col}`;
+    setSelectedZone(cellZoneLookup[key] ?? null);
+  }, [placeElement, setSelectedZone, cellZoneLookup]);
 
   const handleSurrender = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    tap();
     stopTimer();
     surrender();
   };
@@ -266,11 +292,14 @@ function HardcoreGameContent() {
             style={{ position: 'absolute', width: gridPx, height: gridPx }}
             resizeMode="cover"
           />
+          <GridLines gridSize={level.size} cellSize={cellSize} gap={cellGap} totalGridPx={gridPx} />
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
-          <ZoneLabels zones={level.zones} cellSize={cellSize} gap={cellGap} />
+          <ZoneLabels zones={level.zones} cellSize={cellSize} gap={cellGap} minZoneCells={2} />
+          <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
           {board.map((rowArr, r) =>
             rowArr.map((el, c) => {
               const key = `${r},${c}`;
+              const ghost = cellGhostInfo[key];
               return (
                 <View
                   key={key}
@@ -289,8 +318,8 @@ function HardcoreGameContent() {
                     cellSize={cellSize}
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
-                    ghostElement={null}
-                    ghostOpacity={0.7}
+                    ghostElement={el === null ? (ghost?.element ?? null) : null}
+                    ghostOpacity={ghost?.opacity ?? 0.7}
                     onPress={() => handleCellPress(r, c)}
                   />
                 </View>
@@ -299,6 +328,11 @@ function HardcoreGameContent() {
           )}
         </View>
       </View>
+
+      {/* Zone tooltip */}
+      {selectedZone && (
+        <ZoneTooltip zone={selectedZone} board={board} onClose={() => setSelectedZone(null)} />
+      )}
 
       {/* Palette */}
       <ElementPalette level={level} board={board} activeElement={activeElement} onSelect={setActiveElement} />
