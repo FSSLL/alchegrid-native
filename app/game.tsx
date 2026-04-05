@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback, useMemo, useRef, memo } from 'react';
+import Pressable from '../components/Pressable';
 import {
   View,
   Text,
@@ -10,7 +11,7 @@ import {
   InteractionManager,
   useWindowDimensions,
 } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+
 import { GRID_BACKGROUNDS } from '../constants/assets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -277,34 +278,34 @@ function GameContent() {
     <View style={[styles.container, { paddingTop: topPad }]}>
       {/* Top bar */}
       <View style={styles.topBar}>
-        <TouchableOpacity
+        <Pressable
           onPress={() => { stopTimer(); router.back(); }}
           style={styles.backBtn}
         >
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
 
         <View style={styles.pill}>
           <Text style={styles.coinText}>🪙 {coins}</Text>
         </View>
 
         <Animated.View style={{ transform: [{ scale: hintPulse }] }}>
-          <TouchableOpacity
+          <Pressable
             style={[styles.hintBtn, hintMode && styles.hintBtnActive]}
             onPress={handleHintPress}
           >
             <Text style={styles.hintIcon}>💡</Text>
             <Text style={styles.hintCount}>{unlimitedHints ? '∞' : hintBalance}</Text>
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
 
         <View style={styles.pill}>
           <Text style={styles.timerText}>{formatTime(elapsedTime)}</Text>
         </View>
 
-        <TouchableOpacity style={styles.resetBtn} onPress={resetBoard}>
+        <Pressable style={styles.resetBtn} onPress={resetBoard}>
           <Text style={styles.resetIcon}>↺</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Level label */}
