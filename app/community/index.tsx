@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import Pressable from '../../components/Pressable';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CommunityExplore from '../../components/CommunityExplore';
@@ -17,31 +18,31 @@ export default function CommunityScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <Pressable style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+        </Pressable>
         <Text style={styles.title}>Community</Text>
         <View style={{ width: 40 }} />
       </View>
 
       {/* Tab toggle */}
       <View style={styles.tabs}>
-        <TouchableOpacity
+        <Pressable
           style={[styles.tab, tab === 'explore' && styles.tabActive]}
           onPress={() => setTab('explore')}
         >
           <Text style={[styles.tabText, tab === 'explore' && styles.tabTextActive]}>
             🧭 Explore Levels
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </Pressable>
+        <Pressable
           style={[styles.tab, tab === 'build' && styles.tabActive]}
           onPress={() => setTab('build')}
         >
           <Text style={[styles.tabText, tab === 'build' && styles.tabTextActive]}>
             🔨 Make Level
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Content */}
