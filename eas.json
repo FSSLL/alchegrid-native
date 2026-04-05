@@ -1,20 +1,31 @@
 {
   "cli": {
-    "version": ">= 16.0.0"
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "node": "22.12.0"
+      "node": "22.12.0",
+      "env": {
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
+      }
     },
     "preview": {
       "distribution": "internal",
-      "node": "22.12.0"
+      "node": "22.12.0",
+      "env": {
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
+      }
     },
     "production": {
       "autoIncrement": true,
-      "node": "22.12.0"
+      "node": "22.12.0",
+      "credentialsSource": "remote",
+      "env": {
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
+      }
     }
   },
   "submit": {
