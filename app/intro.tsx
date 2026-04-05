@@ -8,13 +8,14 @@ import {
   Platform,
 } from 'react-native';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
 import { useAudioStore } from '../store/audioStore';
 import { audioManager } from '../lib/audioManager';
 
 const INTRO_VIDEO  = require('../assets/videos/intro.mp4');
-const SKIP_DELAY   = 3000; // ms before skip is allowed
+const SKIP_DELAY   = 3000;
 const RING_R       = 21;
 const RING_CIRC    = 2 * Math.PI * RING_R;
 
@@ -71,7 +72,6 @@ export default function IntroScreen() {
     router.replace('/(tabs)');
   }, []);
 
-  // Web: video autoplay blocked by browsers — just skip to home immediately
   useEffect(() => {
     if (Platform.OS === 'web') goHome();
   }, [goHome]);
@@ -93,7 +93,6 @@ export default function IntroScreen() {
     }
   };
 
-  // Show ring automatically once 3s passes (in case user never tapped)
   useEffect(() => {
     if (canSkip) setShowRing(true);
   }, [canSkip]);
@@ -102,15 +101,30 @@ export default function IntroScreen() {
     <View style={styles.container}>
       <StatusBar hidden />
 
+      {/* Video fills width, black bars fill the remaining height */}
       <Video
         source={INTRO_VIDEO}
         style={StyleSheet.absoluteFill}
-        resizeMode={ResizeMode.COVER}
+        resizeMode={ResizeMode.CONTAIN}
         shouldPlay
         isLooping={false}
         isMuted={musicVolume === 0}
         volume={musicVolume}
         onPlaybackStatusUpdate={handleStatus}
+      />
+
+      {/* Fade mask — top: black → transparent, ~20% of screen */}
+      <LinearGradient
+        colors={['#000000', 'transparent']}
+        style={styles.fadeTop}
+        pointerEvents="none"
+      />
+
+      {/* Fade mask — bottom: transparent → black, ~20% of screen */}
+      <LinearGradient
+        colors={['transparent', '#000000']}
+        style={styles.fadeBottom}
+        pointerEvents="none"
       />
 
       {/* Full-screen tap area */}
@@ -120,7 +134,7 @@ export default function IntroScreen() {
         activeOpacity={1}
       />
 
-      {/* Skip ring — top-right, appears after early tap or once 3 s have passed */}
+      {/* Skip ring */}
       {showRing && (
         <View
           style={[
@@ -138,6 +152,16 @@ export default function IntroScreen() {
 
 const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: '#000' },
+  fadeTop: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    height: '22%',
+  },
+  fadeBottom: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    height: '22%',
+  },
   skipCorner:   { position: 'absolute', right: 20 },
   skipIOS:      { top: 58 },
   skipAndroid:  { top: 38 },
