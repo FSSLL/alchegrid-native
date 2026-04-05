@@ -10,7 +10,7 @@ interface ZoneBordersProps {
   selectedZone: Zone | null;
 }
 
-const ZONE_GREEN   = '#22c55e';
+const ZONE_YELLOW  = '#FFD700';
 const ZONE_WIDTH   = 3.5;
 const ZONE_OPACITY = 0.9;
 
@@ -113,7 +113,7 @@ const ZoneBorders = memo(({ zones, size, cellSize, gap, selectedZone }: ZoneBord
           <Path
             key={key}
             d={path}
-            stroke={ZONE_GREEN}
+            stroke={ZONE_YELLOW}
             strokeWidth={ZONE_WIDTH}
             strokeLinecap="square"
             strokeLinejoin="miter"
