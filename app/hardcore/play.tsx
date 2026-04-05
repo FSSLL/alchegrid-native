@@ -1,6 +1,12 @@
 import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react';
+import Pressable from '../../components/Pressable';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Platform, Image, Animated,
+  View,
+  Text,
+  StyleSheet,
+  Platform,
+  Image,
+  Animated,
   useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -18,7 +24,6 @@ import GridLines from '../../components/GridLines';
 import ElementPalette from '../../components/ElementPalette';
 import ZoneTooltip from '../../components/ZoneTooltip';
 import { DragProvider, useDrag } from '../../contexts/DragContext';
-import { tap } from '../../lib/feedback';
 
 export default function HardcoreGameScreen() {
   return (
@@ -73,7 +78,6 @@ function HardcoreGameContent() {
   const { hintBalance, unlimitedHints, usePaidHint, hasDailyFreeHint, useDailyFreeHint } = usePlayerStore();
 
   const handleHintPress = useCallback(() => {
-    tap();
     if (hintMode) {
       toggleHintMode();
       return;
@@ -223,7 +227,6 @@ function HardcoreGameContent() {
   }, [placeElement, setSelectedZone, cellZoneLookup]);
 
   const handleSurrender = () => {
-    tap();
     stopTimer();
     surrender();
   };
@@ -248,9 +251,9 @@ function HardcoreGameContent() {
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={handleSurrender}>
+        <Pressable style={styles.backBtn} onPress={handleSurrender}>
           <Text style={styles.backIcon}>🏳</Text>
-        </TouchableOpacity>
+        </Pressable>
 
         <View style={styles.headerCenter}>
           <Text style={styles.levelLabel}>Level {currentLevel} / 70 · {level.size}×{level.size}</Text>
@@ -263,13 +266,13 @@ function HardcoreGameContent() {
           </View>
         </View>
 
-        <TouchableOpacity
+        <Pressable
           style={[styles.hintBtn, hintMode && styles.hintBtnActive]}
           onPress={handleHintPress}
         >
           <Text style={styles.hintIcon}>💡</Text>
           <Text style={styles.hintCount}>{unlimitedHints ? '∞' : hintBalance}</Text>
-        </TouchableOpacity>
+        </Pressable>
 
         <View style={styles.timerBadge}>
           <Text style={styles.timerText}>{formatTime(elapsedDisplay)}</Text>
