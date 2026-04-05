@@ -99,7 +99,7 @@ function AppRoot() {
       <Image
         source={BG}
         style={{ position: 'absolute', width: sw, height: sh, left: 0, top: 0 }}
-        resizeMode="stretch"
+        resizeMode="cover"
       />
       <View style={[StyleSheet.absoluteFill, styles.tint]} />
       <View style={styles.nav}>
