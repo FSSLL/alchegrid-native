@@ -39,6 +39,8 @@ interface DragState {
 
 interface DragContextValue {
   isDragging: boolean;
+  dragSourceRow: number | null;
+  dragSourceCol: number | null;
   startDrag: (
     element: ElementID,
     source: 'palette' | 'cell',
@@ -185,6 +187,8 @@ export function DragProvider({ children }: { children: ReactNode }) {
     <DragCtx.Provider
       value={{
         isDragging: !!dragState,
+        dragSourceRow: (dragState?.source === 'cell' ? dragState.sourceRow : undefined) ?? null,
+        dragSourceCol: (dragState?.source === 'cell' ? dragState.sourceCol : undefined) ?? null,
         startDrag,
         moveDrag,
         endDrag,
