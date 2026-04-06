@@ -1,3 +1,34 @@
+import { WORLD_ELEMENTS, WORLD_RECIPES } from './levelGenerator';
+import type { CatalogRecipe } from '../constants/recipeCatalog';
+
+function buildFullCatalog(): CatalogRecipe[] {
+  const seen = new Map<string, CatalogRecipe>();
+
+  // 1-ingredient: every base element is a "recipe" of itself
+  Object.entries(WORLD_ELEMENTS).forEach(([w, elements]) => {
+    const worldNum = Number(w);
+    elements.forEach((el) => {
+      if (!seen.has(el)) {
+        seen.set(el, { name: el, ingredients: [el], world: worldNum });
+      }
+    });
+  });
+
+  // Multi-ingredient recipes from every world (first world wins on name collision)
+  Object.entries(WORLD_RECIPES).forEach(([w, recipes]) => {
+    const worldNum = Number(w);
+    Object.entries(recipes).forEach(([key, recipeName]) => {
+      if (!seen.has(key)) {
+        seen.set(key, { name: recipeName, ingredients: key.split('+'), world: worldNum });
+      }
+    });
+  });
+
+  return Array.from(seen.values());
+}
+
+export const RECIPE_CATALOG: CatalogRecipe[] = buildFullCatalog();
+
 export const ZONE_COLORS: string[] = [
   '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
   '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#6366f1',
