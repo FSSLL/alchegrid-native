@@ -236,6 +236,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🛠 Dev Tools</Text>
           <View style={styles.card}>
+            {/* Unlock All Levels — hidden for release, kept for future testing
             <Pressable
               style={[styles.redeemBtn, { backgroundColor: '#16a34a' }]}
               onPress={() => {
@@ -245,6 +246,7 @@ export default function SettingsScreen() {
             >
               <Text style={styles.redeemBtnText}>🔓 Unlock All Levels</Text>
             </Pressable>
+            */}
             <Pressable
               style={[styles.redeemBtn, { backgroundColor: '#dc2626' }]}
               onPress={() =>
@@ -277,6 +279,38 @@ export default function SettingsScreen() {
               {'\n\n'}
               Version 1.0
             </Text>
+          </View>
+        </View>
+
+        {/* ── Contact Us ────────────────────────────────────────────────── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Contact Us</Text>
+          <View style={styles.card}>
+            <Text style={styles.contactIntro}>We'd love to hear from you</Text>
+            <View style={styles.separator} />
+            <View style={styles.contactRow}>
+              <Text style={styles.contactIcon}>📧</Text>
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactLabel}>Email</Text>
+                <Text style={styles.contactValue}>alchegridapp@gmail.com</Text>
+              </View>
+            </View>
+            <View style={styles.separator} />
+            <View style={styles.contactRow}>
+              <Text style={styles.contactIcon}>📞</Text>
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactLabel}>Phone</Text>
+                <Text style={styles.contactValue}>+971 54 466 5566</Text>
+              </View>
+            </View>
+            <View style={styles.separator} />
+            <View style={styles.contactRow}>
+              <Text style={styles.contactIcon}>💬</Text>
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactLabel}>WhatsApp</Text>
+                <Text style={styles.contactValue}>+971 54 466 5566</Text>
+              </View>
+            </View>
           </View>
         </View>
 
@@ -338,6 +372,13 @@ const styles = StyleSheet.create({
   },
   redeemBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   aboutText:     { color: '#8e9ab0', fontSize: 14, lineHeight: 22 },
+
+  contactIntro:  { color: '#eef1f5', fontSize: 14, fontWeight: '600', textAlign: 'center' },
+  contactRow:    { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  contactIcon:   { fontSize: 22 },
+  contactInfo:   { flex: 1 },
+  contactLabel:  { color: '#8e9ab0', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  contactValue:  { color: '#eef1f5', fontSize: 14, fontWeight: '600', marginTop: 2 },
 
   // Toggle switch
   toggle: {
