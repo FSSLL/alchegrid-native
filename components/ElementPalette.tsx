@@ -108,6 +108,7 @@ PaletteItem.displayName = 'PaletteItem';
 
 const ElementPalette = memo(({ level, board }: ElementPaletteProps) => {
   const gridSize = level.size;
+  const { isDragging } = useDrag();
 
   const itemSize =
     gridSize <= 4 ? 72 :
@@ -156,6 +157,7 @@ const ElementPalette = memo(({ level, board }: ElementPaletteProps) => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          scrollEnabled={!isDragging}
           contentContainerStyle={styles.scrollRow}
         >
           {items}
