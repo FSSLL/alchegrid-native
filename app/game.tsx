@@ -108,6 +108,7 @@ function GameContent() {
     initGame,
     placeSpecificElement,
     clearCell,
+    revealHint,
     setSelectedZone,
     toggleHintMode,
     stopTimer,
@@ -186,28 +187,39 @@ function GameContent() {
     );
   }, [setDropHandlers, placeSpecificElement, clearCell, completeLevel, globalLevelNum, setSelectedZone, cellZoneLookup]);
 
-  // Cell tap only opens zone tooltip — placement is drag-only
+  // Cell tap: hint reveal in hint mode; otherwise open zone tooltip
   const handleCellPress = useCallback(
     (row: number, col: number) => {
-      const zone = cellZoneLookup[`${row},${col}`] ?? null;
+      const key = `${row},${col}`;
+      if (hintMode) {
+        if (hintedCells[key]) {
+          // Already filled by a hint — cancel mode, no charge
+          toggleHintMode();
+          return;
+        }
+        // Check + consume credit now (at reveal time)
+        const canUse = unlimitedHints || hintBalance > 0;
+        const dailyFree = hasDailyFreeHint();
+        if (!canUse && !dailyFree) { toggleHintMode(); return; }
+        if (dailyFree && !canUse) { useDailyFreeHint(); }
+        if (!unlimitedHints) { usePaidHint(); }
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        revealHint(row, col);
+        return;
+      }
+      const zone = cellZoneLookup[key] ?? null;
       setSelectedZone(zone);
     },
-    [cellZoneLookup, setSelectedZone],
+    [hintMode, hintedCells, toggleHintMode, unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, revealHint, cellZoneLookup, setSelectedZone],
   );
 
   const handleHintPress = useCallback(() => {
-    if (hintMode) {
-      toggleHintMode();
-      return;
-    }
+    if (hintMode) { toggleHintMode(); return; }
     const canUse = unlimitedHints || hintBalance > 0;
-    const dailyFree = hasDailyFreeHint();
-    if (!canUse && !dailyFree) return;
-    if (dailyFree && !canUse) { useDailyFreeHint(); }
-    if (!unlimitedHints) { usePaidHint(); }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (!canUse && !hasDailyFreeHint()) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     toggleHintMode();
-  }, [hintMode, unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, toggleHintMode]);
+  }, [hintMode, unlimitedHints, hintBalance, hasDailyFreeHint, toggleHintMode]);
 
   const handleReplay = useCallback(() => { resetBoard(); }, [resetBoard]);
 
@@ -307,6 +319,13 @@ function GameContent() {
           <Text style={styles.resetIcon}>↺</Text>
         </Pressable>
       </View>
+
+      {/* Hint mode tooltip banner */}
+      {hintMode && (
+        <View style={styles.hintBanner}>
+          <Text style={styles.hintBannerText}>💡 Tap a cell to fill it with the right element</Text>
+        </View>
+      )}
 
       {/* Level label */}
       <View style={styles.levelLabel}>
@@ -453,6 +472,19 @@ const styles = StyleSheet.create({
   hintBtnActive: {
     borderColor: '#3aa7ff',
     backgroundColor: '#1a2a40',
+  },
+  hintBanner: {
+    alignItems: 'center',
+    paddingVertical: 5,
+    backgroundColor: 'rgba(58,167,255,0.12)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(58,167,255,0.25)',
+  },
+  hintBannerText: {
+    color: '#7dd3fc',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   hintIcon: {
     fontSize: 14,
