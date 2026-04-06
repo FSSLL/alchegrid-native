@@ -149,7 +149,7 @@ const SelectionOverlay = memo(({ selectedZone, cellSize, gap, svgSize, h }: Sele
       <Path
         d={path}
         stroke="#22c55e"
-        strokeWidth={4.4}
+        strokeWidth={2.2}
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
