@@ -242,10 +242,29 @@ function GameContent() {
     [conflicts],
   );
 
+  // Use currentLevelData (sync, always correct for this route) for all layout
+  // computations so the grid can pre-render during the navigation animation —
+  // BEFORE initGame fires and fills the store's `level`.
+  const { width: screenWidth } = useWindowDimensions();
+  const gridSize = currentLevelData?.size ?? 4;
+  const { cellSize, gap, totalGridPx: totalGridSize } = computeGridLayout(gridSize, screenWidth);
+  const gridBgSource = GRID_BACKGROUNDS[gridSize] ?? GRID_BACKGROUNDS[4];
+
+  // Pre-populate an empty board of the right size so cells mount immediately
+  // (empty, no images yet). Once initGame fires, board fills and cells just
+  // update their props — no re-mount, no second freeze.
+  const displayBoard = useMemo<(ElementID | null)[][]>(() => {
+    const n = gridSize;
+    if (board.length === n) return board;
+    return Array.from({ length: n }, () => Array<ElementID | null>(n).fill(null));
+  }, [board, gridSize]);
+
+  // Ghost hints — use currentLevelData so they appear even before initGame.
   const cellGhostInfo = useMemo(() => {
     const map: Record<string, { element: string; opacity: number; grayscale: boolean }> = {};
-    if (!level) return map;
-    level.zones.forEach((zone) => {
+    const src = level?.id === currentLevelData?.id ? level : currentLevelData;
+    if (!src) return map;
+    src.zones.forEach((zone) => {
       if (!zone.recipeName) return;
       const opacity = zone.cells.length === 1 ? 0.45 : 0.70;
       const grayscale = zone.cells.length === 1;
@@ -254,25 +273,16 @@ function GameContent() {
       });
     });
     return map;
-  }, [level]);
+  }, [level, currentLevelData]);
 
   // Guard: the store's selectedZone may still reference a zone from the previous
   // level on the first render (before initGame clears it). Only expose it once the
   // store's level actually matches the current route.
   const displaySelectedZone = level?.id === currentLevelData?.id ? selectedZone : null;
 
-  const { width: screenWidth } = useWindowDimensions();
-
-  if (!level) {
-    return (
-      <View style={[styles.loading, { backgroundColor: '#0f1117' }]}>
-        <ActivityIndicator size="large" color="#a78bfa" />
-      </View>
-    );
-  }
-
-  const gridSize = level.size;
-  const { cellSize, gap, totalGridPx: totalGridSize } = computeGridLayout(gridSize, screenWidth);
+  // Use currentLevelData as the authoritative source for zones/elements so the
+  // full grid structure renders immediately, before initGame fires.
+  const displayLevel = currentLevelData ?? level;
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -282,7 +292,14 @@ function GameContent() {
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const coinsEarned = stars * 10;
-  const gridBgSource = GRID_BACKGROUNDS[gridSize] ?? GRID_BACKGROUNDS[4];
+
+  if (!displayLevel) {
+    return (
+      <View style={[styles.loading, { backgroundColor: '#0f1117' }]}>
+        <ActivityIndicator size="large" color="#a78bfa" />
+      </View>
+    );
+  }
 
   // Measure grid after layout so DragContext knows drop zone coordinates
   const handleGridLayout = () => {
@@ -341,7 +358,7 @@ function GameContent() {
 
       {/* Star progress */}
       <View style={styles.progressRow}>
-        <StarProgress elapsed={elapsedTime} thresholds={level.starThresholds} />
+        <StarProgress elapsed={elapsedTime} thresholds={displayLevel.starThresholds} />
       </View>
 
       {/* Grid — static, no scroll */}
@@ -368,7 +385,7 @@ function GameContent() {
           />
           <GridLines gridSize={gridSize} cellSize={cellSize} gap={gap} totalGridPx={totalGridSize} />
           <ZoneBorders
-            zones={level.zones}
+            zones={displayLevel.zones}
             size={gridSize}
             cellSize={cellSize}
             gap={gap}
@@ -377,7 +394,7 @@ function GameContent() {
           {/* Overlay BEFORE cells so cells are on top and always receive touches */}
           <ZoneHighlightOverlay zone={displaySelectedZone} cellSize={cellSize} gap={gap} />
           <BoardCells
-            board={board}
+            board={displayBoard}
             cellSize={cellSize}
             gap={gap}
             conflictSet={conflictSet}
@@ -396,8 +413,8 @@ function GameContent() {
         ]}
       >
         <ElementPalette
-          level={level}
-          board={board}
+          level={displayLevel}
+          board={displayBoard}
         />
       </View>
 
