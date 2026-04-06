@@ -202,6 +202,7 @@ function WorldCard({
   onToggle: () => void;
   onTap: (n: string) => void;
 }) {
+  const isComingSoon = info.world >= 5;
   const recipeCount = useMemo(
     () => RECIPE_CATALOG.filter((r) => r.world === info.world).length,
     [info.world],
@@ -210,7 +211,11 @@ function WorldCard({
   const cardImage = WORLD_CARD_IMAGES[info.world] ?? null;
 
   const header = cardImage ? (
-    <Pressable onPress={onToggle} activeOpacity={0.88} style={styles.worldHeaderImg}>
+    <Pressable
+      onPress={isComingSoon ? undefined : onToggle}
+      activeOpacity={isComingSoon ? 1 : 0.88}
+      style={styles.worldHeaderImg}
+    >
       <ImageBackground
         source={cardImage}
         resizeMode="stretch"
@@ -233,12 +238,26 @@ function WorldCard({
           </Text>
         </View>
         <View style={styles.chevronPill}>
-          <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
+          {isComingSoon ? (
+            <Text style={styles.comingSoonChevron}>🔒</Text>
+          ) : (
+            <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
+          )}
         </View>
       </View>
+      {/* Coming soon overlay */}
+      {isComingSoon && (
+        <View style={[StyleSheet.absoluteFill, styles.comingSoonOverlay]} pointerEvents="none">
+          <Text style={styles.comingSoonLabel}>Coming Soon</Text>
+        </View>
+      )}
     </Pressable>
   ) : (
-    <Pressable onPress={onToggle} activeOpacity={0.8} style={styles.worldHeader}>
+    <Pressable
+      onPress={isComingSoon ? undefined : onToggle}
+      activeOpacity={isComingSoon ? 1 : 0.8}
+      style={styles.worldHeader}
+    >
       <LinearGradient colors={info.numberBg as [string, string]} style={styles.numBox}>
         <Text style={[styles.numText, { color: info.accent }]}>{info.world}</Text>
       </LinearGradient>
@@ -246,14 +265,18 @@ function WorldCard({
         <Text style={styles.worldName}>{info.name}</Text>
         <Text style={styles.worldMetaLine}>{info.grid} grid · {recipeCount} combos</Text>
       </View>
-      <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
+      {isComingSoon ? (
+        <Text style={styles.comingSoonInline}>🔒 Coming Soon</Text>
+      ) : (
+        <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
+      )}
     </Pressable>
   );
 
   return (
     <View style={[styles.worldCard, { borderColor: info.border }]}>
       {header}
-      {isOpen && <WorldBody info={info} onTap={onTap} />}
+      {isOpen && !isComingSoon && <WorldBody info={info} onTap={onTap} />}
     </View>
   );
 }
@@ -466,4 +489,28 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   defCloseIcon:  { color: '#64748b', fontSize: 12, fontWeight: '700' },
+
+  comingSoonOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  comingSoonLabel: {
+    color: '#ff8c00',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 2,
+    textShadowColor: 'rgba(0,0,0,0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  comingSoonChevron: {
+    fontSize: 14,
+  },
+  comingSoonInline: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ff8c00',
+    letterSpacing: 0.5,
+  },
 });
