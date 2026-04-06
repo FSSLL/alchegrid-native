@@ -136,10 +136,10 @@ export default function HomeScreen() {
         </View>
       </Pressable>
 
-      {/* Bottom row */}
+      {/* Bottom row: Catalog | Shop | Settings */}
       <View style={styles.bottomRow}>
         <Pressable
-          style={styles.halfWrap}
+          style={styles.thirdWrap}
           activeOpacity={0.85}
           onPress={() => router.push('/catalog')}
         >
@@ -149,7 +149,17 @@ export default function HomeScreen() {
           </View>
         </Pressable>
         <Pressable
-          style={styles.halfWrap}
+          style={styles.thirdWrap}
+          activeOpacity={0.85}
+          onPress={() => router.push('/shop' as any)}
+        >
+          <Image source={BANNER_BG} style={styles.bannerBg} resizeMode="contain" />
+          <View style={[StyleSheet.absoluteFill, styles.bannerContent]}>
+            <Text style={styles.bannerTitle}>Shop</Text>
+          </View>
+        </Pressable>
+        <Pressable
+          style={styles.thirdWrap}
           activeOpacity={0.85}
           onPress={() => router.push('/settings')}
         >
@@ -260,6 +270,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
 
-  bottomRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16 },
-  halfWrap: { flex: 1 },
+  bottomRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 16 },
+  thirdWrap: { flex: 1 },
 });
