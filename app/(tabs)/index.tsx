@@ -7,7 +7,6 @@ import {
   ScrollView,
   Platform,
   Image,
-  Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -56,16 +55,8 @@ export default function HomeScreen() {
     { label: 'Endless Mode', sub: 'Adaptive difficulty, chase high scores', route: '/endless' },
   ];
 
-  const screen = Dimensions.get('screen');
-  const window = Dimensions.get('window');
-
   return (
     <>
-    {/* ── DEBUG: screen dimensions — remove when done ── */}
-    <View style={styles.dimDebug} pointerEvents="none">
-      <Text style={styles.dimText}>logical  {screen.width} × {screen.height} pts  ×{screen.scale} scale</Text>
-      <Text style={styles.dimText}>native   {Math.round(screen.width * screen.scale)} × {Math.round(screen.height * screen.scale)} px</Text>
-    </View>
     <ScrollView
       style={styles.container}
       contentContainerStyle={[styles.content, { paddingTop: topPad + 12 }]}
@@ -166,15 +157,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  dimDebug: {
-    position: 'absolute', top: 60, left: 0, right: 0, zIndex: 9999,
-    alignItems: 'center', gap: 2,
-  },
-  dimText: {
-    backgroundColor: 'rgba(0,0,0,0.75)', color: '#00ff88',
-    fontSize: 11, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    paddingHorizontal: 10, paddingVertical: 2, borderRadius: 4, overflow: 'hidden',
-  },
   container: { flex: 1, backgroundColor: 'transparent' },
   content: { gap: 10, backgroundColor: 'transparent', paddingBottom: 64 },
 
