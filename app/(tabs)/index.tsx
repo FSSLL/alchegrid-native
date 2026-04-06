@@ -49,10 +49,10 @@ export default function HomeScreen() {
   };
 
   const BANNERS = [
-    { label: 'Select World', sub: 'Browse & replay levels', route: '/worlds' },
-    { label: 'Tutorial', sub: 'Learn how to play', route: '/tutorial' },
-    { label: '🧭 Community', sub: 'Play & share player-built levels', route: '/community' },
-    { label: 'Endless Mode', sub: 'Adaptive difficulty, chase high scores', route: '/endless' },
+    { label: 'Select World', sub: 'Browse & replay levels', route: '/worlds', comingSoon: false },
+    { label: 'Tutorial', sub: 'Learn how to play', route: '/tutorial', comingSoon: false },
+    { label: '🧭 Community', sub: 'Play & share player-built levels', route: '/community', comingSoon: false },
+    { label: 'Endless Mode', sub: 'Adaptive difficulty, chase high scores', route: '/endless', comingSoon: true },
   ];
 
   return (
@@ -107,8 +107,12 @@ export default function HomeScreen() {
       {BANNERS.map((item) => (
         <Pressable
           key={item.route}
-          onPress={() => { Haptics.selectionAsync(); router.push(item.route as any); }}
-          activeOpacity={0.85}
+          onPress={() => {
+            if (item.comingSoon) return;
+            Haptics.selectionAsync();
+            router.push(item.route as any);
+          }}
+          activeOpacity={item.comingSoon ? 1 : 0.85}
           style={styles.bannerWrap}
         >
           <Image source={BANNER_BG} style={styles.bannerBg} resizeMode="contain" />
@@ -116,12 +120,20 @@ export default function HomeScreen() {
             <Text style={styles.bannerTitle}>{item.label}</Text>
             <Text style={styles.bannerSub}>{item.sub}</Text>
           </View>
+          {item.comingSoon && (
+            <View style={[StyleSheet.absoluteFill, styles.comingSoonOverlay]} pointerEvents="none">
+              <Text style={styles.comingSoonLabel}>🔒  Coming Soon</Text>
+            </View>
+          )}
         </Pressable>
       ))}
 
-      {/* Hardcore button */}
-      <Pressable activeOpacity={0.85} style={styles.hardcoreWrap} onPress={() => router.push('/hardcore')}>
+      {/* Hardcore button — Coming Soon */}
+      <Pressable activeOpacity={1} style={styles.hardcoreWrap}>
         <Image source={HARDCORE_BG} style={styles.hardcoreBg} resizeMode="contain" />
+        <View style={[StyleSheet.absoluteFill, styles.comingSoonOverlay]} pointerEvents="none">
+          <Text style={styles.comingSoonLabel}>🔒  Coming Soon</Text>
+        </View>
       </Pressable>
 
       {/* Bottom row */}
@@ -231,6 +243,22 @@ const styles = StyleSheet.create({
 
   hardcoreWrap: { width: '100%' },
   hardcoreBg: { width: '100%', height: undefined, aspectRatio: HARDCORE_ASPECT },
+
+  comingSoonOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.52)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+  },
+  comingSoonLabel: {
+    color: '#ff8c00',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    textShadowColor: 'rgba(0,0,0,0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
 
   bottomRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16 },
   halfWrap: { flex: 1 },
