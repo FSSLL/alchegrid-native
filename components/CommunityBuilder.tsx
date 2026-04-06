@@ -14,9 +14,8 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useCommunityStore, deriveElements } from '../store/communityStore';
 import { useGameStore } from '../store/gameStore';
-import {
-  RECIPE_CATALOG, ZONE_COLORS, isCellsConnected, isAdjacentToSet, maxZoneSizeForGrid,
-} from '../lib/recipeCatalog';
+import { RECIPE_CATALOG } from '../constants/recipeCatalog';
+import { ZONE_COLORS, isCellsConnected, isAdjacentToSet, maxZoneSizeForGrid } from '../lib/recipeCatalog';
 import type { Level } from '../lib/types';
 
 // ── Builder cell sizes ────────────────────────────────────────────────────────
@@ -172,7 +171,7 @@ export default function CommunityBuilder() {
     setIsDrawingZone(false);
   };
 
-  const handlePickRecipe = (recipe: { recipeName: string; ingredients: string[] }) => {
+  const handlePickRecipe = (recipe: { name: string; ingredients: string[] }) => {
     commitCurrentZone(recipe);
     setShowRecipePicker(false);
     setIsDrawingZone(false);
@@ -367,7 +366,7 @@ export default function CommunityBuilder() {
                         ))}
                         {item.ingredients.length > 1 && <Text style={styles.arrowText}>→</Text>}
                       </View>
-                      <Text style={styles.recipeNameText}>{item.recipeName}</Text>
+                      <Text style={styles.recipeNameText}>{item.name}</Text>
                     </Pressable>
                   )}
                 />
