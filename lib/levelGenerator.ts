@@ -720,6 +720,36 @@ export function getFallbackName(ingredients: string[]): string {
   return FALLBACK_NAMES_4PLUS[h % FALLBACK_NAMES_4PLUS.length];
 }
 
+// Level-context-aware fallback: rotates to an unused name
+const ALL_FALLBACKS = [
+  ...FALLBACK_NAMES_2, ...FALLBACK_NAMES_3, ...FALLBACK_NAMES_4PLUS,
+];
+function getUniqueFallbackName(ingredients: string[], used: Set<string>): string {
+  const key = ingredients.join('+');
+  const h = hashString(key);
+  const list =
+    ingredients.length === 2 ? FALLBACK_NAMES_2 :
+    ingredients.length === 3 ? FALLBACK_NAMES_3 :
+    FALLBACK_NAMES_4PLUS;
+
+  // Try preferred name first
+  const preferred = list[h % list.length];
+  if (!used.has(preferred)) return preferred;
+
+  // Rotate through same-length list
+  for (const name of list) {
+    if (!used.has(name)) return name;
+  }
+  // Spill into the full fallback pool
+  for (const name of ALL_FALLBACKS) {
+    if (!used.has(name)) return name;
+  }
+  // Absolute last resort: number the preferred name
+  let n = 2;
+  while (used.has(`${preferred} ${n}`)) n++;
+  return `${preferred} ${n}`;
+}
+
 export function getStarThresholds(worldNum: number): { three: number; two: number } {
   const map: Record<number, { three: number; two: number }> = {
     1: { three: 60,  two: 120  },
@@ -738,35 +768,58 @@ export function generateLevel(worldNum: number, levelInWorld: number): Level {
   const gridSize = worldNum + 3; // 1->4, 2->5, ... 8->11
   const elements = WORLD_ELEMENTS[worldNum];
   const globalSeed = (worldNum * 1000) + levelInWorld * 37 + (levelInWorld * levelInWorld) % 97;
-  const rng = seededRandom(globalSeed);
 
-  const solution = generateLatinSquare(gridSize, elements, rng);
-  let zoneMap = partitionGrid(gridSize, rng);
-  zoneMap = splitZonesByUniqueness(zoneMap, solution, gridSize);
+  // Try up to 8 partition seeds; keep the attempt with fewest duplicate ingredient sets
+  let bestSolution: string[][] = [];
+  let bestRawZones: { ingredients: string[]; cells: { row: number; col: number }[] }[] = [];
+  let bestDupes = Infinity;
 
-  // Build zone groups
-  const zoneGroups: Map<number, [number, number][]> = new Map();
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-      const id = zoneMap[r][c];
-      if (!zoneGroups.has(id)) zoneGroups.set(id, []);
-      zoneGroups.get(id)!.push([r, c]);
+  for (let attempt = 0; attempt < 8 && bestDupes > 0; attempt++) {
+    const rng = seededRandom(globalSeed + attempt * 7919);
+    const solution = generateLatinSquare(gridSize, elements, rng);
+    let zoneMap = partitionGrid(gridSize, rng);
+    zoneMap = splitZonesByUniqueness(zoneMap, solution, gridSize);
+
+    const zoneGroups: Map<number, [number, number][]> = new Map();
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        const id = zoneMap[r][c];
+        if (!zoneGroups.has(id)) zoneGroups.set(id, []);
+        zoneGroups.get(id)!.push([r, c]);
+      }
+    }
+
+    const rawZones: { ingredients: string[]; cells: { row: number; col: number }[] }[] = [];
+    const seenKeys = new Set<string>();
+    let dupes = 0;
+    for (const [, cells] of zoneGroups) {
+      const ingredients = [...new Set(cells.map(([r, c]) => solution[r][c]))].sort();
+      const key = ingredients.join('+');
+      if (seenKeys.has(key)) dupes++;
+      seenKeys.add(key);
+      rawZones.push({ ingredients, cells: cells.map(([r, c]) => ({ row: r, col: c })) });
+    }
+
+    if (dupes < bestDupes) {
+      bestDupes = dupes;
+      bestSolution = solution;
+      bestRawZones = rawZones;
     }
   }
 
-  const zones: Zone[] = [];
-  let zoneIndex = 0;
-  for (const [, cells] of zoneGroups) {
-    const ingredients = [...new Set(cells.map(([r, c]) => solution[r][c]))].sort();
-    const recipeName = findRecipe(worldNum, ingredients) ?? getFallbackName(ingredients);
-    zones.push({
-      id: `z${zoneIndex}`,
-      recipeName,
-      ingredients,
-      cells: cells.map(([r, c]) => ({ row: r, col: c })),
-    });
-    zoneIndex++;
-  }
+  // Assign recipe names — named recipes get priority; fallbacks are deduplicated
+  const usedNames = new Set<string>();
+  const zones: Zone[] = bestRawZones.map((z, i) => {
+    const named = findRecipe(worldNum, z.ingredients);
+    let recipeName: string;
+    if (named && !usedNames.has(named)) {
+      recipeName = named;
+    } else {
+      recipeName = getUniqueFallbackName(z.ingredients, usedNames);
+    }
+    usedNames.add(recipeName);
+    return { id: `z${i}`, recipeName, ingredients: z.ingredients, cells: z.cells };
+  });
 
   const numStr = levelInWorld.toString().padStart(2, '0');
   return {
@@ -775,7 +828,7 @@ export function generateLevel(worldNum: number, levelInWorld: number): Level {
     size: gridSize,
     elements,
     zones,
-    canonicalSolution: solution,
+    canonicalSolution: bestSolution,
     starThresholds: getStarThresholds(worldNum),
   };
 }
