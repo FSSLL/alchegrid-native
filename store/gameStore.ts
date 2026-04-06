@@ -90,7 +90,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (currentCell === activeElement) {
       const newBoard = board.map((r) => [...r]);
       newBoard[row][col] = null;
-      const conflicts = getConflicts(newBoard, level.size);
+      const conflicts = getConflicts(newBoard, level.size, level.zones);
       set({ board: newBoard, conflicts });
       return;
     }
@@ -108,7 +108,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newBoard = board.map((r) => [...r]);
     newBoard[row][col] = activeElement;
 
-    const conflicts = getConflicts(newBoard, level.size);
+    const conflicts = getConflicts(newBoard, level.size, level.zones);
 
     const won = checkWin(level, newBoard, conflicts);
 
@@ -145,7 +145,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newBoard = board.map((r) => [...r]);
     newBoard[row][col] = element;
 
-    const conflicts = getConflicts(newBoard, level.size);
+    const conflicts = getConflicts(newBoard, level.size, level.zones);
     const won = checkWin(level, newBoard, conflicts);
 
     if (won) {
@@ -168,7 +168,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (hintedCells[`${row},${col}`]) return;
     const newBoard = board.map((r) => [...r]);
     newBoard[row][col] = null;
-    const conflicts = getConflicts(newBoard, level.size);
+    const conflicts = getConflicts(newBoard, level.size, level.zones);
     set({ board: newBoard, conflicts });
   },
 
@@ -182,7 +182,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newBoard = board.map((r) => [...r]);
     newBoard[row][col] = null;
 
-    const conflicts = getConflicts(newBoard, level.size);
+    const conflicts = getConflicts(newBoard, level.size, level.zones);
     set({ board: newBoard, conflicts });
   },
 
@@ -198,7 +198,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     newBoard[row][col] = answer;
 
     const newHinted = { ...hintedCells, [hintKey]: answer };
-    const conflicts = getConflicts(newBoard, level.size);
+    const conflicts = getConflicts(newBoard, level.size, level.zones);
     const won = checkWin(level, newBoard, conflicts);
 
     if (won) {
