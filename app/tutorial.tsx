@@ -415,7 +415,6 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
       setTimeout(() => {
         placeSpecificElement('Fire', 0, 0);
         placeSpecificElement('Fire', 0, 1);
-        setActiveElement(null);
       }, 150);
     }
   }, [tipIndex, conflictDemoShown]);
