@@ -69,7 +69,7 @@ const ElementIcon = memo(({
         <Image
           source={pngSrc}
           style={{ width: size, height: size, opacity }}
-          resizeMode="contain"
+          resizeMode="stretch"
         />
         {showLabel && (
           <Text style={[styles.label, { fontSize: lblSize }]} numberOfLines={1}>
