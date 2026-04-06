@@ -49,10 +49,10 @@ function HardcoreGameContent() {
 
   // ── game store ──────────────────────────────────────────────────────────
   const {
-    level, board, status, activeElement,
+    level, board, status,
     conflicts, selectedZone, hintedCells, hintMode, toggleHintMode,
     initGame, placeElement, placeSpecificElement,
-    clearCell, revealHint, setActiveElement, setSelectedZone, stopTimer,
+    clearCell, revealHint, setSelectedZone, stopTimer,
   } = useGameStore();
 
   const conflictSet = useMemo(
@@ -360,7 +360,7 @@ function HardcoreGameContent() {
       )}
 
       {/* Palette */}
-      <ElementPalette level={level} board={board} activeElement={activeElement} onSelect={setActiveElement} />
+      <ElementPalette level={level} board={board} />
     </View>
   );
 }
