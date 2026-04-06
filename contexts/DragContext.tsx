@@ -52,7 +52,7 @@ interface DragContextValue {
   cancelDrag: () => void;
   registerGrid: (info: GridInfo) => void;
   setDropHandlers: (
-    onDrop: (el: ElementID, row: number, col: number) => void,
+    onDrop: (el: ElementID, row: number, col: number, sourceRow?: number, sourceCol?: number) => void,
     onDropOutside: (row: number, col: number) => void,
   ) => void;
 }
@@ -77,7 +77,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
   // Stable refs so PanResponder callbacks are never stale
   const dragStateRef = useRef<DragState | null>(null);
   const gridInfoRef = useRef<GridInfo | null>(null);
-  const onDropRef = useRef<(el: ElementID, r: number, c: number) => void>(() => {});
+  const onDropRef = useRef<(el: ElementID, r: number, c: number, srcRow?: number, srcCol?: number) => void>(() => {});
   const onDropOutsideRef = useRef<(r: number, c: number) => void>(() => {});
 
   const registerGrid = useCallback((info: GridInfo) => {
@@ -86,7 +86,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
 
   const setDropHandlers = useCallback(
     (
-      onDrop: (el: ElementID, r: number, c: number) => void,
+      onDrop: (el: ElementID, r: number, c: number, srcRow?: number, srcCol?: number) => void,
       onDropOutside: (r: number, c: number) => void,
     ) => {
       onDropRef.current = onDrop;
@@ -143,7 +143,9 @@ export function DragProvider({ children }: { children: ReactNode }) {
           row < gi.gridN;
 
         if (inBounds) {
-          onDropRef.current(ds.element, row, col);
+          const srcRow = ds.source === 'cell' ? ds.sourceRow : undefined;
+          const srcCol = ds.source === 'cell' ? ds.sourceCol : undefined;
+          onDropRef.current(ds.element, row, col, srcRow, srcCol);
           audioManager.playDrop().catch(() => {});
           if (Platform.OS !== 'web' && useAudioStore.getState().hapticsEnabled) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
