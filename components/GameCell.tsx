@@ -36,7 +36,7 @@ const GameCell = memo(({
   ghostOpacity,
   onPress,
 }: GameCellProps) => {
-  const { startDrag, moveDrag, endDrag, cancelDrag } = useDrag();
+  const { startDrag, moveDrag, endDrag, cancelDrag, dragSourceRow, dragSourceCol } = useDrag();
   const scale = useSharedValue(1);
   const isDragging = useRef(false);
 
@@ -110,6 +110,8 @@ const GameCell = memo(({
     }),
   ).current;
 
+  const isBeingDragged = dragSourceRow === row && dragSourceCol === col;
+
   const iconSize = cellSize * 0.96;
   const labelFontSize = cellSize * 0.18;
   const showLabel = false;
@@ -137,12 +139,19 @@ const GameCell = memo(({
           },
         ]}
       >
-        {element ? (
+        {element && !isBeingDragged ? (
           <ElementIcon
             name={element}
             size={iconSize}
             showLabel={showLabel}
             labelFontSize={labelFontSize}
+          />
+        ) : element && isBeingDragged ? (
+          <ElementIcon
+            name={element}
+            size={iconSize}
+            showLabel={false}
+            opacity={0.2}
           />
         ) : ghostElement ? (
           <ElementIcon
