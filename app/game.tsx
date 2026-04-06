@@ -171,7 +171,12 @@ function GameContent() {
   // extra re-registration is cheap and correct.
   useEffect(() => {
     setDropHandlers(
-      (element, row, col) => {
+      (element, row, col, srcRow, srcCol) => {
+        // Move semantics: clear source cell first so inventory count is correct
+        const isMove = srcRow !== undefined && srcCol !== undefined;
+        const isSameCell = isMove && srcRow === row && srcCol === col;
+        if (isSameCell) return; // dropped on same cell — no-op
+        if (isMove) clearCell(srcRow!, srcCol!);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         placeSpecificElement(element, row, col, (earnedStars) => {
           completeLevel(globalLevelNum, earnedStars);
