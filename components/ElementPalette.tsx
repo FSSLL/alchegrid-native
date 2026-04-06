@@ -46,7 +46,9 @@ const PaletteItem = memo(({ element, remaining, itemSize }: PaletteItemProps) =>
       onStartShouldSetPanResponder: () => false,
       onStartShouldSetPanResponderCapture: () => false,
       onMoveShouldSetPanResponder: (_e, gs) =>
-        (Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5) && remainingRef.current > 0,
+        remainingRef.current > 0 &&
+        Math.abs(gs.dy) > 8 &&
+        Math.abs(gs.dy) > Math.abs(gs.dx),
       onMoveShouldSetPanResponderCapture: () => false,
       onPanResponderGrant: (e) => {
         isDraggingRef.current = true;
