@@ -22,22 +22,34 @@ function VolumeSlider({
   value,
   onChange,
   accent = '#ff6a00',
+  onInteractStart,
+  onInteractEnd,
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
   accent?: string;
+  onInteractStart?: () => void;
+  onInteractEnd?: () => void;
 }) {
   const trackW = useRef(0);
   const trackPageX = useRef(0);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onStartRef = useRef(onInteractStart);
+  onStartRef.current = onInteractStart;
+  const onEndRef = useRef(onInteractEnd);
+  onEndRef.current = onInteractEnd;
 
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
       onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (e) => {
+        onStartRef.current?.();
         trackPageX.current = e.nativeEvent.pageX - e.nativeEvent.locationX;
         const v = Math.max(0, Math.min(1, e.nativeEvent.locationX / (trackW.current || 1)));
         onChangeRef.current(v);
@@ -46,6 +58,8 @@ function VolumeSlider({
         const v = Math.max(0, Math.min(1, (gs.moveX - trackPageX.current) / (trackW.current || 1)));
         onChangeRef.current(v);
       },
+      onPanResponderRelease: () => { onEndRef.current?.(); },
+      onPanResponderTerminate: () => { onEndRef.current?.(); },
     })
   ).current;
 
@@ -120,6 +134,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const [code, setCode] = useState('');
+  const [sliderActive, setSliderActive] = useState(false);
   const {
     coins, hintBalance, unlimitedHints,
     activateUnlimitedHints, addHint, addCoins, unlockAll, resetProgress,
@@ -158,15 +173,17 @@ export default function SettingsScreen() {
         <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} scrollEnabled={!sliderActive}>
 
         {/* ── Sound & Haptics ────────────────────────────────────────────── */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sound & Haptics</Text>
           <View style={styles.card}>
-            <VolumeSlider label="🎵 Music" value={musicVolume} onChange={setMusicVolume} />
+            <VolumeSlider label="🎵 Music" value={musicVolume} onChange={setMusicVolume}
+              onInteractStart={() => setSliderActive(true)} onInteractEnd={() => setSliderActive(false)} />
             <View style={styles.separator} />
-            <VolumeSlider label="🔊 SFX" value={sfxVolume} onChange={setSfxVolume} accent="#22c55e" />
+            <VolumeSlider label="🔊 SFX" value={sfxVolume} onChange={setSfxVolume} accent="#22c55e"
+              onInteractStart={() => setSliderActive(true)} onInteractEnd={() => setSliderActive(false)} />
             <View style={styles.separator} />
             <View style={styles.row}>
               <Text style={styles.rowLabel}>📳 Haptics</Text>
