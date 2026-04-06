@@ -14,6 +14,14 @@ import { useCommunityStore, communityLevelToGameLevel, type CommunityLevel } fro
 import { useGameStore } from '../store/gameStore';
 
 type ActiveFilter = 'all' | 'shared' | 'liked' | 'mine';
+type SortOption = 'newest' | 'oldest' | 'grid_asc' | 'grid_desc';
+
+const SORT_LABELS: Record<SortOption, string> = {
+  newest:    '🕐 Newest',
+  oldest:    '🕰 Oldest',
+  grid_asc:  '⬆ Grid',
+  grid_desc: '⬇ Grid',
+};
 
 interface ServerStatus {
   queuedUploads: number;
@@ -35,6 +43,7 @@ function getApiBase(): string {
 
 export default function CommunityExplore() {
   const [filter, setFilter] = useState<ActiveFilter>('all');
+  const [sort, setSort]   = useState<SortOption>('newest');
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -72,13 +81,35 @@ export default function CommunityExplore() {
   const allBrowsable = getAllBrowsableLevels();
 
   const filteredLevels = useMemo(() => {
+    let base: CommunityLevel[];
     switch (filter) {
-      case 'all': return allBrowsable;
-      case 'shared': return remoteLevels;
-      case 'liked': return allBrowsable.filter((l) => likedLevelIds.includes(l.id));
-      case 'mine': return levels.filter((l) => l.published && l.createdByPlayer);
+      case 'shared': base = remoteLevels; break;
+      case 'liked':  base = allBrowsable.filter((l) => likedLevelIds.includes(l.id)); break;
+      case 'mine':   base = levels.filter((l) => l.published && l.createdByPlayer); break;
+      default:       base = allBrowsable;
     }
-  }, [filter, allBrowsable, remoteLevels, likedLevelIds, levels]);
+
+    const sorted = [...base];
+    switch (sort) {
+      case 'newest':
+        sorted.sort((a, b) => {
+          const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+          const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+          return tb - ta;
+        });
+        break;
+      case 'oldest':
+        sorted.sort((a, b) => {
+          const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+          const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+          return ta - tb;
+        });
+        break;
+      case 'grid_asc':  sorted.sort((a, b) => a.size - b.size); break;
+      case 'grid_desc': sorted.sort((a, b) => b.size - a.size); break;
+    }
+    return sorted;
+  }, [filter, sort, allBrowsable, remoteLevels, likedLevelIds, levels]);
 
   const totalSolved = useMemo(
     () => solvedLevelIds.filter((id) => allBrowsable.some((l) => l.id === id)).length,
@@ -145,6 +176,22 @@ export default function CommunityExplore() {
             onPress={() => { setFilter(f); setConfirmDeleteId(null); }}
           >
             <Text style={[styles.filterBtnText, filter === f && styles.filterBtnTextActive]}>{label}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      {/* Sort row */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sortRow} contentContainerStyle={styles.sortContent}>
+        <Text style={styles.sortLabel}>Sort:</Text>
+        {(Object.keys(SORT_LABELS) as SortOption[]).map((s) => (
+          <Pressable
+            key={s}
+            style={[styles.sortBtn, sort === s && styles.sortBtnActive]}
+            onPress={() => setSort(s)}
+          >
+            <Text style={[styles.sortBtnText, sort === s && styles.sortBtnTextActive]}>
+              {SORT_LABELS[s]}
+            </Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -315,6 +362,18 @@ const styles = StyleSheet.create({
 
   filterRow: { maxHeight: 44 },
   filterContent: { paddingHorizontal: 12, paddingVertical: 6, gap: 6 },
+
+  sortRow: { maxHeight: 38, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.07)' },
+  sortContent: { paddingHorizontal: 12, paddingVertical: 5, gap: 6, alignItems: 'center' },
+  sortLabel: { color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: '600', marginRight: 2, alignSelf: 'center' },
+  sortBtn: {
+    paddingHorizontal: 11, paddingVertical: 4, borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  sortBtnActive: { backgroundColor: 'rgba(96,165,250,0.2)', borderColor: 'rgba(96,165,250,0.45)' },
+  sortBtnText: { color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: '600' },
+  sortBtnTextActive: { color: '#93c5fd', fontWeight: '700' },
   filterBtn: {
     paddingHorizontal: 14, paddingVertical: 6, borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.07)',
