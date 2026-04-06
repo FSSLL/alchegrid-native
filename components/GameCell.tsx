@@ -110,7 +110,7 @@ const GameCell = memo(({
     }),
   ).current;
 
-  const iconSize = cellSize * 0.90;
+  const iconSize = cellSize * 0.96;
   const labelFontSize = cellSize * 0.18;
   const showLabel = false;
 
