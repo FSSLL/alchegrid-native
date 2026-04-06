@@ -118,7 +118,7 @@ export default function IntroScreen() {
       <Video
         source={INTRO_VIDEO}
         style={StyleSheet.absoluteFill}
-        resizeMode={ResizeMode.CONTAIN}
+        resizeMode={ResizeMode.COVER}
         shouldPlay
         isLooping={false}
         isMuted={musicVolume === 0}
