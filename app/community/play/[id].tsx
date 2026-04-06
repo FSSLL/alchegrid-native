@@ -14,7 +14,6 @@ import * as Haptics from 'expo-haptics';
 import { GRID_BACKGROUNDS } from '../../../constants/assets';
 import { useGameStore } from '../../../store/gameStore';
 import { useCommunityStore, communityLevelToGameLevel } from '../../../store/communityStore';
-import { computeGridLayout } from '../../../lib/gridLayout';
 import GameCell from '../../../components/GameCell';
 import ZoneBorders from '../../../components/ZoneBorders';
 import ZoneHighlightOverlay from '../../../components/ZoneHighlightOverlay';
@@ -38,6 +37,17 @@ const CELL_GAPS: Record<number, number> = {
   4: 6, 5: 4, 6: 3, 7: 3, 8: 2, 9: 2, 10: 2, 11: 2,
 };
 
+function cellLayoutForSize(size: number, screenWidth: number): { cellSize: number; cellGap: number; gridPx: number } {
+  const baseCellSize = CELL_SIZES[size] ?? 40;
+  const baseCellGap  = CELL_GAPS[size]  ?? 3;
+  // Cap at what fits within the screen (with 24px side padding)
+  const maxCellFromWidth = Math.floor((screenWidth - 48 - (size - 1) * baseCellGap) / size);
+  const cellSize = Math.min(baseCellSize, maxCellFromWidth);
+  const cellGap  = baseCellGap;
+  const gridPx   = size * cellSize + (size - 1) * cellGap;
+  return { cellSize, cellGap, gridPx };
+}
+
 function PlayContent() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 8 : insets.top;
@@ -48,9 +58,9 @@ function PlayContent() {
   const prevBoardRef = useRef('');
 
   const {
-    level, board, hintedCells, status, activeElement, hintMode,
-    conflicts, selectedZone, initGame, placeElement, placeSpecificElement,
-    clearCell, setActiveElement, setSelectedZone, stopTimer, toggleHintMode,
+    level, board, hintedCells, status, hintMode,
+    conflicts, selectedZone, initGame, placeSpecificElement,
+    clearCell, setSelectedZone, stopTimer, toggleHintMode,
   } = useGameStore();
 
   const conflictSet = useMemo(
@@ -102,7 +112,11 @@ function PlayContent() {
   // ── drag handlers ─────────────────────────────────────────────────────────
   useEffect(() => {
     setDropHandlers(
-      (element, row, col) => {
+      (element, row, col, srcRow, srcCol) => {
+        const isMove = srcRow !== undefined && srcCol !== undefined;
+        const isSameCell = isMove && srcRow === row && srcCol === col;
+        if (isSameCell) return;
+        if (isMove) clearCell(srcRow!, srcCol!);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         placeSpecificElement(element, row, col);
         if (level) {
@@ -125,15 +139,13 @@ function PlayContent() {
 
   const handleCellPress = useCallback((row: number, col: number) => {
     const key = `${row},${col}`;
-    if (hintedCells[key]) return;
-    placeElement(row, col);
     setSelectedZone(cellZoneLookup[key] ?? null);
-  }, [placeElement, hintedCells, cellZoneLookup, setSelectedZone]);
+  }, [cellZoneLookup, setSelectedZone]);
 
   const { width: screenWidth } = useWindowDimensions();
   if (!level) return null;
 
-  const { cellSize, gap: cellGap, totalGridPx: gridPx } = computeGridLayout(level.size, screenWidth);
+  const { cellSize, cellGap, gridPx } = cellLayoutForSize(level.size, screenWidth);
 
   const handleGridLayout = () => {
     gridViewRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
@@ -213,7 +225,7 @@ function PlayContent() {
         <ZoneTooltip zone={selectedZone} board={board} onClose={() => setSelectedZone(null)} />
       )}
 
-      <ElementPalette level={level} board={board} activeElement={activeElement} onSelect={setActiveElement} />
+      <ElementPalette level={level} board={board} />
     </View>
   );
 }
