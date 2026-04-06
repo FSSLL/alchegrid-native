@@ -64,12 +64,13 @@ const ElementIcon = memo(({
   }
 
   if (pngSrc) {
+    const imgSize = size * 0.9;
     return (
       <View style={[styles.wrap, { width: size, height: size }]}>
         <Image
           source={pngSrc}
-          style={{ width: size, height: size, opacity }}
-          resizeMode="cover"
+          style={{ width: imgSize, height: imgSize, opacity }}
+          resizeMode="contain"
         />
         {showLabel && (
           <Text style={[styles.label, { fontSize: lblSize }]} numberOfLines={1}>
