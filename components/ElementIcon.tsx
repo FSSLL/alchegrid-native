@@ -10,6 +10,7 @@ export const VIDEO_MAP: Record<string, ReturnType<typeof require>> = {
   lightning: require('../assets/videos/lightning.mp4'),
   fume:      require('../assets/videos/fume.mp4'),
   reactor:   require('../assets/videos/reactor.mp4'),
+  flash:     require('../assets/videos/flash.mp4'),
 };
 
 export function normalizeName(name: string): string {
