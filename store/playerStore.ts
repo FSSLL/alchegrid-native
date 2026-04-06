@@ -32,8 +32,8 @@ interface PlayerStore {
 export const usePlayerStore = create<PlayerStore>()(
   persist(
     (set, get) => ({
-      coins: 100,
-      hintBalance: 3,
+      coins: 0,
+      hintBalance: 10,
       lastDailyFreeHint: '',
       progressIndex: 0,
       starsByLevel: {},
@@ -108,8 +108,8 @@ export const usePlayerStore = create<PlayerStore>()(
         set({
           progressIndex: 0,
           starsByLevel: {},
-          coins: 100,
-          hintBalance: 3,
+          coins: 0,
+          hintBalance: 10,
           unlimitedHints: false,
           tutorialDismissed: false,
           seenWorlds: [],
