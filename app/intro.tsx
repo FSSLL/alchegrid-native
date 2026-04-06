@@ -79,9 +79,9 @@ export default function IntroScreen() {
     if (Platform.OS === 'web') goHome();
   }, [goHome]);
 
-  // Hard safety timeout — if video hasn't moved after 5 s, skip to home
+  // Hard safety timeout — video is ~10 s; bail at 13 s only if it never finishes
   useEffect(() => {
-    const t = setTimeout(goHome, 5000);
+    const t = setTimeout(goHome, 13000);
     return () => clearTimeout(t);
   }, [goHome]);
 
