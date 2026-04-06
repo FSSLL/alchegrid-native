@@ -64,12 +64,11 @@ const ElementIcon = memo(({
   }
 
   if (pngSrc) {
-    const imgSize = size * 0.9;
     return (
       <View style={[styles.wrap, { width: size, height: size }]}>
         <Image
           source={pngSrc}
-          style={{ width: imgSize, height: imgSize, opacity }}
+          style={{ width: size, height: size, opacity }}
           resizeMode="contain"
         />
         {showLabel && (
