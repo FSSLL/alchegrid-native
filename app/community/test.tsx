@@ -45,9 +45,9 @@ function TestContent() {
   const gridViewRef = useRef<View>(null);
 
   const {
-    level, board, hintedCells, status, activeElement,
+    level, board, hintedCells, status,
     conflicts, selectedZone, placeElement, placeSpecificElement,
-    clearCell, setActiveElement, setSelectedZone, stopTimer,
+    clearCell, setSelectedZone, stopTimer,
   } = useGameStore();
 
   const conflictSet = useMemo(
@@ -183,7 +183,7 @@ function TestContent() {
         <ZoneTooltip zone={selectedZone} board={board} onClose={() => setSelectedZone(null)} />
       )}
 
-      <ElementPalette level={level} board={board} activeElement={activeElement} onSelect={setActiveElement} />
+      <ElementPalette level={level} board={board} />
     </View>
   );
 }
