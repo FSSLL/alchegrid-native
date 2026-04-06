@@ -119,7 +119,7 @@ interface CommunityStore {
   addCellToCurrentZone: (r: number, c: number) => void;
   removeCellFromCurrentZone: (r: number, c: number) => void;
   clearCurrentZone: () => void;
-  commitCurrentZone: (recipe: { recipeName: string; ingredients: string[] }) => void;
+  commitCurrentZone: (recipe: { name: string; ingredients: string[] }) => void;
   editZone: (index: number) => void;
   removeZone: (index: number) => void;
   markEdited: () => void;
@@ -195,7 +195,7 @@ export const useCommunityStore = create<CommunityStore>()(
           const { draft } = s;
           const newZone: Zone = {
             id: `cz_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`,
-            recipeName: recipe.recipeName,
+            recipeName: recipe.name,
             ingredients: recipe.ingredients,
             cells: [...draft.currentZoneCells],
           };
