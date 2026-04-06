@@ -1,8 +1,13 @@
 import type { Level, CellCoord, Zone, ElementID } from './types';
 
-export function getConflicts(board: (ElementID | null)[][], size: number): CellCoord[] {
+export function getConflicts(
+  board: (ElementID | null)[][],
+  size: number,
+  zones?: Zone[],
+): CellCoord[] {
   const conflicts: CellCoord[] = [];
 
+  // ── Rule 1: no duplicate element in the same row ──
   for (let r = 0; r < size; r++) {
     const seen = new Map<string, number>();
     for (let c = 0; c < size; c++) {
@@ -17,6 +22,7 @@ export function getConflicts(board: (ElementID | null)[][], size: number): CellC
     }
   }
 
+  // ── Rule 2: no duplicate element in the same column ──
   for (let c = 0; c < size; c++) {
     const seen = new Map<string, number>();
     for (let r = 0; r < size; r++) {
@@ -31,6 +37,25 @@ export function getConflicts(board: (ElementID | null)[][], size: number): CellC
     }
   }
 
+  // ── Rule 3: no duplicate element in the same combination zone ──
+  if (zones) {
+    for (const zone of zones) {
+      if (zone.cells.length < 2) continue; // single-cell zones can't have duplicates
+      const seen = new Map<string, CellCoord>();
+      for (const cell of zone.cells) {
+        const el = board[cell.row][cell.col];
+        if (!el) continue;
+        if (seen.has(el)) {
+          conflicts.push(seen.get(el)!);
+          conflicts.push({ row: cell.row, col: cell.col });
+        } else {
+          seen.set(el, { row: cell.row, col: cell.col });
+        }
+      }
+    }
+  }
+
+  // Deduplicate
   const keys = new Set<string>();
   return conflicts.filter((cc) => {
     const k = `${cc.row},${cc.col}`;
@@ -67,7 +92,7 @@ export function checkWin(
   }
 
   // 2. No conflicts — reuse pre-computed result when available
-  const conflicts = preComputedConflicts ?? getConflicts(board, level.size);
+  const conflicts = preComputedConflicts ?? getConflicts(board, level.size, level.zones);
   if (conflicts.length > 0) return false;
 
   // 3. All zones satisfied
