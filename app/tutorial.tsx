@@ -316,6 +316,7 @@ const TIP_TOP: Record<TipPosition, string> = {
   'below-board':          '54%',
   'below-board-arrow-up': '50%',
   'above-inventory':      '54%',
+  'none':                 '30%',
 };
 function TipOverlay({ tip, tipIndex, total }: { tip: TipStep; tipIndex: number; total: number }) {
   const arrowDown = ['above-board', 'over-board-top', 'above-inventory'].includes(tip.position);
@@ -353,6 +354,9 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
   const [hasPlaced,         setHasPlaced]         = useState(false);
   const [showWin,           setShowWin]           = useState(false);
   const [paletteH,          setPaletteH]          = useState(100);
+  // Tracks the tappedCells count at the moment each tip became active.
+  // Prevents stale counts from previous tips triggering the next tip immediately.
+  const tappedBaseRef = useRef(0);
 
   // Init the tutorial board once
   useEffect(() => {
@@ -367,8 +371,10 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
   // Wire up drop handlers
   useEffect(() => {
     setDropHandlers(
-      (element, row, col) => {
+      (element, row, col, srcRow, srcCol) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        // Board-to-board move: clear source cell first
+        if (srcRow !== undefined && srcCol !== undefined) clearCell(srcRow, srcCol);
         placeSpecificElement(element, row, col);
         trackPlacement(element, row, col);
         if (level) {
@@ -419,20 +425,24 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
     }
   }, [tipIndex, conflictDemoShown]);
 
-  // Auto-advance tips
+  // Auto-advance tips.
+  // tappedBaseRef stores the tappedCells value when the current tip became active,
+  // so a tap from a previous tip cannot immediately trigger the next one.
   useEffect(() => {
     if (tipsComplete) return;
     const tip = PRACTICE_TIPS[tipIndex];
     if (!tip) return;
     let shouldAdvance = false;
+    const tapsSince = tappedCells - tappedBaseRef.current;
     switch (tip.id) {
-      case 'drag-element': shouldAdvance = hasPlaced;           break;
-      case 'tap-cell':     shouldAdvance = tappedCells >= 1;   break;
-      case 'read-tooltip': shouldAdvance = tappedCells >= 2;   break;
-      case 'single-cell':  shouldAdvance = topleftPlaced;      break;
-      case 'multi-cell':   shouldAdvance = multizonePlaced;    break;
+      case 'drag-element': shouldAdvance = hasPlaced;         break;
+      case 'tap-cell':     shouldAdvance = tapsSince >= 1;   break;
+      case 'read-tooltip': shouldAdvance = tapsSince >= 2;   break;
+      case 'single-cell':  shouldAdvance = topleftPlaced;    break;
+      case 'multi-cell':   shouldAdvance = multizonePlaced;  break;
     }
     if (shouldAdvance) {
+      tappedBaseRef.current = tappedCells; // lock in baseline before index changes
       if (tipIndex < PRACTICE_TIPS.length - 1) setTipIndex((p) => p + 1);
       else setTipsComplete(true);
     }
@@ -452,6 +462,7 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
     if (tipIndex === 5 && conflictDemoShown) {
       removeElement(0, 0);
       removeElement(0, 1);
+      tappedBaseRef.current = tappedCells; // reset baseline for next tip
       if (tipIndex < PRACTICE_TIPS.length - 1) setTipIndex((p) => p + 1);
       else setTipsComplete(true);
     }
@@ -459,6 +470,7 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
 
   const handleRetry = () => {
     initGame(TUTORIAL_LEVEL);
+    tappedBaseRef.current = 0;
     setTipIndex(0); setTipsComplete(false); setTappedCells(0);
     setTopleftPlaced(false); setMultizonePlaced(false);
     setConflictDemoShown(false); setHasPlaced(false); setShowWin(false);
@@ -493,7 +505,6 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
     <View
       style={{ flex: 1 }}
       onTouchEnd={() => {
-        setTappedCells((p) => p + 1);
         if (tipIndex === 5 && conflictDemoShown) handleConflictDismiss();
       }}
     >
@@ -537,6 +548,7 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
                     ghostElement={ghost?.element ?? null}
+                    ghostOpacity={ghost?.opacity ?? 0.45}
                     onPress={handleCellPress}
                   />
                 </View>
@@ -663,7 +675,7 @@ export default function TutorialScreen() {
         </Pressable>
         <Text style={ss.headerTitle}>{isPractice ? 'Practice Level' : 'Tutorial'}</Text>
         <Pressable
-          onPress={() => isPractice ? router.replace('/') : goTo(SLIDES.length)}
+          onPress={() => router.replace('/worlds')}
           style={ss.headerBtn}
         >
           <Text style={[ss.headerBtnText, { fontSize: 13, fontWeight: '600' }]}>Skip</Text>
@@ -721,7 +733,7 @@ export default function TutorialScreen() {
             Try solving this level using everything you've learned!
           </Text>
           <View style={{ flex: 1 }}>
-            <PracticeBoard onComplete={() => router.replace('/')} />
+            <PracticeBoard onComplete={() => router.replace('/worlds')} />
           </View>
         </Animated.View>
       )}
