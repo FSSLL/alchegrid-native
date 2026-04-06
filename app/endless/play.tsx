@@ -47,9 +47,9 @@ function EndlessGameContent() {
 
   // ── game store ──────────────────────────────────────────────────────────
   const {
-    level, board, hintedCells, status, activeElement, hintMode, toggleHintMode,
+    level, board, hintedCells, status, hintMode, toggleHintMode,
     conflicts, selectedZone, initGame, placeElement, placeSpecificElement,
-    clearCell, revealHint, setActiveElement, setSelectedZone, stopTimer,
+    clearCell, revealHint, setSelectedZone, stopTimer,
   } = useGameStore();
 
   const conflictSet = useMemo(
@@ -355,7 +355,7 @@ function EndlessGameContent() {
       )}
 
       {/* Palette */}
-      <ElementPalette level={level} board={board} activeElement={activeElement} onSelect={setActiveElement} />
+      <ElementPalette level={level} board={board} />
     </View>
   );
 }
