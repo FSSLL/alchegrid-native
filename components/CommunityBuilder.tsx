@@ -74,11 +74,13 @@ export default function CommunityBuilder() {
   const [isDrawingZone, setIsDrawingZone] = useState(false);
   const [showRecipePicker, setShowRecipePicker] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const {
     draft, setDraftName, setDraftSize,
     addCellToCurrentZone, removeCellFromCurrentZone, clearCurrentZone,
-    commitCurrentZone, editZone, removeZone, markEdited, resetDraft, publishLevel,
+    commitCurrentZone, editZone, removeZone, markEdited, resetDraft,
+    publishLevel, publishSyncStatus,
   } = useCommunityStore();
 
   const { initGame } = useGameStore();
@@ -223,12 +225,17 @@ export default function CommunityBuilder() {
   };
 
   // ── Publish ───────────────────────────────────────────────────────────────
-  const handlePublish = () => {
-    if (!validation.ok) return;
-    publishLevel();
-    setStep('setup');
-    showToast('Level Published! 🎉');
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  const handlePublish = async () => {
+    if (!validation.ok || isPublishing) return;
+    setIsPublishing(true);
+    try {
+      await publishLevel();
+      setStep('setup');
+      showToast('Level Published! Visible to all players 🌍');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleReset = () => {
@@ -281,7 +288,7 @@ export default function CommunityBuilder() {
 
           <Text style={styles.fieldLabel}>Board Size</Text>
           <View style={styles.sizeGrid}>
-            {[4, 5, 6, 7, 8, 9, 10, 11].map((s) => (
+            {[4, 5, 6, 7].map((s) => (
               <Pressable
                 key={s}
                 style={[styles.sizeBtn, draft.size === s && styles.sizeBtnActive]}
@@ -301,7 +308,18 @@ export default function CommunityBuilder() {
             <Text style={styles.infoText}>4. Publish to share with the community</Text>
           </View>
 
-          <Pressable style={styles.nextBtn} onPress={() => setStep('zones')}>
+          <Pressable
+            style={[styles.nextBtn, !draft.name.trim() && styles.disabledBtn]}
+            onPress={() => {
+              if (!draft.name.trim()) {
+                showToast('Please enter a level name first');
+                return;
+              }
+              // Default draft size to 4 if somehow above 7 (coming soon sizes hidden)
+              if (draft.size > 7) setDraftSize(4);
+              setStep('zones');
+            }}
+          >
             <Text style={styles.nextBtnText}>Next: Draw Zones →</Text>
           </Pressable>
         </ScrollView>
@@ -548,12 +566,17 @@ export default function CommunityBuilder() {
           )}
 
           <Pressable
-            style={[styles.publishBtn, !validation.ok && styles.disabledBtn]}
+            style={[styles.publishBtn, (!validation.ok || isPublishing) && styles.disabledBtn]}
             onPress={handlePublish}
-            disabled={!validation.ok}
+            disabled={!validation.ok || isPublishing}
           >
-            <Text style={styles.publishBtnText}>🚀 Publish Level</Text>
+            <Text style={styles.publishBtnText}>
+              {isPublishing ? '⏳ Publishing...' : publishSyncStatus === 'error' ? '⚠️ Retry Publish' : '🚀 Publish Level'}
+            </Text>
           </Pressable>
+          {publishSyncStatus === 'error' && (
+            <Text style={styles.uploadErrorText}>Upload failed — tap to retry</Text>
+          )}
 
           <Pressable style={styles.resetBtn} onPress={handleReset}>
             <Text style={styles.resetBtnText}>Reset & Start Over</Text>
@@ -741,6 +764,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3b82f6', borderRadius: 14, paddingVertical: 16, alignItems: 'center',
   },
   publishBtnText: { color: '#fff', fontSize: 17, fontWeight: '900' },
+  uploadErrorText: { color: '#f87171', fontSize: 12, textAlign: 'center', marginTop: -4 },
   resetBtn: {
     backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, paddingVertical: 14,
     alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
