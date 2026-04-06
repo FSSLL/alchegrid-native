@@ -34,7 +34,8 @@ export default function WorldsScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {WORLD_INFO.map((world, idx) => {
-          const unlocked = isWorldUnlocked(idx, progressIndex, starsByLevel);
+          const isComingSoon = idx >= 4;
+          const unlocked = !isComingSoon && isWorldUnlocked(idx, progressIndex, starsByLevel);
           const stars = getWorldStars(idx, starsByLevel);
           const maxStars = LEVELS_PER_WORLD * 3;
           const completed = Math.max(0, Math.min(LEVELS_PER_WORLD, progressIndex - world.globalStart + 1));
@@ -45,12 +46,12 @@ export default function WorldsScreen() {
             <Pressable
               key={world.id}
               onPress={() => {
-                if (!unlocked) return;
+                if (isComingSoon || !unlocked) return;
                 Haptics.selectionAsync();
                 router.push({ pathname: '/world-levels', params: { worldNum: world.worldNumber.toString() } });
               }}
-              activeOpacity={unlocked ? 0.85 : 1}
-              style={[styles.worldWrap, !unlocked && styles.worldLocked]}
+              activeOpacity={isComingSoon ? 1 : (unlocked ? 0.85 : 1)}
+              style={[styles.worldWrap, !unlocked && !isComingSoon && styles.worldLocked]}
             >
               <Image
                 source={WORLD_BUTTONS[idx]}
@@ -59,12 +60,21 @@ export default function WorldsScreen() {
               />
               <View style={[StyleSheet.absoluteFill, styles.worldContent, { paddingTop: ptop }]}>
                 <Text style={styles.worldName}>{world.name}</Text>
-                <Text style={styles.worldMeta}>
-                  {unlocked
-                    ? `${world.size}×${world.size} Grid • ${completed}/${LEVELS_PER_WORLD} Complete`
-                    : `Collect ${STARS_TO_UNLOCK_NEXT_WORLD} stars in ${prevWorldName}`}
-                </Text>
-                {unlocked ? (
+                {isComingSoon ? (
+                  <Text style={styles.worldMeta}>{world.size}×{world.size} Grid</Text>
+                ) : (
+                  <Text style={styles.worldMeta}>
+                    {unlocked
+                      ? `${world.size}×${world.size} Grid • ${completed}/${LEVELS_PER_WORLD} Complete`
+                      : `Collect ${STARS_TO_UNLOCK_NEXT_WORLD} stars in ${prevWorldName}`}
+                  </Text>
+                )}
+                {isComingSoon ? (
+                  <View style={styles.starsRow}>
+                    <Text style={styles.lockIcon}>🔒</Text>
+                    <Text style={styles.comingSoonText}>Coming Soon</Text>
+                  </View>
+                ) : unlocked ? (
                   <View style={styles.starsRow}>
                     <Text style={styles.starFilled}>★</Text>
                     <Text style={styles.starsText}>{stars}/{maxStars}</Text>
@@ -76,6 +86,13 @@ export default function WorldsScreen() {
                   </View>
                 )}
               </View>
+
+              {/* Coming soon overlay */}
+              {isComingSoon && (
+                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                  <View style={styles.comingSoonOverlay} />
+                </View>
+              )}
             </Pressable>
           );
         })}
@@ -122,4 +139,13 @@ const styles = StyleSheet.create({
   starsText: { fontSize: 15, color: '#fbbf24', fontWeight: '700' },
   lockIcon: { fontSize: 15 },
   lockedText: { fontSize: 14, color: 'rgba(255,255,255,0.65)', fontWeight: '700' },
+  comingSoonText: {
+    fontSize: 14, fontWeight: '800', color: '#ff8c00',
+    textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
+    letterSpacing: 1,
+  },
+  comingSoonOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
 });
