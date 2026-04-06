@@ -194,7 +194,11 @@ function HardcoreGameContent() {
   // ── drag handlers ────────────────────────────────────────────────────────
   useEffect(() => {
     setDropHandlers(
-      (element, row, col) => {
+      (element, row, col, srcRow, srcCol) => {
+        const isMove = srcRow !== undefined && srcCol !== undefined;
+        const isSameCell = isMove && srcRow === row && srcCol === col;
+        if (isSameCell) return;
+        if (isMove) clearCell(srcRow!, srcCol!);
         bumpActivity();
         placeSpecificElement(element, row, col);
         if (level) {
