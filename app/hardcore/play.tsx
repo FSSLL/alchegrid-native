@@ -52,7 +52,7 @@ function HardcoreGameContent() {
     level, board, status, activeElement,
     conflicts, selectedZone, hintedCells, hintMode, toggleHintMode,
     initGame, placeElement, placeSpecificElement,
-    clearCell, setActiveElement, setSelectedZone, stopTimer,
+    clearCell, revealHint, setActiveElement, setSelectedZone, stopTimer,
   } = useGameStore();
 
   const conflictSet = useMemo(
@@ -78,17 +78,11 @@ function HardcoreGameContent() {
   const { hintBalance, unlimitedHints, usePaidHint, hasDailyFreeHint, useDailyFreeHint } = usePlayerStore();
 
   const handleHintPress = useCallback(() => {
-    if (hintMode) {
-      toggleHintMode();
-      return;
-    }
+    if (hintMode) { toggleHintMode(); return; }
     const canUse = unlimitedHints || hintBalance > 0;
-    const dailyFree = hasDailyFreeHint();
-    if (!canUse && !dailyFree) return;
-    if (dailyFree && !canUse) { useDailyFreeHint(); }
-    if (!unlimitedHints) { usePaidHint(); }
+    if (!canUse && !hasDailyFreeHint()) return;
     toggleHintMode();
-  }, [hintMode, unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, toggleHintMode]);
+  }, [hintMode, unlimitedHints, hintBalance, hasDailyFreeHint, toggleHintMode]);
 
   // ── hardcore store ──────────────────────────────────────────────────────
   const {
@@ -222,11 +216,28 @@ function HardcoreGameContent() {
   }, [level]);
 
   const handleCellPress = useCallback((row: number, col: number) => {
-    bumpActivity();
-    placeElement(row, col);
     const key = `${row},${col}`;
+    bumpActivity();
+    if (hintMode) {
+      if (hintedCells[key]) {
+        // Already filled by a hint — cancel mode, no charge
+        toggleHintMode();
+        return;
+      }
+      // Consume credit now (at reveal time)
+      const canUse = unlimitedHints || hintBalance > 0;
+      const dailyFree = hasDailyFreeHint();
+      if (!canUse && !dailyFree) { toggleHintMode(); return; }
+      if (dailyFree && !canUse) { useDailyFreeHint(); }
+      if (!unlimitedHints) { usePaidHint(); }
+      revealHint(row, col);
+      setSelectedZone(cellZoneLookup[key] ?? null);
+      return;
+    }
+    if (hintedCells[key]) return;
+    placeElement(row, col);
     setSelectedZone(cellZoneLookup[key] ?? null);
-  }, [placeElement, setSelectedZone, cellZoneLookup, bumpActivity]);
+  }, [hintMode, hintedCells, toggleHintMode, unlimitedHints, hintBalance, hasDailyFreeHint, useDailyFreeHint, usePaidHint, revealHint, placeElement, cellZoneLookup, setSelectedZone, bumpActivity]);
 
   const handleSurrender = () => {
     stopTimer();
@@ -280,6 +291,13 @@ function HardcoreGameContent() {
           <Text style={styles.timerText}>{formatTime(elapsedDisplay)}</Text>
         </View>
       </View>
+
+      {/* Hint mode tooltip banner */}
+      {hintMode && (
+        <View style={styles.hintBanner}>
+          <Text style={styles.hintBannerText}>💡 Tap a cell to fill it with the right element</Text>
+        </View>
+      )}
 
       {/* Mistake toast */}
       {mistakeMsg && (
@@ -378,6 +396,12 @@ const styles = StyleSheet.create({
   hintBtnActive: { borderColor: '#3aa7ff', backgroundColor: 'rgba(58,167,255,0.18)' },
   hintIcon: { fontSize: 14 },
   hintCount: { color: '#34d399', fontSize: 13, fontWeight: '700' },
+  hintBanner: {
+    alignItems: 'center', paddingVertical: 5,
+    backgroundColor: 'rgba(58,167,255,0.12)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(58,167,255,0.25)',
+  },
+  hintBannerText: { color: '#7dd3fc', fontSize: 12, fontWeight: '600', letterSpacing: 0.2 },
 
   toastWrap: {
     position: 'absolute', top: 80, left: 0, right: 0, alignItems: 'center', zIndex: 99,
