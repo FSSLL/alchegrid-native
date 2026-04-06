@@ -80,17 +80,20 @@ function createEmptyDraft(): DraftState {
   };
 }
 
-async function uploadToServer(level: CommunityLevel): Promise<void> {
+async function uploadToServer(level: CommunityLevel): Promise<boolean> {
   const base = getApiBase();
-  if (!base) return;
+  if (!base) return false;
   try {
     await fetch(`${base}/api/community/init`, { method: 'POST' });
-    await fetch(`${base}/api/community/publish`, {
+    const res = await fetch(`${base}/api/community/publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(level),
     });
-  } catch { /* fire-and-forget */ }
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 async function deleteFromServer(id: string): Promise<void> {
@@ -128,13 +131,16 @@ interface CommunityStore {
   resetDraft: () => void;
 
   // Level management
-  publishLevel: () => string;
+  publishLevel: () => Promise<string>;
   deleteLevel: (id: string) => void;
 
   // Play tracking
   incrementPlays: (id: string) => void;
   toggleLike: (id: string) => void;
   markLevelSolved: (id: string) => void;
+
+  // Publish sync status (per publish attempt)
+  publishSyncStatus: 'idle' | 'uploading' | 'uploaded' | 'error';
 
   // Remote sync
   refreshRemoteLevels: () => Promise<void>;
@@ -153,6 +159,7 @@ export const useCommunityStore = create<CommunityStore>()(
       solvedLevelIds: [],
       remoteLevels: [],
       syncStatus: 'idle',
+      publishSyncStatus: 'idle',
 
       // ── Draft actions ─────────────────────────────────────────────────────
 
@@ -255,7 +262,7 @@ export const useCommunityStore = create<CommunityStore>()(
 
       // ── Level management ──────────────────────────────────────────────────
 
-      publishLevel: () => {
+      publishLevel: async () => {
         const { draft } = get();
         const elements = deriveElements(draft.zones);
         const id = generateId();
@@ -275,8 +282,13 @@ export const useCommunityStore = create<CommunityStore>()(
           likes: 0,
           createdByPlayer: true,
         };
-        set((s) => ({ levels: [cl, ...s.levels], draft: createEmptyDraft() }));
-        uploadToServer(cl);
+        set((s) => ({ levels: [cl, ...s.levels], draft: createEmptyDraft(), publishSyncStatus: 'uploading' }));
+        const ok = await uploadToServer(cl);
+        set({ publishSyncStatus: ok ? 'uploaded' : 'error' });
+        if (ok) {
+          // Refresh remote list so the new level appears in Explore immediately
+          get().refreshRemoteLevels();
+        }
         return id;
       },
 
