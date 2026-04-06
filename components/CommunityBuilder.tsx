@@ -14,7 +14,8 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useCommunityStore, deriveElements } from '../store/communityStore';
 import { useGameStore } from '../store/gameStore';
-import { RECIPE_CATALOG, ZONE_COLORS, isCellsConnected, isAdjacentToSet, maxZoneSizeForGrid } from '../lib/recipeCatalog';
+import { RECIPE_CATALOG } from '../constants/recipeCatalog';
+import { ZONE_COLORS, isCellsConnected, isAdjacentToSet, maxZoneSizeForGrid } from '../lib/recipeCatalog';
 import type { Level } from '../lib/types';
 
 // ── Builder cell sizes ────────────────────────────────────────────────────────
