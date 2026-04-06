@@ -63,9 +63,8 @@ export default function HomeScreen() {
     <>
     {/* ── DEBUG: screen dimensions — remove when done ── */}
     <View style={styles.dimDebug} pointerEvents="none">
-      <Text style={styles.dimText}>screen  {screen.width} × {screen.height} px  (scale {screen.scale})</Text>
-      <Text style={styles.dimText}>window  {window.width} × {window.height} pts</Text>
-      <Text style={styles.dimText}>native  {Math.round(screen.width * screen.scale)} × {Math.round(screen.height * screen.scale)} px</Text>
+      <Text style={styles.dimText}>logical  {screen.width} × {screen.height} pts  ×{screen.scale} scale</Text>
+      <Text style={styles.dimText}>native   {Math.round(screen.width * screen.scale)} × {Math.round(screen.height * screen.scale)} px</Text>
     </View>
     <ScrollView
       style={styles.container}
