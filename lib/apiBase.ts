@@ -1,27 +1,16 @@
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
 
 /**
- * Returns the base URL for the Alchegrid API server.
+ * Returns the single production API base URL used by all clients:
+ * iOS players, Android players, the Replit dev preview, and anyone
+ * publishing community levels. Everyone reads from and writes to the
+ * same database through this one endpoint.
  *
- * • Native (iOS / Android): reads `extra.apiUrl` from app.json via expo-constants.
- *   This is the hardcoded production URL and always works on device.
- *
- * • Web (dev preview or production web build): derives the URL from
- *   window.location so the dev preview keeps talking to the local API server
- *   instead of the deployed production URL.
+ * The URL is read from app.json → extra.apiUrl so it is easy to
+ * change without touching code.  The hardcoded fallback exists only
+ * as a safety net if app.json is somehow not available at runtime.
  */
 export function getApiBase(): string {
-  if (Platform.OS !== 'web') {
-    const configured: string | undefined = Constants.expoConfig?.extra?.apiUrl;
-    if (configured) return configured.replace(/\/$/, '');
-  }
-
-  try {
-    if (typeof window !== 'undefined' && window.location?.hostname) {
-      const h = window.location.hostname.replace('.expo.', '.');
-      return `${window.location.protocol}//${h}`;
-    }
-  } catch {}
-  return '';
+  const configured: string | undefined = Constants.expoConfig?.extra?.apiUrl;
+  return (configured ?? 'https://workspace.almurekhe.replit.app').replace(/\/$/, '');
 }
