@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import type { Level, Zone, ElementID, CellCoord } from '../lib/types';
 
 // ── Pending tab signal (avoids navigation stacking) ──────────────────────────
@@ -46,12 +47,16 @@ export type ActiveFilter = 'all' | 'shared' | 'liked' | 'mine';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getApiBase(): string {
-  // 1. Native iOS/Android: use the hardcoded production URL from app.json extra
-  const configured: string | undefined = Constants.expoConfig?.extra?.apiUrl;
-  if (configured) return configured.replace(/\/$/, '');
+export function getApiBase(): string {
+  // Native (iOS / Android): use the hardcoded production URL from app.json extra.
+  // On web we derive the base from window.location so the dev preview keeps
+  // talking to the local API server instead of the deployed production URL.
+  if (Platform.OS !== 'web') {
+    const configured: string | undefined = Constants.expoConfig?.extra?.apiUrl;
+    if (configured) return configured.replace(/\/$/, '');
+  }
 
-  // 2. Web / dev preview fallback: derive from window.location
+  // Web (dev preview or production web build): derive from window.location
   try {
     if (typeof window !== 'undefined' && window.location?.hostname) {
       const h = window.location.hostname.replace('.expo.', '.');

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getApiBase } from './communityStore';
 
 // ── Constants from spec ───────────────────────────────────────────────────────
 const GRID_POINTS: Record<number, number> = { 4: 1, 5: 2, 6: 3, 7: 5 };
@@ -85,18 +86,6 @@ function shouldUpgradeGrid(tracker: SkillTracker): boolean {
   return false;
 }
 
-// ── API URL helper (web only) ─────────────────────────────────────────────────
-// The API server is routed at path /api on the main Replit domain (*.riker.replit.dev).
-// Expo web runs on *.expo.riker.replit.dev — strip the `.expo` infix to get the main domain.
-function getApiBase(): string {
-  try {
-    if (typeof window !== 'undefined') {
-      const h = window.location.hostname.replace('.expo.', '.');
-      return `${window.location.protocol}//${h}`;
-    }
-  } catch {}
-  return '';
-}
 
 // ── Store ─────────────────────────────────────────────────────────────────────
 export const useEndlessStore = create<EndlessState>((set, get) => ({

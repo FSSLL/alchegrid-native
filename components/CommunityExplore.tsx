@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useCommunityStore, communityLevelToGameLevel, formatSolveTime, type CommunityLevel } from '../store/communityStore';
+import { useCommunityStore, communityLevelToGameLevel, formatSolveTime, getApiBase, type CommunityLevel } from '../store/communityStore';
 import { useGameStore } from '../store/gameStore';
 
 type ActiveFilter = 'all' | 'shared' | 'liked' | 'mine' | 'solved';
@@ -30,16 +30,6 @@ interface ServerStatus {
   rateLimited: boolean;
   nextRefreshIn: number;
   totalLevels: number;
-}
-
-function getApiBase(): string {
-  try {
-    if (typeof window !== 'undefined') {
-      const h = window.location.hostname.replace('.expo.', '.');
-      return `${window.location.protocol}//${h}`;
-    }
-  } catch {}
-  return '';
 }
 
 export default function CommunityExplore() {

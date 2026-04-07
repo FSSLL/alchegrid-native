@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getApiBase } from './communityStore';
 
 export type GameOverReason = 'mistakes' | 'inactivity' | 'surrender' | 'completed' | null;
 
@@ -13,6 +14,32 @@ const INACTIVITY_MS = 60_000;
 const MAX_LIVES = 3;
 const MAX_LEVEL = 70;
 
+// Grid-size blocks: each inner array is 0-based indices into hardcoreLevels[].
+// Levels within each block are shuffled independently on every new run.
+const HARDCORE_BLOCKS: number[][] = [
+  [0,1,2,3,4,5,6,7],                           // 5×5  (W2)
+  [8,9,10,11,12,13,14,15],                      // 6×6  (W3)
+  [16,17,18,19,20,21,22,23],                    // 7×7  (W4)
+  [24,25,26,27,28,29,30,31],                    // 8×8  (W5)
+  [32,33,34,35,36,37,38,39],                    // 9×9  (W6)
+  [40,41,42,43,44,45,46,47],                    // 10×10 (W7)
+  [48,49,50,51,52,53,54,55],                    // 11×11 (W8 Tier 2+3)
+  [56,57,58,59,60,61,62,63,64,65,66,67,68,69], // 11×11 Tier 3 extras
+];
+
+function shuffleBlock<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildRunOrder(): number[] {
+  return HARDCORE_BLOCKS.flatMap(block => shuffleBlock(block));
+}
+
 interface HardcoreState {
   runActive: boolean;
   currentLevel: number;
@@ -24,6 +51,8 @@ interface HardcoreState {
   showGameOver: boolean;
   bestLevel: number;
   leaderboard: HardcoreLBEntry[];
+  /** Per-run shuffle: hardcoreOrder[slot - 1] gives the 0-based data index for that slot */
+  hardcoreOrder: number[];
   // Actions
   startRun: () => void;
   completeLevel: () => void;
@@ -34,16 +63,8 @@ interface HardcoreState {
   refreshLeaderboard: () => Promise<void>;
   submitScore: (playerName: string) => Promise<void>;
   dismissGameOver: () => void;
-}
-
-function getApiBase(): string {
-  try {
-    if (typeof window !== 'undefined') {
-      const h = window.location.hostname.replace('.expo.', '.');
-      return `${window.location.protocol}//${h}`;
-    }
-  } catch {}
-  return '';
+  /** Returns the 1-based data index into hardcoreLevels[] for the current run slot */
+  getActualLevelIndex: () => number;
 }
 
 export const useHardcoreStore = create<HardcoreState>((set, get) => ({
@@ -57,6 +78,12 @@ export const useHardcoreStore = create<HardcoreState>((set, get) => ({
   showGameOver: false,
   bestLevel: 0,
   leaderboard: [],
+  hardcoreOrder: buildRunOrder(),
+
+  getActualLevelIndex: () => {
+    const { currentLevel, hardcoreOrder } = get();
+    return (hardcoreOrder[currentLevel - 1] ?? currentLevel - 1) + 1;
+  },
 
   startRun: () => {
     const now = Date.now();
@@ -69,6 +96,7 @@ export const useHardcoreStore = create<HardcoreState>((set, get) => ({
       lastActivityTime: now,
       gameOverReason: null,
       showGameOver: false,
+      hardcoreOrder: buildRunOrder(), // fresh shuffle each run
     });
   },
 
@@ -79,7 +107,6 @@ export const useHardcoreStore = create<HardcoreState>((set, get) => ({
     const nextLevel = currentLevel + 1;
 
     if (nextLevel > MAX_LEVEL) {
-      // Perfect run — all 70 levels cleared
       set({
         runActive: false,
         totalTimeMs: newTotal,
@@ -166,7 +193,6 @@ export const useHardcoreStore = create<HardcoreState>((set, get) => ({
 
   submitScore: async (playerName: string) => {
     const { currentLevel, totalTimeMs, gameOverReason } = get();
-    // Level reached = last fully completed level
     const levelReached = gameOverReason === 'completed' ? currentLevel : currentLevel - 1;
     if (levelReached < 1) return;
     const base = getApiBase();
