@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -17,11 +18,17 @@ import type { PurchasesPackage } from 'react-native-purchases';
 
 const HINT_COST = 40;
 
-// Icon + label per coin pack (keyed by RevenueCat package lookup_key)
-const PACK_META: Record<string, { icon: string; label: string; coins: number; tag?: string }> = {
-  "$rc_custom_small":  { icon: "🪙",  label: "100 Coins",  coins: 100 },
-  "$rc_custom_medium": { icon: "💰",  label: "600 Coins",  coins: 600,  tag: "Popular" },
-  "$rc_custom_large":  { icon: "💎",  label: "1500 Coins", coins: 1500, tag: "Best Value" },
+const PACK_IMAGES: Record<string, ReturnType<typeof require>> = {
+  "$rc_custom_small":  require('../assets/images/coins_100.png'),
+  "$rc_custom_medium": require('../assets/images/coins_600.png'),
+  "$rc_custom_large":  require('../assets/images/coins_1500.png'),
+};
+
+// Label per coin pack (keyed by RevenueCat package lookup_key)
+const PACK_META: Record<string, { label: string; coins: number; tag?: string }> = {
+  "$rc_custom_small":  { label: "100 Coins",  coins: 100 },
+  "$rc_custom_medium": { label: "600 Coins",  coins: 600,  tag: "Popular" },
+  "$rc_custom_large":  { label: "1500 Coins", coins: 1500, tag: "Best Value" },
 };
 
 export default function ShopScreen() {
@@ -170,9 +177,11 @@ export default function ShopScreen() {
                   </View>
                 )}
                 <View style={ss.packRow}>
-                  <View style={ss.packIconCircle}>
-                    <Text style={ss.packIconText}>{meta?.icon ?? '🪙'}</Text>
-                  </View>
+                  <Image
+                    source={PACK_IMAGES[pkg.identifier]}
+                    style={ss.packImage}
+                    resizeMode="contain"
+                  />
                   <View style={ss.packInfo}>
                     <Text style={ss.packName}>{meta?.label ?? pkg.product.title}</Text>
                     <Text style={ss.packDesc}>{pkg.product.description || 'In-game coins'}</Text>
@@ -284,13 +293,7 @@ const ss = StyleSheet.create({
   packRow: {
     flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16,
   },
-  packIconCircle: {
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: 'rgba(251,191,36,0.15)',
-    borderWidth: 1.5, borderColor: 'rgba(251,191,36,0.35)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  packIconText: { fontSize: 26 },
+  packImage: { width: 64, height: 64 },
   packInfo:    { flex: 1 },
   packName:    { fontSize: 16, fontWeight: '800', color: '#fff' },
   packDesc:    { fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 2 },
