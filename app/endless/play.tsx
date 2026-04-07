@@ -63,7 +63,7 @@ function EndlessGameContent() {
     if (!level) return map;
     level.zones.forEach((zone) => {
       if (!zone.recipeName) return;
-      const opacity = zone.cells.length === 1 ? 0.45 : 0.70;
+      const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
       const grayscale = zone.cells.length === 1;
       zone.cells.forEach(({ row, col }) => {
         map[`${row},${col}`] = { element: zone.recipeName!, opacity, grayscale };
@@ -339,7 +339,7 @@ function EndlessGameContent() {
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
                     ghostElement={el === null ? (ghost?.element ?? null) : null}
-                    ghostOpacity={ghost?.opacity ?? 0.7}
+                    ghostOpacity={ghost?.opacity ?? 0.90}
                     onPress={() => handleCellPress(r, c)}
                   />
                 </View>
