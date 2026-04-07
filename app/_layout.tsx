@@ -20,6 +20,7 @@ import { useAudioStore } from '@/store/audioStore';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { initializeRevenueCat, SubscriptionProvider } from '@/lib/revenuecat';
 
 const BG = require('../assets/images/bg.jpg');
 
@@ -54,6 +55,11 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 }
 
 SplashScreen.preventAutoHideAsync();
+
+// Initialize RevenueCat as early as possible (non-blocking)
+try {
+  initializeRevenueCat();
+} catch (_) {}
 
 // Warm up levelData module in background — avoids first-load lag when user
 // navigates to any game screen, especially World 8 (240 levels to parse).
@@ -166,7 +172,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <AppRoot />
+        <SubscriptionProvider>
+          <AppRoot />
+        </SubscriptionProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
   );

@@ -6,49 +6,86 @@ import {
   StyleSheet,
   ScrollView,
   Platform,
-  Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { usePlayerStore } from '../store/playerStore';
+import { useSubscription, COINS_PER_PACKAGE } from '../lib/revenuecat';
+import type { PurchasesPackage } from 'react-native-purchases';
 
 const HINT_COST = 40;
+
+// Icon + label per coin pack (keyed by RevenueCat package lookup_key)
+const PACK_META: Record<string, { icon: string; label: string; coins: number; tag?: string }> = {
+  "$rc_custom_small":  { icon: "🪙",  label: "100 Coins",  coins: 100 },
+  "$rc_custom_medium": { icon: "💰",  label: "600 Coins",  coins: 600,  tag: "Popular" },
+  "$rc_custom_large":  { icon: "💎",  label: "1500 Coins", coins: 1500, tag: "Best Value" },
+};
 
 export default function ShopScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
 
-  const { coins, hintBalance, unlimitedHints, spendCoins, addHint } = usePlayerStore();
+  const { coins, hintBalance, unlimitedHints, spendCoins, addHint, addCoins } = usePlayerStore();
+  const { packages, isLoading, purchasePackage, restorePurchases, isPurchasing, isRestoring } = useSubscription();
 
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
-  const [buying, setBuying] = useState(false);
+  const [buyingHint, setBuyingHint] = useState(false);
+  const [purchasingId, setPurchasingId] = useState<string | null>(null);
 
   const showToast = (msg: string, ok: boolean) => {
     setToast({ msg, ok });
-    setTimeout(() => setToast(null), 2200);
+    setTimeout(() => setToast(null), 2400);
   };
 
   const handleBuyHint = () => {
-    if (buying) return;
-    if (unlimitedHints) {
-      showToast('You already have unlimited hints!', false);
-      return;
-    }
+    if (buyingHint) return;
+    if (unlimitedHints) { showToast('You already have unlimited hints!', false); return; }
     if (coins < HINT_COST) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(`Not enough coins — need ${HINT_COST} 🪙`, false);
+      showToast(`Need ${HINT_COST} 🪙 — buy coins below`, false);
       return;
     }
-    setBuying(true);
+    setBuyingHint(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     spendCoins(HINT_COST);
     addHint(1);
-    showToast('+1 Hint added to your balance!', true);
-    setTimeout(() => setBuying(false), 600);
+    showToast('+1 Hint added!', true);
+    setTimeout(() => setBuyingHint(false), 600);
   };
 
-  const canAfford = coins >= HINT_COST && !unlimitedHints;
+  const handleBuyCoins = async (pkg: PurchasesPackage) => {
+    if (isPurchasing || purchasingId) return;
+    setPurchasingId(pkg.identifier);
+    try {
+      await purchasePackage(pkg);
+      const coinsToAdd = COINS_PER_PACKAGE[pkg.identifier] ?? 0;
+      if (coinsToAdd > 0) {
+        addCoins(coinsToAdd);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        showToast(`+${coinsToAdd} Coins added! 🪙`, true);
+      }
+    } catch (e: any) {
+      if (!e?.userCancelled) {
+        showToast('Purchase failed. Please try again.', false);
+      }
+    } finally {
+      setPurchasingId(null);
+    }
+  };
+
+  const handleRestore = async () => {
+    try {
+      await restorePurchases();
+      showToast('Purchases restored!', true);
+    } catch {
+      showToast('Nothing to restore.', false);
+    }
+  };
+
+  const canAffordHint = coins >= HINT_COST && !unlimitedHints;
 
   return (
     <View style={[ss.root, { paddingTop: topPad }]}>
@@ -61,10 +98,7 @@ export default function ShopScreen() {
         <View style={ss.backBtn} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={ss.scroll}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={ss.scroll} showsVerticalScrollIndicator={false}>
         {/* Balance bar */}
         <View style={ss.balanceRow}>
           <View style={ss.balancePill}>
@@ -81,46 +115,91 @@ export default function ShopScreen() {
           </View>
         </View>
 
-        {/* Section heading */}
-        <Text style={ss.sectionTitle}>Available Items</Text>
+        {/* ─── Spend coins on hints ───────────────────────────────────── */}
+        <Text style={ss.sectionTitle}>Spend Coins</Text>
 
-        {/* Hint item card */}
         <View style={ss.itemCard}>
-          {/* Icon circle */}
           <View style={ss.itemIconCircle}>
             <Text style={ss.itemIconText}>💡</Text>
           </View>
-
-          {/* Info */}
           <View style={ss.itemInfo}>
             <Text style={ss.itemName}>Hint</Text>
             <Text style={ss.itemDesc}>Reveals one correct cell on the board</Text>
           </View>
-
-          {/* Price + buy */}
           <View style={ss.itemRight}>
             <View style={ss.priceRow}>
               <Text style={ss.priceIcon}>🪙</Text>
               <Text style={ss.priceAmount}>{HINT_COST}</Text>
             </View>
             <Pressable
-              style={[ss.buyBtn, !canAfford && ss.buyBtnDisabled]}
-              activeOpacity={canAfford ? 0.82 : 1}
+              style={[ss.buyBtn, !canAffordHint && ss.buyBtnDisabled]}
+              activeOpacity={canAffordHint ? 0.82 : 1}
               onPress={handleBuyHint}
             >
-              <Text style={[ss.buyBtnText, !canAfford && ss.buyBtnTextDisabled]}>
-                Buy
-              </Text>
+              {buyingHint
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={[ss.buyBtnText, !canAffordHint && ss.buyBtnTextDisabled]}>Buy</Text>
+              }
             </Pressable>
           </View>
         </View>
 
-        {/* Low-coin hint */}
-        {!canAfford && !unlimitedHints && (
+        {!canAffordHint && !unlimitedHints && (
           <Text style={ss.lowCoinNote}>
-            Complete levels to earn more coins — up to 30 🪙 per level.
+            Need more coins? Buy a pack below or earn up to 30 🪙 per level.
           </Text>
         )}
+
+        {/* ─── Buy coin packs ─────────────────────────────────────────── */}
+        <Text style={[ss.sectionTitle, { marginTop: 28 }]}>Buy Coins</Text>
+
+        {isLoading ? (
+          <ActivityIndicator color="#60a5fa" style={{ marginVertical: 24 }} />
+        ) : packages.length === 0 ? (
+          <Text style={ss.lowCoinNote}>Coin packs not available right now.</Text>
+        ) : (
+          packages.map((pkg) => {
+            const meta = PACK_META[pkg.identifier];
+            const busy = purchasingId === pkg.identifier;
+            const price = pkg.product.priceString;
+            return (
+              <View key={pkg.identifier} style={ss.packCard}>
+                {meta?.tag && (
+                  <View style={ss.packTag}>
+                    <Text style={ss.packTagText}>{meta.tag}</Text>
+                  </View>
+                )}
+                <View style={ss.packRow}>
+                  <View style={ss.packIconCircle}>
+                    <Text style={ss.packIconText}>{meta?.icon ?? '🪙'}</Text>
+                  </View>
+                  <View style={ss.packInfo}>
+                    <Text style={ss.packName}>{meta?.label ?? pkg.product.title}</Text>
+                    <Text style={ss.packDesc}>{pkg.product.description || 'In-game coins'}</Text>
+                  </View>
+                  <Pressable
+                    style={[ss.packBuyBtn, busy && ss.packBuyBtnBusy]}
+                    onPress={() => handleBuyCoins(pkg)}
+                    disabled={!!purchasingId}
+                  >
+                    {busy
+                      ? <ActivityIndicator size="small" color="#fff" />
+                      : <Text style={ss.packBuyText}>{price}</Text>
+                    }
+                  </Pressable>
+                </View>
+              </View>
+            );
+          })
+        )}
+
+        {/* Restore */}
+        <Pressable style={ss.restoreBtn} onPress={handleRestore} disabled={isRestoring}>
+          {isRestoring
+            ? <ActivityIndicator size="small" color="#60a5fa" />
+            : <Text style={ss.restoreText}>Restore Purchases</Text>
+          }
+        </Pressable>
 
         <View style={{ height: insets.bottom + 32 }} />
       </ScrollView>
@@ -144,8 +223,8 @@ const ss = StyleSheet.create({
 
   scroll: { paddingHorizontal: 16, paddingTop: 8 },
 
-  balanceRow:   { flexDirection: 'row', gap: 12, marginBottom: 28 },
-  balancePill:  {
+  balanceRow:  { flexDirection: 'row', gap: 12, marginBottom: 28 },
+  balancePill: {
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: 'rgba(255,255,255,0.07)',
     borderRadius: 16, borderWidth: 1, borderColor: 'rgba(251,191,36,0.35)',
@@ -166,7 +245,6 @@ const ss = StyleSheet.create({
     borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
     padding: 16,
   },
-
   itemIconCircle: {
     width: 58, height: 58, borderRadius: 29,
     backgroundColor: 'rgba(52,211,153,0.15)',
@@ -174,35 +252,59 @@ const ss = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   itemIconText: { fontSize: 28 },
-
-  itemInfo: { flex: 1, gap: 4 },
-  itemName: { fontSize: 17, fontWeight: '800', color: '#fff' },
-  itemDesc: { fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 17 },
-
-  itemRight:    { alignItems: 'center', gap: 8 },
-  priceRow:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  priceIcon:    { fontSize: 15 },
-  priceAmount:  { fontSize: 16, fontWeight: '800', color: '#fbbf24' },
-
-  buyBtn: {
-    backgroundColor: '#ff6a00', borderRadius: 12,
-    paddingHorizontal: 18, paddingVertical: 9,
-    minWidth: 64, alignItems: 'center',
-  },
+  itemInfo:  { flex: 1, gap: 4 },
+  itemName:  { fontSize: 17, fontWeight: '800', color: '#fff' },
+  itemDesc:  { fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 17 },
+  itemRight: { alignItems: 'center', gap: 8 },
+  priceRow:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  priceIcon: { fontSize: 15 },
+  priceAmount: { fontSize: 16, fontWeight: '800', color: '#fbbf24' },
+  buyBtn:         { backgroundColor: '#ff6a00', borderRadius: 12, paddingHorizontal: 18, paddingVertical: 9, minWidth: 64, alignItems: 'center' },
   buyBtnDisabled: { backgroundColor: 'rgba(255,255,255,0.08)' },
-  buyBtnText:        { color: '#fff', fontSize: 14, fontWeight: '800' },
+  buyBtnText:         { color: '#fff', fontSize: 14, fontWeight: '800' },
   buyBtnTextDisabled: { color: 'rgba(255,255,255,0.3)' },
 
   lowCoinNote: {
-    marginTop: 14, textAlign: 'center',
+    marginTop: 10, textAlign: 'center',
     color: 'rgba(255,255,255,0.35)', fontSize: 12, lineHeight: 18,
   },
 
-  toast: {
-    position: 'absolute', bottom: 40, left: 24, right: 24,
-    borderRadius: 14, paddingVertical: 14, paddingHorizontal: 20,
-    alignItems: 'center',
+  packCard: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    marginBottom: 10, overflow: 'hidden',
   },
+  packTag: {
+    backgroundColor: 'rgba(96,165,250,0.2)',
+    paddingHorizontal: 14, paddingVertical: 4,
+    alignSelf: 'flex-start',
+    borderBottomRightRadius: 10,
+  },
+  packTagText: { color: '#93c5fd', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+  packRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16,
+  },
+  packIconCircle: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: 'rgba(251,191,36,0.15)',
+    borderWidth: 1.5, borderColor: 'rgba(251,191,36,0.35)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  packIconText: { fontSize: 26 },
+  packInfo:    { flex: 1 },
+  packName:    { fontSize: 16, fontWeight: '800', color: '#fff' },
+  packDesc:    { fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 2 },
+  packBuyBtn:  { backgroundColor: '#3b82f6', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, minWidth: 70, alignItems: 'center' },
+  packBuyBtnBusy: { backgroundColor: 'rgba(59,130,246,0.5)' },
+  packBuyText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+
+  restoreBtn: {
+    marginTop: 20, alignSelf: 'center',
+    paddingHorizontal: 20, paddingVertical: 10,
+  },
+  restoreText: { color: 'rgba(255,255,255,0.35)', fontSize: 13, fontWeight: '600' },
+
+  toast:     { position: 'absolute', bottom: 40, left: 24, right: 24, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 20, alignItems: 'center' },
   toastOk:   { backgroundColor: 'rgba(52,211,153,0.92)' },
   toastErr:  { backgroundColor: 'rgba(220,38,38,0.92)' },
   toastText: { color: '#fff', fontWeight: '700', fontSize: 14 },
