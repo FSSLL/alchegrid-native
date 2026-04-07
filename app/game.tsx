@@ -68,7 +68,7 @@ const BoardCells = memo(({ board, cellSize, gap, conflictSet, hintedCells, cellG
               isConflict={conflictSet.has(key)}
               isHinted={!!hintedCells[key]}
               ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
-              ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.7}
+              ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.90}
               onPress={onPress}
             />
           </View>
@@ -266,7 +266,7 @@ function GameContent() {
     if (!src) return map;
     src.zones.forEach((zone) => {
       if (!zone.recipeName) return;
-      const opacity = zone.cells.length === 1 ? 0.45 : 0.70;
+      const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
       const grayscale = zone.cells.length === 1;
       zone.cells.forEach(({ row, col }) => {
         map[`${row},${col}`] = { element: zone.recipeName!, opacity, grayscale };
