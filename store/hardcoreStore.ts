@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getApiBase } from './communityStore';
+import { getApiBase } from '../lib/apiBase';
 
 export type GameOverReason = 'mistakes' | 'inactivity' | 'surrender' | 'completed' | null;
 

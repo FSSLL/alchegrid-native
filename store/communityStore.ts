@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { getApiBase } from '../lib/apiBase';
 import type { Level, Zone, ElementID, CellCoord } from '../lib/types';
+
+export { getApiBase };
 
 // ── Pending tab signal (avoids navigation stacking) ──────────────────────────
 let _pendingCommunityTab: 'explore' | 'build' | null = null;
@@ -46,25 +47,6 @@ export type SyncStatus = 'idle' | 'syncing' | 'error';
 export type ActiveFilter = 'all' | 'shared' | 'liked' | 'mine';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-export function getApiBase(): string {
-  // Native (iOS / Android): use the hardcoded production URL from app.json extra.
-  // On web we derive the base from window.location so the dev preview keeps
-  // talking to the local API server instead of the deployed production URL.
-  if (Platform.OS !== 'web') {
-    const configured: string | undefined = Constants.expoConfig?.extra?.apiUrl;
-    if (configured) return configured.replace(/\/$/, '');
-  }
-
-  // Web (dev preview or production web build): derive from window.location
-  try {
-    if (typeof window !== 'undefined' && window.location?.hostname) {
-      const h = window.location.hostname.replace('.expo.', '.');
-      return `${window.location.protocol}//${h}`;
-    }
-  } catch {}
-  return '';
-}
 
 function generateId(): string {
   return 'cl_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);

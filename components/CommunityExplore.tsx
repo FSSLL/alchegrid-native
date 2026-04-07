@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useCommunityStore, communityLevelToGameLevel, formatSolveTime, getApiBase, type CommunityLevel } from '../store/communityStore';
+import { useCommunityStore, communityLevelToGameLevel, formatSolveTime, type CommunityLevel } from '../store/communityStore';
+import { getApiBase } from '../lib/apiBase';
 import { useGameStore } from '../store/gameStore';
 
 type ActiveFilter = 'all' | 'shared' | 'liked' | 'mine' | 'solved';

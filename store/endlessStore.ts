@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getApiBase } from './communityStore';
+import { getApiBase } from '../lib/apiBase';
 
 // ── Constants from spec ───────────────────────────────────────────────────────
 const GRID_POINTS: Record<number, number> = { 4: 1, 5: 2, 6: 3, 7: 5 };
