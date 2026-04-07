@@ -20,6 +20,7 @@ interface GameCellProps {
   isHinted: boolean;
   ghostElement: string | null;
   ghostOpacity: number;
+  ghostZoneBg?: string;
   onPress: (row: number, col: number) => void;
 }
 
@@ -34,6 +35,7 @@ const GameCell = memo(({
   isHinted,
   ghostElement,
   ghostOpacity,
+  ghostZoneBg,
   onPress,
 }: GameCellProps) => {
   const { startDrag, moveDrag, endDrag, cancelDrag, dragSourceRow, dragSourceCol } = useDrag();
@@ -154,12 +156,15 @@ const GameCell = memo(({
             opacity={0.2}
           />
         ) : ghostElement ? (
-          <ElementIcon
-            name={ghostElement}
-            size={iconSize}
-            showLabel={false}
-            opacity={ghostOpacity}
-          />
+          <>
+            <View style={[styles.ghostBg, ghostZoneBg ? { backgroundColor: ghostZoneBg } : undefined]} />
+            <ElementIcon
+              name={ghostElement}
+              size={iconSize}
+              showLabel={false}
+              opacity={ghostOpacity}
+            />
+          </>
         ) : null}
       </View>
     </Animated.View>
@@ -174,6 +179,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  ghostBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.13)',
   },
 });
 

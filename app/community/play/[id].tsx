@@ -12,8 +12,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { GRID_BACKGROUNDS } from '../../../constants/assets';
+import { colors } from '../../../constants/colors';
 import { useGameStore } from '../../../store/gameStore';
-import { useCommunityStore, communityLevelToGameLevel } from '../../../store/communityStore';
+import { useCommunityStore, communityLevelToGameLevel, formatSolveTime } from '../../../store/communityStore';
 import GameCell from '../../../components/GameCell';
 import ZoneBorders from '../../../components/ZoneBorders';
 import ZoneHighlightOverlay from '../../../components/ZoneHighlightOverlay';
@@ -40,7 +41,6 @@ const CELL_GAPS: Record<number, number> = {
 function cellLayoutForSize(size: number, screenWidth: number): { cellSize: number; cellGap: number; gridPx: number } {
   const baseCellSize = CELL_SIZES[size] ?? 40;
   const baseCellGap  = CELL_GAPS[size]  ?? 3;
-  // Cap at what fits within the screen (with 24px side padding)
   const maxCellFromWidth = Math.floor((screenWidth - 48 - (size - 1) * baseCellGap) / size);
   const cellSize = Math.min(baseCellSize, maxCellFromWidth);
   const cellGap  = baseCellGap;
@@ -56,11 +56,13 @@ function PlayContent() {
   const gridViewRef = useRef<View>(null);
   const [mistakes, setMistakes] = useState(0);
   const prevBoardRef = useRef('');
+  const [showWinPopup, setShowWinPopup] = useState(false);
+  const [solveTime, setSolveTime] = useState(0);
 
   const {
     level, board, hintedCells, status, hintMode,
     conflicts, selectedZone, initGame, placeSpecificElement,
-    clearCell, setSelectedZone, stopTimer, toggleHintMode,
+    clearCell, setSelectedZone, stopTimer, toggleHintMode, elapsedTime,
   } = useGameStore();
 
   const conflictSet = useMemo(
@@ -69,6 +71,10 @@ function PlayContent() {
   );
 
   const { getLevelById, markLevelSolved, incrementPlays } = useCommunityStore();
+
+  // Look up the community level for its name
+  const communityLevel = id ? getLevelById(id) : null;
+  const levelDisplayName = communityLevel?.name ?? level?.id ?? '';
 
   // ── load level ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -85,8 +91,11 @@ function PlayContent() {
   useEffect(() => {
     if (status === 'won' && id) {
       stopTimer();
-      markLevelSolved(id);
+      const t = elapsedTime;
+      setSolveTime(t);
+      markLevelSolved(id, t);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setShowWinPopup(true);
     }
   }, [status]);
 
@@ -142,6 +151,20 @@ function PlayContent() {
     setSelectedZone(cellZoneLookup[key] ?? null);
   }, [cellZoneLookup, setSelectedZone]);
 
+  const cellGhostInfo = useMemo(() => {
+    const map: Record<string, { element: string; opacity: number; zoneBg: string }> = {};
+    if (!level) return map;
+    level.zones.forEach((zone, zoneIdx) => {
+      if (!zone.recipeName) return;
+      const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
+      const zoneBg = colors.zoneBgTints[zoneIdx % colors.zoneBgTints.length];
+      zone.cells.forEach(({ row, col }) => {
+        map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
+      });
+    });
+    return map;
+  }, [level]);
+
   const { width: screenWidth } = useWindowDimensions();
   if (!level) return null;
 
@@ -157,11 +180,11 @@ function PlayContent() {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad }]}>
-        <Pressable style={styles.backBtn} onPress={() => { stopTimer(); router.replace('/community'); }}>
+        <Pressable style={styles.backBtn} onPress={() => { stopTimer(); router.back(); }}>
           <Text style={styles.backIcon}>←</Text>
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text style={styles.levelName} numberOfLines={1}>{level.id}</Text>
+          <Text style={styles.levelName} numberOfLines={1}>{levelDisplayName}</Text>
           <Text style={styles.levelMeta}>
             {level.size}×{level.size}
             {mistakes > 0 ? `  ·  ⚠ ${mistakes} mistake${mistakes > 1 ? 's' : ''}` : ''}
@@ -182,13 +205,12 @@ function PlayContent() {
           {GRID_BACKGROUNDS[level.size] && (
             <Image
               source={GRID_BACKGROUNDS[level.size]}
-              style={StyleSheet.absoluteFill}
+              style={{ position: 'absolute', width: gridPx, height: gridPx }}
               resizeMode="cover"
             />
           )}
           <GridLines gridSize={level.size} cellSize={cellSize} gap={cellGap} totalGridPx={gridPx} />
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
-          {/* Overlay BEFORE cells so cells sit on top and always receive touches */}
           <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
           {board.map((rowArr, r) =>
             rowArr.map((el, c) => {
@@ -210,8 +232,9 @@ function PlayContent() {
                     cellSize={cellSize}
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
-                    ghostElement={null}
-                    ghostOpacity={0.9}
+                    ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
+                    ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.90}
+                    ghostZoneBg={cellGhostInfo[key]?.zoneBg}
                     onPress={() => handleCellPress(r, c)}
                   />
                 </View>
@@ -226,6 +249,27 @@ function PlayContent() {
       )}
 
       <ElementPalette level={level} board={board} />
+
+      {/* Win popup */}
+      {showWinPopup && (
+        <View style={styles.overlay}>
+          <View style={styles.popup}>
+            <Text style={styles.popupEmoji}>🎉</Text>
+            <Text style={styles.popupTitle}>Congratulations!</Text>
+            <Text style={styles.popupLevelName} numberOfLines={2}>{levelDisplayName}</Text>
+            <Text style={styles.popupTime}>Solved in {formatSolveTime(solveTime)}</Text>
+            <Pressable
+              style={styles.okBtn}
+              onPress={() => {
+                setShowWinPopup(false);
+                router.back();
+              }}
+            >
+              <Text style={styles.okBtnText}>Back to Explore</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -251,5 +295,37 @@ const styles = StyleSheet.create({
   hintBtnActive: { backgroundColor: 'rgba(250,204,21,0.3)' },
   hintIcon: { fontSize: 20 },
   gridSection: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  gridWrap: { position: 'relative' },
+  gridWrap: { position: 'relative', overflow: 'hidden' },
+
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+  },
+  popup: {
+    backgroundColor: '#1e293b',
+    borderRadius: 24,
+    paddingHorizontal: 28,
+    paddingVertical: 32,
+    alignItems: 'center',
+    width: 300,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    gap: 8,
+  },
+  popupEmoji: { fontSize: 52 },
+  popupTitle: { color: '#fff', fontSize: 22, fontWeight: '900' },
+  popupLevelName: {
+    color: '#93c5fd', fontSize: 15, fontWeight: '700', textAlign: 'center', maxWidth: 240,
+  },
+  popupTime: {
+    color: '#34d399', fontSize: 18, fontWeight: '800', marginTop: 4,
+  },
+  okBtn: {
+    marginTop: 12, paddingVertical: 13, paddingHorizontal: 40,
+    backgroundColor: '#3b82f6', borderRadius: 14, alignItems: 'center',
+  },
+  okBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

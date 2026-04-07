@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Pressable from '../../components/Pressable';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CommunityExplore from '../../components/CommunityExplore';
 import CommunityBuilder from '../../components/CommunityBuilder';
+import { takePendingCommunityTab } from '../../store/communityStore';
 
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
@@ -12,6 +13,15 @@ export default function CommunityScreen() {
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<'explore' | 'build'>(
     tabParam === 'build' ? 'build' : 'explore',
+  );
+
+  // When this screen regains focus (e.g. after back from test/play),
+  // check if another screen requested a tab switch — consumes and applies it.
+  useFocusEffect(
+    useCallback(() => {
+      const pending = takePendingCommunityTab();
+      if (pending) setTab(pending);
+    }, []),
   );
 
   return (

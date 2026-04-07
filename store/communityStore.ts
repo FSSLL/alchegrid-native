@@ -3,6 +3,15 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Level, Zone, ElementID, CellCoord } from '../lib/types';
 
+// ── Pending tab signal (avoids navigation stacking) ──────────────────────────
+let _pendingCommunityTab: 'explore' | 'build' | null = null;
+export function requestCommunityTab(tab: 'explore' | 'build') { _pendingCommunityTab = tab; }
+export function takePendingCommunityTab(): 'explore' | 'build' | null {
+  const t = _pendingCommunityTab;
+  _pendingCommunityTab = null;
+  return t;
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface CommunityLevel {
@@ -68,6 +77,13 @@ export function communityLevelToGameLevel(cl: CommunityLevel): Level {
   };
 }
 
+export function formatSolveTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  if (m === 0) return `${s}s`;
+  return `${m}m ${s}s`;
+}
+
 function createEmptyDraft(): DraftState {
   return {
     name: '',
@@ -104,6 +120,20 @@ async function deleteFromServer(id: string): Promise<void> {
   } catch { /* fire-and-forget */ }
 }
 
+export async function checkNameAvailability(name: string): Promise<'available' | 'taken' | 'error'> {
+  const base = getApiBase();
+  if (!base) return 'error';
+  try {
+    const res = await fetch(`${base}/api/community/levels`);
+    if (!res.ok) return 'error';
+    const levels: CommunityLevel[] = await res.json();
+    const taken = levels.some((l) => l.name.trim().toLowerCase() === name.trim().toLowerCase());
+    return taken ? 'taken' : 'available';
+  } catch {
+    return 'error';
+  }
+}
+
 // ── Store ─────────────────────────────────────────────────────────────────────
 
 interface CommunityStore {
@@ -112,6 +142,7 @@ interface CommunityStore {
   draft: DraftState;
   likedLevelIds: string[];
   solvedLevelIds: string[];
+  solvedLevelTimes: Record<string, number>;
   // Not persisted
   remoteLevels: CommunityLevel[];
   syncStatus: SyncStatus;
@@ -137,7 +168,7 @@ interface CommunityStore {
   // Play tracking
   incrementPlays: (id: string) => void;
   toggleLike: (id: string) => void;
-  markLevelSolved: (id: string) => void;
+  markLevelSolved: (id: string, timeSeconds?: number) => void;
 
   // Publish sync status (per publish attempt)
   publishSyncStatus: 'idle' | 'uploading' | 'uploaded' | 'error';
@@ -157,6 +188,7 @@ export const useCommunityStore = create<CommunityStore>()(
       draft: createEmptyDraft(),
       likedLevelIds: [],
       solvedLevelIds: [],
+      solvedLevelTimes: {},
       remoteLevels: [],
       syncStatus: 'idle',
       publishSyncStatus: 'idle',
@@ -286,7 +318,6 @@ export const useCommunityStore = create<CommunityStore>()(
         const ok = await uploadToServer(cl);
         set({ publishSyncStatus: ok ? 'uploaded' : 'error' });
         if (ok) {
-          // Refresh remote list so the new level appears in Explore immediately
           get().refreshRemoteLevels();
         }
         return id;
@@ -317,11 +348,14 @@ export const useCommunityStore = create<CommunityStore>()(
           };
         }),
 
-      markLevelSolved: (id) =>
+      markLevelSolved: (id, timeSeconds) =>
         set((s) => ({
           solvedLevelIds: s.solvedLevelIds.includes(id)
             ? s.solvedLevelIds
             : [...s.solvedLevelIds, id],
+          solvedLevelTimes: timeSeconds !== undefined
+            ? { ...s.solvedLevelTimes, [id]: timeSeconds }
+            : s.solvedLevelTimes,
         })),
 
       // ── Remote sync ───────────────────────────────────────────────────────
@@ -362,12 +396,19 @@ export const useCommunityStore = create<CommunityStore>()(
     {
       name: 'elemental-community-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 5,
+      version: 6,
+      migrate: (persisted: any, version: number) => {
+        if (version < 6) {
+          return { ...persisted, solvedLevelTimes: {} };
+        }
+        return persisted;
+      },
       partialize: (state) => ({
         levels: state.levels,
         draft: state.draft,
         likedLevelIds: state.likedLevelIds,
         solvedLevelIds: state.solvedLevelIds,
+        solvedLevelTimes: state.solvedLevelTimes,
       }),
     },
   ),

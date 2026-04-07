@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import Pressable from './Pressable';
 import {
   View,
@@ -9,10 +9,11 @@ import {
   Platform,
   FlatList,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useCommunityStore, deriveElements } from '../store/communityStore';
+import { useCommunityStore, deriveElements, checkNameAvailability } from '../store/communityStore';
 import { useGameStore } from '../store/gameStore';
 import { RECIPE_CATALOG } from '../constants/recipeCatalog';
 import { ZONE_COLORS, isCellsConnected, isAdjacentToSet, maxZoneSizeForGrid } from '../lib/recipeCatalog';
@@ -75,6 +76,8 @@ export default function CommunityBuilder() {
   const [showRecipePicker, setShowRecipePicker] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [nameStatus, setNameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'error'>('idle');
+  const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     draft, setDraftName, setDraftSize,
@@ -89,6 +92,19 @@ export default function CommunityBuilder() {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 2200);
   };
+
+  // ── Name availability debounce ─────────────────────────────────────────────
+  useEffect(() => {
+    const trimmed = draft.name.trim();
+    if (!trimmed) { setNameStatus('idle'); return; }
+    setNameStatus('checking');
+    if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current);
+    nameDebounceRef.current = setTimeout(async () => {
+      const result = await checkNameAvailability(trimmed);
+      setNameStatus(result);
+    }, 600);
+    return () => { if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current); };
+  }, [draft.name]);
 
   // ── Computed values ───────────────────────────────────────────────────────
   const totalCells = draft.size * draft.size;
@@ -106,12 +122,14 @@ export default function CommunityBuilder() {
   const cellCount = draft.currentZoneCells.length;
 
   const availableRecipes = useMemo(() => {
+    const worldNum = draft.size - 3; // 4×4=W1, 5×5=W2 ... 11×11=W8
     return RECIPE_CATALOG.filter((r) => {
+      if (r.world !== worldNum) return false;
       if (r.ingredients.length !== cellCount) return false;
       const newEls = r.ingredients.filter((el) => !committedElements.has(el));
       return newEls.length <= remainingBudget;
     });
-  }, [cellCount, committedElements, remainingBudget]);
+  }, [draft.size, cellCount, committedElements, remainingBudget]);
 
   // Build zone map: -1=empty, -2=current zone, N=committed zone index
   const zoneMap = useMemo(() => {
@@ -277,14 +295,33 @@ export default function CommunityBuilder() {
       {step === 'setup' && (
         <ScrollView contentContainerStyle={styles.setupContent} showsVerticalScrollIndicator={false}>
           <Text style={styles.fieldLabel}>Level Name</Text>
-          <TextInput
-            style={styles.nameInput}
-            placeholder="Enter a name..."
-            placeholderTextColor="rgba(255,255,255,0.3)"
-            value={draft.name}
-            onChangeText={setDraftName}
-            maxLength={40}
-          />
+          <View style={styles.nameRow}>
+            <TextInput
+              style={styles.nameInput}
+              placeholder="Enter a name..."
+              placeholderTextColor="rgba(255,255,255,0.3)"
+              value={draft.name}
+              onChangeText={setDraftName}
+              maxLength={40}
+            />
+            <View style={styles.nameStatusBadge}>
+              {nameStatus === 'checking' && (
+                <ActivityIndicator size="small" color="rgba(255,255,255,0.5)" />
+              )}
+              {nameStatus === 'available' && (
+                <Text style={styles.nameAvailable}>✓</Text>
+              )}
+              {nameStatus === 'taken' && (
+                <Text style={styles.nameTaken}>✕</Text>
+              )}
+            </View>
+          </View>
+          {nameStatus === 'taken' && (
+            <Text style={styles.nameTakenHint}>This name is already taken. Try another.</Text>
+          )}
+          {nameStatus === 'available' && (
+            <Text style={styles.nameAvailableHint}>Name is available!</Text>
+          )}
 
           <Text style={styles.fieldLabel}>Board Size</Text>
           <View style={styles.sizeGrid}>
@@ -309,10 +346,17 @@ export default function CommunityBuilder() {
           </View>
 
           <Pressable
-            style={[styles.nextBtn, !draft.name.trim() && styles.disabledBtn]}
+            style={[
+              styles.nextBtn,
+              (!draft.name.trim() || nameStatus === 'taken') && styles.disabledBtn,
+            ]}
             onPress={() => {
               if (!draft.name.trim()) {
                 showToast('Please enter a level name first');
+                return;
+              }
+              if (nameStatus === 'taken') {
+                showToast('This name is already taken. Choose another.');
                 return;
               }
               // Default draft size to 4 if somehow above 7 (coming soon sizes hidden)
@@ -372,7 +416,7 @@ export default function CommunityBuilder() {
               ) : (
                 <FlatList
                   data={availableRecipes}
-                  keyExtractor={(r) => r.ingredients.join('+')}
+                  keyExtractor={(r, i) => `${i}-${r.ingredients.join('+')}`}
                   contentContainerStyle={styles.recipeList}
                   renderItem={({ item }) => (
                     <Pressable style={styles.recipeRow} onPress={() => handlePickRecipe(item)}>
@@ -622,10 +666,21 @@ const styles = StyleSheet.create({
   // Setup
   setupContent: { paddingHorizontal: 16, paddingTop: 8, gap: 12, paddingBottom: 40 },
   fieldLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '700', marginBottom: -4 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   nameInput: {
+    flex: 1,
     backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: 12,
     color: '#fff', fontSize: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
+  nameStatusBadge: {
+    width: 32, height: 32, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 10,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  nameAvailable: { color: '#34d399', fontSize: 16, fontWeight: '900' },
+  nameTaken: { color: '#f87171', fontSize: 16, fontWeight: '900' },
+  nameTakenHint: { color: '#f87171', fontSize: 12, fontWeight: '600', marginTop: -6 },
+  nameAvailableHint: { color: '#34d399', fontSize: 12, fontWeight: '600', marginTop: -6 },
   sizeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   sizeBtn: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,

@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useCallback, useRef, useMemo, useState } from 'react';
 import Pressable from '../../components/Pressable';
 import {
   View,
@@ -6,14 +6,16 @@ import {
   StyleSheet,
   Platform,
   Image,
+  ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { GRID_BACKGROUNDS } from '../../constants/assets';
+import { colors } from '../../constants/colors';
 import { useGameStore } from '../../store/gameStore';
-import { useCommunityStore } from '../../store/communityStore';
+import { useCommunityStore, requestCommunityTab } from '../../store/communityStore';
 import { computeGridLayout } from '../../lib/gridLayout';
 import GameCell from '../../components/GameCell';
 import ZoneBorders from '../../components/ZoneBorders';
@@ -31,18 +33,15 @@ export default function CommunityTestScreen() {
   );
 }
 
-const CELL_SIZES: Record<number, number> = {
-  4: 72, 5: 52, 6: 44, 7: 38, 8: 32, 9: 28, 10: 25, 11: 22,
-};
-const CELL_GAPS: Record<number, number> = {
-  4: 6, 5: 4, 6: 3, 7: 3, 8: 2, 9: 2, 10: 2, 11: 2,
-};
-
 function TestContent() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 8 : insets.top;
   const { registerGrid, setDropHandlers } = useDrag();
   const gridViewRef = useRef<View>(null);
+
+  const [showPopup, setShowPopup] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [published, setPublished] = useState(false);
 
   const {
     level, board, hintedCells, status,
@@ -55,9 +54,9 @@ function TestContent() {
     [conflicts],
   );
 
-  const { setSolution, markSolved } = useCommunityStore();
+  const { setSolution, markSolved, publishLevel } = useCommunityStore();
 
-  // ── win detection: save solution ──────────────────────────────────────────
+  // ── win detection ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (status === 'won' && board.length > 0) {
       stopTimer();
@@ -65,6 +64,7 @@ function TestContent() {
       setSolution(solution);
       markSolved();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setShowPopup(true);
     }
   }, [status]);
 
@@ -96,6 +96,20 @@ function TestContent() {
     setSelectedZone(cellZoneLookup[`${row},${col}`] ?? null);
   }, [placeElement, cellZoneLookup, setSelectedZone]);
 
+  const cellGhostInfo = useMemo(() => {
+    const map: Record<string, { element: string; opacity: number; zoneBg: string }> = {};
+    if (!level) return map;
+    level.zones.forEach((zone, zoneIdx) => {
+      if (!zone.recipeName) return;
+      const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
+      const zoneBg = colors.zoneBgTints[zoneIdx % colors.zoneBgTints.length];
+      zone.cells.forEach(({ row, col }) => {
+        map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
+      });
+    });
+    return map;
+  }, [level]);
+
   const { width: screenWidth } = useWindowDimensions();
   if (!level) return null;
 
@@ -107,31 +121,43 @@ function TestContent() {
     });
   };
 
+  const handleEdit = () => {
+    setShowPopup(false);
+    stopTimer();
+    router.back();
+  };
+
+  const handlePublish = async () => {
+    setPublishing(true);
+    await publishLevel();
+    setPublishing(false);
+    setPublished(true);
+  };
+
+  const handleDoneAfterPublish = () => {
+    setShowPopup(false);
+    requestCommunityTab('explore');
+    router.back();
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad }]}>
         <Pressable
           style={styles.backBtn}
-          onPress={() => { stopTimer(); router.replace('/community?tab=build'); }}
+          onPress={() => { stopTimer(); router.back(); }}
         >
           <Text style={styles.backIcon}>←</Text>
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.title}>Test Play</Text>
           <Text style={styles.sub}>
-            {status === 'won' ? '✓ Solved! Tap ← to go back.' : 'Solve to unlock Publish'}
+            {status === 'won' ? '✓ Solved! You can now publish.' : 'Solve to unlock Publish'}
           </Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
-
-      {/* Win banner */}
-      {status === 'won' && (
-        <View style={styles.winBanner}>
-          <Text style={styles.winText}>✓ Solution recorded! You can now publish.</Text>
-        </View>
-      )}
 
       {/* Grid */}
       <View style={styles.gridSection}>
@@ -139,13 +165,12 @@ function TestContent() {
           {GRID_BACKGROUNDS[level.size] && (
             <Image
               source={GRID_BACKGROUNDS[level.size]}
-              style={StyleSheet.absoluteFill}
+              style={{ position: 'absolute', width: gridPx, height: gridPx }}
               resizeMode="cover"
             />
           )}
           <GridLines gridSize={level.size} cellSize={cellSize} gap={cellGap} totalGridPx={gridPx} />
           <ZoneBorders zones={level.zones} size={level.size} cellSize={cellSize} gap={cellGap} selectedZone={selectedZone} />
-          {/* Overlay BEFORE cells so cells sit on top and always receive touches */}
           <ZoneHighlightOverlay zone={selectedZone} cellSize={cellSize} gap={cellGap} />
           {board.map((rowArr, r) =>
             rowArr.map((el, c) => {
@@ -168,8 +193,9 @@ function TestContent() {
                     cellSize={cellSize}
                     isConflict={conflictSet.has(key)}
                     isHinted={false}
-                    ghostElement={null}
-                    ghostOpacity={0.7}
+                    ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
+                    ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.90}
+                    ghostZoneBg={cellGhostInfo[key]?.zoneBg}
                     onPress={() => handleCellPress(r, c)}
                   />
                 </View>
@@ -184,6 +210,50 @@ function TestContent() {
       )}
 
       <ElementPalette level={level} board={board} />
+
+      {/* Win popup */}
+      {showPopup && (
+        <View style={styles.overlay}>
+          <View style={styles.popup}>
+            {published ? (
+              /* ── Published confirmation ── */
+              <>
+                <Text style={styles.popupEmoji}>🎉</Text>
+                <Text style={styles.popupTitle}>Level Published!</Text>
+                <Text style={styles.popupSub}>
+                  Your level will be added to the community explore page shortly.
+                </Text>
+                <Pressable style={styles.okBtn} onPress={handleDoneAfterPublish}>
+                  <Text style={styles.okBtnText}>Go to Explore</Text>
+                </Pressable>
+              </>
+            ) : (
+              /* ── Edit or Publish choice ── */
+              <>
+                <Text style={styles.popupEmoji}>✅</Text>
+                <Text style={styles.popupTitle}>Your level is solvable!</Text>
+                <Text style={styles.popupSub}>
+                  Solution recorded. What would you like to do?
+                </Text>
+                <View style={styles.popupBtns}>
+                  <Pressable style={styles.editBtn} onPress={handleEdit} disabled={publishing}>
+                    <Text style={styles.editBtnText}>✏️  Edit Zones</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.publishBtn, publishing && styles.publishBtnDisabled]}
+                    onPress={handlePublish}
+                    disabled={publishing}
+                  >
+                    {publishing
+                      ? <ActivityIndicator size="small" color="#fff" />
+                      : <Text style={styles.publishBtnText}>🚀  Publish</Text>}
+                  </Pressable>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -202,12 +272,47 @@ const styles = StyleSheet.create({
   headerCenter: { alignItems: 'center' },
   title: { color: '#fff', fontSize: 16, fontWeight: '900' },
   sub: { color: 'rgba(255,255,255,0.55)', fontSize: 11, marginTop: 1 },
-  winBanner: {
-    backgroundColor: 'rgba(16,185,129,0.2)', paddingVertical: 8, paddingHorizontal: 16,
-    borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(16,185,129,0.4)',
+  gridSection: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  gridWrap: { position: 'relative', overflow: 'hidden' },
+
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+  },
+  popup: {
+    backgroundColor: '#1e293b',
+    borderRadius: 24,
+    paddingHorizontal: 28,
+    paddingVertical: 32,
+    alignItems: 'center',
+    width: 300,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    gap: 12,
+  },
+  popupEmoji: { fontSize: 48 },
+  popupTitle: { color: '#fff', fontSize: 20, fontWeight: '900', textAlign: 'center' },
+  popupSub: { color: 'rgba(255,255,255,0.6)', fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  popupBtns: { flexDirection: 'row', gap: 10, marginTop: 6 },
+  editBtn: {
+    flex: 1, paddingVertical: 12, borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
   },
-  winText: { color: '#34d399', fontSize: 13, fontWeight: '700' },
-  gridSection: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  gridWrap: { position: 'relative' },
+  editBtnText: { color: '#e2e8f0', fontSize: 14, fontWeight: '700' },
+  publishBtn: {
+    flex: 1, paddingVertical: 12, borderRadius: 14,
+    backgroundColor: '#3b82f6', alignItems: 'center',
+  },
+  publishBtnDisabled: { backgroundColor: 'rgba(59,130,246,0.5)' },
+  publishBtnText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  okBtn: {
+    marginTop: 4, paddingVertical: 12, paddingHorizontal: 36,
+    backgroundColor: '#10b981', borderRadius: 14, alignItems: 'center',
+  },
+  okBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

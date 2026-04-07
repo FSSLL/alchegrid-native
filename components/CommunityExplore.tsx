@@ -5,15 +5,16 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TextInput,
   Platform,
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useCommunityStore, communityLevelToGameLevel, type CommunityLevel } from '../store/communityStore';
+import { useCommunityStore, communityLevelToGameLevel, formatSolveTime, type CommunityLevel } from '../store/communityStore';
 import { useGameStore } from '../store/gameStore';
 
-type ActiveFilter = 'all' | 'shared' | 'liked' | 'mine';
+type ActiveFilter = 'all' | 'shared' | 'liked' | 'mine' | 'solved';
 type SortOption = 'newest' | 'oldest' | 'grid_asc' | 'grid_desc';
 
 const SORT_LABELS: Record<SortOption, string> = {
@@ -44,12 +45,14 @@ function getApiBase(): string {
 export default function CommunityExplore() {
   const [filter, setFilter] = useState<ActiveFilter>('all');
   const [sort, setSort]   = useState<SortOption>('newest');
+  const [search, setSearch] = useState('');
+  const [hideSolved, setHideSolved] = useState(false);
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
 
   const {
-    levels, remoteLevels, likedLevelIds, solvedLevelIds, syncStatus,
+    levels, remoteLevels, likedLevelIds, solvedLevelIds, solvedLevelTimes, syncStatus,
     getAllBrowsableLevels, getLevelById, refreshRemoteLevels,
     incrementPlays, toggleLike, deleteLevel,
   } = useCommunityStore();
@@ -86,7 +89,19 @@ export default function CommunityExplore() {
       case 'shared': base = remoteLevels; break;
       case 'liked':  base = allBrowsable.filter((l) => likedLevelIds.includes(l.id)); break;
       case 'mine':   base = levels.filter((l) => l.published && l.createdByPlayer); break;
+      case 'solved': base = allBrowsable.filter((l) => solvedLevelIds.includes(l.id)); break;
       default:       base = allBrowsable;
+    }
+
+    // Search filter
+    const q = search.trim().toLowerCase();
+    if (q) {
+      base = base.filter((l) => l.name.toLowerCase().includes(q));
+    }
+
+    // Hide solved toggle
+    if (hideSolved && filter !== 'solved') {
+      base = base.filter((l) => !solvedLevelIds.includes(l.id));
     }
 
     const sorted = [...base];
@@ -109,7 +124,7 @@ export default function CommunityExplore() {
       case 'grid_desc': sorted.sort((a, b) => b.size - a.size); break;
     }
     return sorted;
-  }, [filter, sort, allBrowsable, remoteLevels, likedLevelIds, levels]);
+  }, [filter, sort, search, hideSolved, allBrowsable, remoteLevels, likedLevelIds, solvedLevelIds, levels]);
 
   const totalSolved = useMemo(
     () => solvedLevelIds.filter((id) => allBrowsable.some((l) => l.id === id)).length,
@@ -122,6 +137,7 @@ export default function CommunityExplore() {
 
   const myMineCount = levels.filter((l) => l.published && l.createdByPlayer).length;
   const sharedCount = remoteLevels.length;
+  const solvedCount = totalSolved;
 
   const handlePlay = (levelId: string) => {
     const cl = getLevelById(levelId);
@@ -141,7 +157,7 @@ export default function CommunityExplore() {
 
   return (
     <View style={styles.container}>
-      {/* Status bar */}
+      {/* Status / refresh row */}
       <View style={styles.statusBar}>
         <Text style={styles.statusLabel}>🌐 Community</Text>
         {serverStatus?.rateLimited && (
@@ -160,6 +176,27 @@ export default function CommunityExplore() {
         </Pressable>
       </View>
 
+      {/* Search bar */}
+      <View style={styles.searchRow}>
+        <Text style={styles.searchIcon}>🔍</Text>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by level name…"
+          placeholderTextColor="rgba(255,255,255,0.3)"
+          value={search}
+          onChangeText={setSearch}
+          returnKeyType="search"
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+        />
+        {search.length > 0 && (
+          <Pressable onPress={() => setSearch('')} style={styles.clearBtn}>
+            <Text style={styles.clearBtnText}>✕</Text>
+          </Pressable>
+        )}
+      </View>
+
       {/* Stats row */}
       <View style={styles.statsRow}>
         <StatPill icon="🗂" label={`${allBrowsable.length} levels`} />
@@ -169,7 +206,13 @@ export default function CommunityExplore() {
 
       {/* Filter tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterContent}>
-        {([['all', `All (${allBrowsable.length})`], ['shared', `🌐 Shared (${sharedCount})`], ['liked', '❤ Liked'], ['mine', `👤 Mine (${myMineCount})`]] as [ActiveFilter, string][]).map(([f, label]) => (
+        {([
+          ['all',    `All (${allBrowsable.length})`],
+          ['shared', `🌐 Shared (${sharedCount})`],
+          ['liked',  '❤ Liked'],
+          ['solved', `✓ Solved (${solvedCount})`],
+          ['mine',   `👤 Mine (${myMineCount})`],
+        ] as [ActiveFilter, string][]).map(([f, label]) => (
           <Pressable
             key={f}
             style={[styles.filterBtn, filter === f && styles.filterBtnActive[f]]}
@@ -180,7 +223,7 @@ export default function CommunityExplore() {
         ))}
       </ScrollView>
 
-      {/* Sort row */}
+      {/* Sort + hide-solved row */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sortRow} contentContainerStyle={styles.sortContent}>
         <Text style={styles.sortLabel}>Sort:</Text>
         {(Object.keys(SORT_LABELS) as SortOption[]).map((s) => (
@@ -194,6 +237,20 @@ export default function CommunityExplore() {
             </Text>
           </Pressable>
         ))}
+        {/* Separator */}
+        <View style={styles.sortSeparator} />
+        {/* Hide-solved checkbox */}
+        <Pressable
+          style={[styles.hidesolvedBtn, hideSolved && styles.hidesolvedBtnActive]}
+          onPress={() => setHideSolved((v) => !v)}
+        >
+          <View style={[styles.checkbox, hideSolved && styles.checkboxChecked]}>
+            {hideSolved && <Text style={styles.checkmark}>✓</Text>}
+          </View>
+          <Text style={[styles.hidesolvedText, hideSolved && styles.hidesolvedTextActive]}>
+            Hide solved
+          </Text>
+        </Pressable>
       </ScrollView>
 
       {/* Level list */}
@@ -203,13 +260,14 @@ export default function CommunityExplore() {
         showsVerticalScrollIndicator={false}
       >
         {filteredLevels.length === 0 ? (
-          <EmptyState filter={filter} />
+          <EmptyState filter={filter} hasSearch={search.length > 0} />
         ) : (
           filteredLevels.map((level) => (
             <LevelCard
               key={level.id}
               level={level}
               isSolved={solvedLevelIds.includes(level.id)}
+              solveTime={solvedLevelTimes?.[level.id]}
               isLiked={likedLevelIds.includes(level.id)}
               showTrash={filter === 'mine' && level.createdByPlayer}
               confirmDelete={confirmDeleteId === level.id}
@@ -235,12 +293,21 @@ function StatPill({ icon, label }: { icon: string; label: string }) {
   );
 }
 
-function EmptyState({ filter }: { filter: ActiveFilter }) {
+function EmptyState({ filter, hasSearch }: { filter: ActiveFilter; hasSearch: boolean }) {
+  if (hasSearch) {
+    return (
+      <View style={styles.emptyWrap}>
+        <Text style={styles.emptyIcon}>🔍</Text>
+        <Text style={styles.emptyText}>No levels match your search.</Text>
+      </View>
+    );
+  }
   const messages: Record<ActiveFilter, { icon: string; text: string }> = {
-    all: { icon: '👥', text: 'No levels yet. Create or refresh to discover levels.' },
+    all:    { icon: '👥', text: 'No levels yet. Create or refresh to discover levels.' },
     shared: { icon: '🌐', text: 'No shared levels yet. Tap Refresh.' },
-    liked: { icon: '❤', text: 'No liked levels yet.' },
-    mine: { icon: '👤', text: "You haven't published any levels yet." },
+    liked:  { icon: '❤', text: 'No liked levels yet.' },
+    solved: { icon: '🏆', text: 'No solved levels yet. Start playing!' },
+    mine:   { icon: '👤', text: "You haven't published any levels yet." },
   };
   const m = messages[filter];
   return (
@@ -252,11 +319,12 @@ function EmptyState({ filter }: { filter: ActiveFilter }) {
 }
 
 function LevelCard({
-  level, isSolved, isLiked, showTrash, confirmDelete,
+  level, isSolved, solveTime, isLiked, showTrash, confirmDelete,
   onPlay, onLike, onTrash, onCancelDelete, onConfirmDelete,
 }: {
   level: CommunityLevel;
   isSolved: boolean;
+  solveTime?: number;
   isLiked: boolean;
   showTrash: boolean;
   confirmDelete: boolean;
@@ -282,6 +350,12 @@ function LevelCard({
             <Text style={styles.metaText}>👁 {level.plays}</Text>
             <Text style={styles.metaDot}>·</Text>
             <Text style={styles.metaText}>❤ {level.likes}</Text>
+            {isSolved && solveTime !== undefined && (
+              <>
+                <Text style={styles.metaDot}>·</Text>
+                <Text style={styles.solveTimeText}>⏱ {formatSolveTime(solveTime)}</Text>
+              </>
+            )}
           </View>
         </View>
 
@@ -321,16 +395,18 @@ function LevelCard({
 
 // Dynamic active color per filter
 const FILTER_ACTIVE_BG: Record<ActiveFilter, string> = {
-  all: 'rgba(96,165,250,0.2)',
+  all:    'rgba(96,165,250,0.2)',
   shared: 'rgba(59,130,246,0.25)',
-  liked: 'rgba(244,63,94,0.2)',
-  mine: 'rgba(251,191,36,0.2)',
+  liked:  'rgba(244,63,94,0.2)',
+  solved: 'rgba(16,185,129,0.2)',
+  mine:   'rgba(251,191,36,0.2)',
 };
 const FILTER_ACTIVE_BORDER: Record<ActiveFilter, string> = {
-  all: 'rgba(96,165,250,0.5)',
+  all:    'rgba(96,165,250,0.5)',
   shared: 'rgba(59,130,246,0.5)',
-  liked: 'rgba(244,63,94,0.5)',
-  mine: 'rgba(251,191,36,0.5)',
+  liked:  'rgba(244,63,94,0.5)',
+  solved: 'rgba(16,185,129,0.5)',
+  mine:   'rgba(251,191,36,0.5)',
 };
 
 const styles = StyleSheet.create({
@@ -351,6 +427,24 @@ const styles = StyleSheet.create({
   refreshBtn: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   refreshIcon: { color: '#60a5fa', fontSize: 20, fontWeight: '700' },
 
+  searchRow: {
+    flexDirection: 'row', alignItems: 'center',
+    marginHorizontal: 12, marginTop: 8, marginBottom: 2,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 10, height: 38,
+  },
+  searchIcon: { fontSize: 14, marginRight: 6, opacity: 0.5 },
+  searchInput: {
+    flex: 1, color: '#fff', fontSize: 14, paddingVertical: 0,
+    fontWeight: '500',
+  },
+  clearBtn: {
+    width: 24, height: 24, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 12,
+  },
+  clearBtnText: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: '700' },
+
   statsRow: {
     flexDirection: 'row', gap: 8, paddingHorizontal: 14, paddingVertical: 8,
   },
@@ -363,7 +457,7 @@ const styles = StyleSheet.create({
   filterRow: { maxHeight: 44 },
   filterContent: { paddingHorizontal: 12, paddingVertical: 6, gap: 6 },
 
-  sortRow: { maxHeight: 38, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.07)' },
+  sortRow: { maxHeight: 40, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.07)' },
   sortContent: { paddingHorizontal: 12, paddingVertical: 5, gap: 6, alignItems: 'center' },
   sortLabel: { color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: '600', marginRight: 2, alignSelf: 'center' },
   sortBtn: {
@@ -374,16 +468,42 @@ const styles = StyleSheet.create({
   sortBtnActive: { backgroundColor: 'rgba(96,165,250,0.2)', borderColor: 'rgba(96,165,250,0.45)' },
   sortBtnText: { color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: '600' },
   sortBtnTextActive: { color: '#93c5fd', fontWeight: '700' },
+
+  sortSeparator: {
+    width: 1, height: 18, backgroundColor: 'rgba(255,255,255,0.15)', marginHorizontal: 2, alignSelf: 'center',
+  },
+  hidesolvedBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  hidesolvedBtnActive: {
+    backgroundColor: 'rgba(251,191,36,0.15)', borderColor: 'rgba(251,191,36,0.4)',
+  },
+  checkbox: {
+    width: 14, height: 14, borderRadius: 3,
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#fbbf24', borderColor: '#fbbf24',
+  },
+  checkmark: { color: '#1e293b', fontSize: 9, fontWeight: '900', lineHeight: 12 },
+  hidesolvedText: { color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: '600' },
+  hidesolvedTextActive: { color: '#fbbf24', fontWeight: '700' },
+
   filterBtn: {
     paddingHorizontal: 14, paddingVertical: 6, borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.07)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
   filterBtnActive: {
-    all: { backgroundColor: FILTER_ACTIVE_BG.all, borderColor: FILTER_ACTIVE_BORDER.all },
+    all:    { backgroundColor: FILTER_ACTIVE_BG.all,    borderColor: FILTER_ACTIVE_BORDER.all },
     shared: { backgroundColor: FILTER_ACTIVE_BG.shared, borderColor: FILTER_ACTIVE_BORDER.shared },
-    liked: { backgroundColor: FILTER_ACTIVE_BG.liked, borderColor: FILTER_ACTIVE_BORDER.liked },
-    mine: { backgroundColor: FILTER_ACTIVE_BG.mine, borderColor: FILTER_ACTIVE_BORDER.mine },
+    liked:  { backgroundColor: FILTER_ACTIVE_BG.liked,  borderColor: FILTER_ACTIVE_BORDER.liked },
+    solved: { backgroundColor: FILTER_ACTIVE_BG.solved, borderColor: FILTER_ACTIVE_BORDER.solved },
+    mine:   { backgroundColor: FILTER_ACTIVE_BG.mine,   borderColor: FILTER_ACTIVE_BORDER.mine },
   },
   filterBtnText: { color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: '600' },
   filterBtnTextActive: { color: '#fff', fontWeight: '700' },
@@ -408,9 +528,10 @@ const styles = StyleSheet.create({
   cardName: { color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 },
   solvedBadge: { color: '#34d399', fontSize: 13, fontWeight: '800' },
   globalBadge: { fontSize: 13 },
-  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
+  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3, flexWrap: 'wrap' },
   metaText: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },
   metaDot: { color: 'rgba(255,255,255,0.25)', fontSize: 12 },
+  solveTimeText: { color: '#34d399', fontSize: 12, fontWeight: '700' },
 
   cardActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   actionBtn: {
