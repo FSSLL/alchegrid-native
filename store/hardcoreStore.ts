@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { getApiBase } from '../lib/apiBase';
+import { usePlayerStore } from './playerStore';
 
 export type GameOverReason = 'mistakes' | 'inactivity' | 'surrender' | 'completed' | null;
 
@@ -105,6 +106,11 @@ export const useHardcoreStore = create<HardcoreState>((set, get) => ({
     const levelTime = Date.now() - levelStartTime;
     const newTotal = totalTimeMs + levelTime;
     const nextLevel = currentLevel + 1;
+
+    // Every 10 levels costs 10 coins — deduct before advancing
+    if (currentLevel % 10 === 0) {
+      usePlayerStore.getState().spendCoins(10);
+    }
 
     if (nextLevel > MAX_LEVEL) {
       set({

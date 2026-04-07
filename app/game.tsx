@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import { GRID_BACKGROUNDS } from '../constants/assets';
+import colors from '../constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -40,7 +41,7 @@ interface BoardCellsProps {
   gap: number;
   conflictSet: Set<string>;
   hintedCells: Record<string, ElementID>;
-  cellGhostInfo: Record<string, { element: string; opacity: number }>;
+  cellGhostInfo: Record<string, { element: string; opacity: number; zoneBg: string }>;
   onPress: (row: number, col: number) => void;
 }
 
@@ -69,6 +70,7 @@ const BoardCells = memo(({ board, cellSize, gap, conflictSet, hintedCells, cellG
               isHinted={!!hintedCells[key]}
               ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
               ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.90}
+              ghostZoneBg={cellGhostInfo[key]?.zoneBg}
               onPress={onPress}
             />
           </View>
@@ -261,15 +263,15 @@ function GameContent() {
 
   // Ghost hints — use currentLevelData so they appear even before initGame.
   const cellGhostInfo = useMemo(() => {
-    const map: Record<string, { element: string; opacity: number; grayscale: boolean }> = {};
+    const map: Record<string, { element: string; opacity: number; zoneBg: string }> = {};
     const src = level?.id === currentLevelData?.id ? level : currentLevelData;
     if (!src) return map;
-    src.zones.forEach((zone) => {
+    src.zones.forEach((zone, zoneIdx) => {
       if (!zone.recipeName) return;
       const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
-      const grayscale = zone.cells.length === 1;
+      const zoneBg = colors.zoneBgTints[zoneIdx % colors.zoneBgTints.length];
       zone.cells.forEach(({ row, col }) => {
-        map[`${row},${col}`] = { element: zone.recipeName!, opacity, grayscale };
+        map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
       });
     });
     return map;
@@ -291,7 +293,7 @@ function GameContent() {
   };
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
-  const coinsEarned = stars * 10;
+  const coinsEarned = stars;
 
   if (!displayLevel) {
     return (

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { getApiBase } from '../lib/apiBase';
+import { usePlayerStore } from './playerStore';
 
 // ── Constants from spec ───────────────────────────────────────────────────────
 const GRID_POINTS: Record<number, number> = { 4: 1, 5: 2, 6: 3, 7: 5 };
@@ -172,6 +173,11 @@ export const useEndlessStore = create<EndlessState>((set, get) => ({
     const baseProgress = Math.min(1, newLevelsCompleted / 30);
     const skill = computeSkill(updatedTracker);
     const newDifficulty = Math.min(1, baseProgress * 0.5 + skill * 0.5);
+
+    // Every 40 levels in a session rewards 10 coins
+    if (newLevelsCompleted % 40 === 0) {
+      usePlayerStore.getState().addCoins(10);
+    }
 
     const now = Date.now();
     set({
