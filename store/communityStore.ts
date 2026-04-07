@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import type { Level, Zone, ElementID, CellCoord } from '../lib/types';
 
 // ── Pending tab signal (avoids navigation stacking) ──────────────────────────
@@ -46,8 +47,13 @@ export type ActiveFilter = 'all' | 'shared' | 'liked' | 'mine';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getApiBase(): string {
+  // 1. Native iOS/Android: use the hardcoded production URL from app.json extra
+  const configured: string | undefined = Constants.expoConfig?.extra?.apiUrl;
+  if (configured) return configured.replace(/\/$/, '');
+
+  // 2. Web / dev preview fallback: derive from window.location
   try {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.location?.hostname) {
       const h = window.location.hostname.replace('.expo.', '.');
       return `${window.location.protocol}//${h}`;
     }
@@ -330,10 +336,18 @@ export const useCommunityStore = create<CommunityStore>()(
 
       // ── Play tracking ─────────────────────────────────────────────────────
 
-      incrementPlays: (id) =>
+      incrementPlays: (id) => {
+        // Update local state optimistically
         set((s) => ({
           levels: s.levels.map((l) => (l.id === id ? { ...l, plays: l.plays + 1 } : l)),
-        })),
+          remoteLevels: s.remoteLevels.map((l) => (l.id === id ? { ...l, plays: l.plays + 1 } : l)),
+        }));
+        // Fire-and-forget server update
+        const base = getApiBase();
+        if (base) {
+          fetch(`${base}/api/community/levels/${id}/play`, { method: 'POST' }).catch(() => {});
+        }
+      },
 
       toggleLike: (id) =>
         set((s) => {

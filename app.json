@@ -50,6 +50,7 @@
       "reactCompiler": true
     },
     "extra": {
+      "apiUrl": "https://workspace.almurekhe.replit.app",
       "eas": {
         "projectId": "cb01eb69-59f0-4983-89ed-8161f3dae257"
       }
