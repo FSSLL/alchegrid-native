@@ -211,7 +211,7 @@ function PlayContent() {
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
                     ghostElement={null}
-                    ghostOpacity={0.7}
+                    ghostOpacity={0.9}
                     onPress={() => handleCellPress(r, c)}
                   />
                 </View>
