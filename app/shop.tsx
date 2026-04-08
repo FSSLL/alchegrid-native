@@ -165,7 +165,7 @@ export default function ShopScreen() {
         ) : packages.length === 0 ? (
           <Text style={ss.lowCoinNote}>Coin packs not available right now.</Text>
         ) : (
-          packages.map((pkg) => {
+          packages.filter((pkg) => pkg.identifier in PACK_META).map((pkg) => {
             const meta = PACK_META[pkg.identifier];
             const busy = purchasingId === pkg.identifier;
             const price = pkg.product.priceString;
