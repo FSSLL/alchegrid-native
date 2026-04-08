@@ -125,7 +125,6 @@ const GameCell = memo(({
   const shadowColor = isConflict ? '#ee0000' : isHinted ? '#3aa7ff' : isGiven ? '#f59e0b' : 'transparent';
   const shadowOpacity = isConflict ? 0.5 : isHinted ? 0.6 : isGiven ? 0.5 : 0;
   const shadowRadius = isConflict ? 5 : isHinted ? 4 : isGiven ? 6 : 0;
-  const bgColor = isGiven ? 'rgba(245,158,11,0.12)' : undefined;
 
   return (
     <Animated.View style={animatedStyle} {...panResponder.panHandlers}>
@@ -141,7 +140,6 @@ const GameCell = memo(({
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity,
             shadowRadius,
-            backgroundColor: bgColor,
           },
         ]}
       >
