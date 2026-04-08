@@ -726,6 +726,18 @@ function generateLevelCore({
     cells:       z.cells,
   }));
 
+  // For forceSingletons levels (World 1 levels 1-5), expose singleton zone cells
+  // as givenCells — pre-filled, locked cells visible to the player from the start.
+  const givenCells = forceSingletons
+    ? zones
+        .filter(z => z.cells.length === 1)
+        .map(z => ({
+          row:     z.cells[0].row,
+          col:     z.cells[0].col,
+          element: bestSolution[z.cells[0].row][z.cells[0].col],
+        }))
+    : [];
+
   return {
     id:               levelId,
     worldId,
@@ -734,6 +746,7 @@ function generateLevelCore({
     zones,
     canonicalSolution: bestSolution,
     starThresholds:   getStarThresholds(worldNum),
+    givenCells,
   };
 }
 
@@ -904,6 +917,9 @@ function levelToTs(lv) {
     '[' + row.map(e => JSON.stringify(e)).join(',') + ']'
   ).join(',\n    ');
   const elStr = lv.elements.map(e => JSON.stringify(e)).join(',');
+  const givenStr = (lv.givenCells && lv.givenCells.length > 0)
+    ? `\n  givenCells:[${lv.givenCells.map(g => `{row:${g.row},col:${g.col},element:${JSON.stringify(g.element)}}`).join(',')}],`
+    : '';
   return `{
   id:${JSON.stringify(lv.id)},
   worldId:${JSON.stringify(lv.worldId)},
@@ -915,7 +931,7 @@ function levelToTs(lv) {
   canonicalSolution:[
     ${solRows}
   ],
-  starThresholds:{three:${lv.starThresholds.three},two:${lv.starThresholds.two}},
+  starThresholds:{three:${lv.starThresholds.three},two:${lv.starThresholds.two}},${givenStr}
 }`;
 }
 
