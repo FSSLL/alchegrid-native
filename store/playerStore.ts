@@ -32,8 +32,8 @@ interface PlayerStore {
 export const usePlayerStore = create<PlayerStore>()(
   persist(
     (set, get) => ({
-      coins: 0,
-      hintBalance: 10,
+      coins: 10,
+      hintBalance: 3,
       lastDailyFreeHint: '',
       progressIndex: 0,
       starsByLevel: {},
@@ -46,7 +46,7 @@ export const usePlayerStore = create<PlayerStore>()(
         set((s) => {
           const existingStars = s.starsByLevel[globalLevel] ?? 0;
           const newStars = Math.max(existingStars, stars);
-          const coinsEarned = stars * 10;
+          const coinsEarned = stars;
           return {
             progressIndex: Math.max(s.progressIndex, globalLevel),
             starsByLevel: { ...s.starsByLevel, [globalLevel]: newStars },
@@ -108,8 +108,8 @@ export const usePlayerStore = create<PlayerStore>()(
         set({
           progressIndex: 0,
           starsByLevel: {},
-          coins: 0,
-          hintBalance: 10,
+          coins: 10,
+          hintBalance: 3,
           unlimitedHints: false,
           tutorialDismissed: false,
           seenWorlds: [],
