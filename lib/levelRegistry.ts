@@ -14,7 +14,7 @@ export const WORLD_INFO: WorldInfo[] = [
   { id: 'world5', name: 'Quantum Realm', worldNumber: 5, size: 8, elements: ['Particle', 'Wave', 'Energy', 'Void', 'Spin', 'Field', 'Observer', 'Charge'], available: true, globalStart: 121, globalEnd: 150 },
   { id: 'world6', name: 'Biology', worldNumber: 6, size: 9, elements: ['Cell', 'Water', 'Light', 'Carbon', 'Oxygen', 'Nitrogen', 'Heat', 'Acid', 'Enzyme'], available: true, globalStart: 151, globalEnd: 180 },
   { id: 'world7', name: 'Civilization', worldNumber: 7, size: 10, elements: ['Stone', 'Wood', 'Metal', 'Fire', 'Knowledge', 'Labor', 'Time', 'Soil', 'Water', 'Spirit'], available: true, globalStart: 181, globalEnd: 210 },
-  { id: 'world8', name: 'Cosmos', worldNumber: 8, size: 11, elements: ['Void', 'Light', 'Gravity', 'Plasma', 'Dust', 'Ice', 'Time', 'Magnetism', 'Radiation', 'Gas', 'Dark Matter'], available: true, globalStart: 211, globalEnd: 240 },
+  { id: 'world8', name: 'Weather', worldNumber: 8, size: 11, elements: ['Wind', 'Rain', 'Thunder', 'Frost', 'Heat', 'Fog', 'Pressure', 'Drought', 'Flood', 'Storm', 'Rainbow'], available: true, globalStart: 211, globalEnd: 240 },
 ];
 
 export function globalToWorld(globalLevel: number): { worldIndex: number; levelInWorld: number } {
