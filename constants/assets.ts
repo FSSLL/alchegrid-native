@@ -24,7 +24,7 @@ export const WORLD_BUTTONS = [
   require('../assets/images/quantum_realm_button_1772171673767.png'),        // W5
   require('../assets/images/WORLD_6_PLATE_BIOLOGY_1775168325470.png'),       // W6
   require('../assets/images/WORLD_7_PLATE_CIVILIZATION_filled_1775221671691.png'), // W7
-  require('../assets/images/WORLD_8_PLATE_COSMOS_1775168325469.png'),        // W8
+  require('../assets/images/WORLD_8_PLATE_WEATHER_1775674983418.png'),        // W8
 ];
 
 // ── Grid background PNGs per board size ──────────────────────────────────────
