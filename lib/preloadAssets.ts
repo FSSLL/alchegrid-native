@@ -26,7 +26,7 @@ export const ALL_IMAGES = [
   require('../assets/images/world_5_card.jpg'),
   require('../assets/images/world_6_card.jpg'),
   require('../assets/images/world_7_card.jpg'),
-  require('../assets/images/world_8_card.jpg'),
+  require('../assets/images/world_8_catalog_card_weather_1775674991582.png'),
   require('../assets/images/CASE_PNG_1775175573823.png'),
   require('../assets/images/chemistry_lab_button_1772171567710.png'),
   require('../assets/images/CLAMP_PNG_1775175573824.png'),
@@ -145,5 +145,5 @@ export const ALL_IMAGES = [
   require('../assets/images/WOOD_PNG_1775175540984.png'),
   require('../assets/images/WORLD_6_PLATE_BIOLOGY_1775168325470.png'),
   require('../assets/images/WORLD_7_PLATE_CIVILIZATION_filled_1775221671691.png'),
-  require('../assets/images/WORLD_8_PLATE_COSMOS_1775168325469.png'),
+  require('../assets/images/WORLD_8_PLATE_WEATHER_1775674983418.png'),
 ];
