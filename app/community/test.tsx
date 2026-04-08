@@ -13,7 +13,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { GRID_BACKGROUNDS } from '../../constants/assets';
-import { colors } from '../../constants/colors';
+import colors from '../../constants/colors';
 import { useGameStore } from '../../store/gameStore';
 import { useCommunityStore, requestCommunityTab } from '../../store/communityStore';
 import { computeGridLayout } from '../../lib/gridLayout';
