@@ -157,7 +157,7 @@ function PlayContent() {
     level.zones.forEach((zone, zoneIdx) => {
       if (!zone.recipeName) return;
       const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
-      const zoneBg = colors.zoneBgTints[zoneIdx % colors.zoneBgTints.length];
+      const zoneBg = colors.zoneTints[zoneIdx % colors.zoneTints.length];
       zone.cells.forEach(({ row, col }) => {
         map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
       });
