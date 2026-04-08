@@ -152,7 +152,20 @@ function PlayContent() {
 
 
 
-  const { width: screenWidth } = useWindowDimensions();
+  const cellGhostInfo = useMemo(() => {
+      const map: Record<string, { element: string; opacity: number }> = {};
+      if (!level) return map;
+      level.zones.forEach((zone) => {
+        if (!zone.recipeName) return;
+        const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
+        zone.cells.forEach(({ row, col }) => {
+          map[`${row},${col}`] = { element: zone.recipeName!, opacity };
+        });
+      });
+      return map;
+    }, [level]);
+
+    const { width: screenWidth } = useWindowDimensions();
   if (!level) return null;
 
   const { cellSize, cellGap, gridPx } = cellLayoutForSize(level.size, screenWidth);
@@ -219,8 +232,8 @@ function PlayContent() {
                     cellSize={cellSize}
                     isConflict={conflictSet.has(key)}
                     isHinted={!!hintedCells[key]}
-                    ghostElement={null}
-                    ghostOpacity={0.90}
+                    ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
+                    ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.90}
                     onPress={() => handleCellPress(r, c)}
                   />
                 </View>
