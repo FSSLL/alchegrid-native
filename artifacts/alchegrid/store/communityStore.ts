@@ -317,8 +317,11 @@ export const useCommunityStore = create<CommunityStore>()(
       },
 
       deleteLevel: (id) => {
-        set((s) => ({ levels: s.levels.filter((l) => l.id !== id) }));
-        deleteFromServer(id);
+        set((s) => ({
+          levels: s.levels.filter((l) => l.id !== id),
+          remoteLevels: s.remoteLevels.filter((l) => l.id !== id),
+        }));
+        deleteFromServer(id).then(() => get().refreshRemoteLevels());
       },
 
       // ── Play tracking ─────────────────────────────────────────────────────

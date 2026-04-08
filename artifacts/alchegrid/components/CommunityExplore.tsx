@@ -42,6 +42,7 @@ export default function CommunityExplore() {
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const {
     levels, remoteLevels, likedLevelIds, solvedLevelIds, solvedLevelTimes, syncStatus,
@@ -62,8 +63,17 @@ export default function CommunityExplore() {
 
   const handleRefresh = async () => {
     setSyncing(true);
-    await Promise.all([refreshRemoteLevels(), fetchStatus()]);
-    setSyncing(false);
+    setFetchError(null);
+    try {
+      await Promise.all([refreshRemoteLevels(), fetchStatus()]);
+      if (useCommunityStore.getState().syncStatus === 'error') {
+        setFetchError('Could not reach server. Pull down to retry.');
+      }
+    } catch {
+      setFetchError('Could not reach server. Pull down to retry.');
+    } finally {
+      setSyncing(false);
+    }
   };
 
   useEffect(() => {
@@ -167,6 +177,13 @@ export default function CommunityExplore() {
             : <Text style={styles.refreshIcon}>↻</Text>}
         </Pressable>
       </View>
+
+      {/* Error banner */}
+      {fetchError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>⚠ {fetchError}</Text>
+        </View>
+      )}
 
       {/* Search bar */}
       <View style={styles.searchRow}>
@@ -425,6 +442,12 @@ const styles = StyleSheet.create({
   remoteCount: { color: 'rgba(255,255,255,0.45)', fontSize: 11 },
   refreshBtn: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   refreshIcon: { color: '#60a5fa', fontSize: 20, fontWeight: '700' },
+
+  errorBanner: {
+    backgroundColor: 'rgba(239,68,68,0.15)', borderBottomWidth: 1,
+    borderColor: 'rgba(239,68,68,0.3)', paddingHorizontal: 14, paddingVertical: 8,
+  },
+  errorBannerText: { color: '#fca5a5', fontSize: 12, fontWeight: '600', textAlign: 'center' },
 
   searchRow: {
     flexDirection: 'row', alignItems: 'center',
