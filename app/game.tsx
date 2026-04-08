@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import { GRID_BACKGROUNDS } from '../constants/assets';
+import colors from '../constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -40,11 +41,12 @@ interface BoardCellsProps {
   gap: number;
   conflictSet: Set<string>;
   hintedCells: Record<string, ElementID>;
+  givenKeys: Set<string>;
   cellGhostInfo: Record<string, { element: string; opacity: number; zoneBg: string }>;
   onPress: (row: number, col: number) => void;
 }
 
-const BoardCells = memo(({ board, cellSize, gap, conflictSet, hintedCells, cellGhostInfo, onPress }: BoardCellsProps) => (
+const BoardCells = memo(({ board, cellSize, gap, conflictSet, hintedCells, givenKeys, cellGhostInfo, onPress }: BoardCellsProps) => (
   <>
     {board.map((rowArr, r) =>
       rowArr.map((el, c) => {
@@ -67,8 +69,10 @@ const BoardCells = memo(({ board, cellSize, gap, conflictSet, hintedCells, cellG
               cellSize={cellSize}
               isConflict={conflictSet.has(key)}
               isHinted={!!hintedCells[key]}
+              isGiven={givenKeys.has(key)}
               ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
               ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.90}
+              ghostZoneBg={cellGhostInfo[key]?.zoneBg}
               onPress={onPress}
             />
           </View>
@@ -99,6 +103,7 @@ function GameContent() {
     level,
     board,
     hintedCells,
+    givenKeys,
     status,
     hintMode,
     conflicts,
@@ -261,14 +266,15 @@ function GameContent() {
 
   // Ghost hints — use currentLevelData so they appear even before initGame.
   const cellGhostInfo = useMemo(() => {
-    const map: Record<string, { element: string; opacity: number }> = {};
+    const map: Record<string, { element: string; opacity: number; zoneBg: string }> = {};
     const src = level?.id === currentLevelData?.id ? level : currentLevelData;
     if (!src) return map;
-    src.zones.forEach((zone) => {
+    src.zones.forEach((zone, zoneIdx) => {
       if (!zone.recipeName) return;
       const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
+      const zoneBg = colors.zoneBgTints[zoneIdx % colors.zoneBgTints.length];
       zone.cells.forEach(({ row, col }) => {
-        map[`${row},${col}`] = { element: zone.recipeName!, opacity };
+        map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
       });
     });
     return map;
@@ -398,6 +404,7 @@ function GameContent() {
             gap={gap}
             conflictSet={conflictSet}
             hintedCells={hintedCells}
+            givenKeys={givenKeys}
             cellGhostInfo={cellGhostInfo}
             onPress={handleCellPress}
           />
