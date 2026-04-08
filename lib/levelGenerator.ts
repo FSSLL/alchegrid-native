@@ -8,7 +8,7 @@ export const WORLD_ELEMENTS: Record<number, string[]> = {
   5: ['Particle', 'Wave', 'Energy', 'Void', 'Spin', 'Field', 'Observer', 'Charge'],
   6: ['Cell', 'Water', 'Light', 'Carbon', 'Oxygen', 'Nitrogen', 'Heat', 'Acid', 'Enzyme'],
   7: ['Stone', 'Wood', 'Metal', 'Fire', 'Knowledge', 'Labor', 'Time', 'Soil', 'Water', 'Spirit'],
-  8: ['Void', 'Light', 'Gravity', 'Plasma', 'Dust', 'Ice', 'Time', 'Magnetism', 'Radiation', 'Gas', 'Dark Matter'],
+  8: ['Wind', 'Rain', 'Thunder', 'Frost', 'Heat', 'Fog', 'Pressure', 'Drought', 'Flood', 'Storm', 'Rainbow'],
 };
 
 type RecipeMap = Record<string, string>;
@@ -47,6 +47,8 @@ export const WORLD_RECIPES: Record<number, RecipeMap> = {
     'Metal+Plastic+Wood': 'Fixture',
     'Glass+Plastic+Rubber': 'Grip',
     'Glass+Metal+Rubber+Wood': 'Machine',
+    'Glass+Metal+Plastic': 'Display',
+    'Glass+Rubber+Wood': 'Handle',
     'Glass+Metal+Plastic+Rubber': 'Device',
     'Glass+Plastic+Rubber+Wood': 'Cabinet',
     'Metal+Plastic+Rubber+Wood': 'Console',
@@ -316,60 +318,115 @@ export const WORLD_RECIPES: Record<number, RecipeMap> = {
     'Fire+Knowledge+Labor+Metal+Soil+Spirit+Stone+Time+Water+Wood': 'Golden Age',
   },
   8: {
-    'Dust+Gas': 'Nebula',
-    'Light+Radiation': 'Laser',
-    'Gravity+Light': 'Lensing',
-    'Radiation+Time': 'Decay',
-    'Gravity+Time': 'Orbit',
-    'Ice+Time': 'Glacier',
-    'Plasma+Radiation': 'Flare',
-    'Magnetism+Plasma': 'Solar Wind',
-    'Light+Void': 'Ghost Star',
-    'Dust+Light': 'Shadow',
-    'Ice+Radiation': 'Frost',
-    'Dust+Ice': 'Tail',
-    'Dust+Time': 'Debris',
-    'Gravity+Void': 'Abyss',
-    'Gas+Void': 'Gas Cloud',
-    'Gas+Gravity+Plasma': 'Star',
-    'Dust+Gravity+Time': 'Asteroid',
-    'Magnetism+Plasma+Radiation': 'Pulsar',
-    'Magnetism+Radiation+Time': 'Magnetar',
-    'Dust+Gas+Gravity': 'Protostar',
-    'Dust+Gravity+Ice': 'Planet',
-    'Dark Matter+Gravity+Light': 'Dark Halo',
-    'Dark Matter+Gravity+Void': 'Dark Web',
-    'Gas+Plasma+Radiation': 'Shockwave',
-    'Ice+Magnetism+Time': 'Polar Cap',
-    'Gravity+Light+Time': 'Epoch',
-    'Dust+Gas+Ice': 'Comet Storm',
-    'Ice+Magnetism+Radiation': 'Permafrost',
-    'Gravity+Time+Void': 'Time Dilation',
-    'Gas+Magnetism+Plasma': 'Magnetic Storm',
-    'Gas+Gravity+Plasma+Radiation': 'Supernova',
-    'Gravity+Magnetism+Plasma+Radiation': 'Neutron Star',
-    'Dark Matter+Dust+Gravity+Void': 'Dark Mass',
-    'Gravity+Light+Time+Void': 'Event Horizon',
-    'Dust+Gravity+Ice+Time': 'Ice Planet',
-    'Dust+Gravity+Light+Plasma': 'Quasar',
-    'Gravity+Light+Plasma+Radiation': 'Blazar',
-    'Dust+Gas+Gravity+Plasma': 'Stellar Nursery',
-    'Dust+Gravity+Light+Magnetism+Plasma': 'Galaxy',
-    'Dust+Gas+Gravity+Plasma+Radiation': 'Nebula Core',
-    'Gravity+Light+Magnetism+Plasma+Time': 'White Dwarf',
-    'Gas+Gravity+Light+Plasma+Time': 'Red Giant',
-    'Dark Matter+Dust+Gravity+Light+Magnetism+Void': 'Dark Galaxy',
-    'Dust+Gas+Gravity+Ice+Light+Plasma': 'Solar System',
-    'Gas+Gravity+Ice+Magnetism+Plasma+Radiation': 'Magnetosphere',
-    'Dust+Gas+Gravity+Light+Plasma+Radiation+Time': 'Cosmic Dawn',
-    'Dark Matter+Gravity+Light+Magnetism+Radiation+Time+Void': 'Dark Universe',
-    'Dust+Gas+Gravity+Ice+Light+Magnetism+Plasma+Radiation': 'Observable Universe',
-    'Dust+Gas+Gravity+Ice+Light+Magnetism+Plasma+Time': 'Cosmic Web',
-    'Dust+Gas+Gravity+Ice+Light+Magnetism+Plasma+Radiation+Time': 'Multiverse',
-    'Dust+Gravity+Ice+Light+Magnetism+Plasma+Radiation+Time+Void': 'Big Bang',
-    'Dust+Gas+Gravity+Ice+Light+Magnetism+Plasma+Radiation+Time+Void': 'Heat Death',
-    'Dark Matter+Dust+Gas+Gravity+Ice+Light+Magnetism+Plasma+Radiation+Time': 'Inflation',
-    'Dark Matter+Dust+Gas+Gravity+Ice+Light+Magnetism+Plasma+Radiation+Time+Void': 'Universe',
+    // 2-element
+    'Rain+Wind': 'Drizzle',
+    'Frost+Rain': 'Hail',
+    'Rain+Thunder': 'Sleet',
+    'Flood+Rain': 'Monsoon',
+    'Drought+Rain': 'Acid Rain',
+    'Fog+Rain': 'Mist',
+    'Rain+Storm': 'Downpour',
+    'Heat+Rain': 'Mirage',
+    'Rain+Rainbow': 'Waterfall',
+    'Pressure+Rain': 'Puddle',
+    'Frost+Wind': 'Blizzard',
+    'Drought+Wind': 'Dust Storm',
+    'Storm+Wind': 'Gale',
+    'Pressure+Wind': 'Tornado',
+    'Heat+Wind': 'Sirocco',
+    'Fog+Wind': 'Whirlwind',
+    'Thunder+Wind': 'Squall',
+    'Rainbow+Wind': 'Breeze',
+    'Flood+Wind': 'Sandstorm',
+    'Heat+Thunder': 'Lightning',
+    'Frost+Thunder': 'Thundersnow',
+    'Storm+Thunder': 'Supercell',
+    'Flood+Thunder': 'Flash Flood',
+    'Fog+Thunder': 'Thunder Fog',
+    'Drought+Thunder': 'Dry Storm',
+    'Rainbow+Thunder': 'Storm Arc',
+    'Flood+Frost': 'Black Ice',
+    'Drought+Frost': 'Permafrost',
+    'Frost+Pressure': 'Freeze',
+    'Fog+Frost': 'Ice Fog',
+    'Frost+Storm': 'Polar Vortex',
+    'Frost+Heat': 'Frostfire',
+    'Frost+Rainbow': 'Sun Dog',
+    'Drought+Heat': 'Scorched',
+    'Flood+Heat': 'Steam',
+    'Fog+Heat': 'Smog',
+    'Heat+Pressure': 'Hot Spring',
+    'Heat+Rainbow': 'Sunshower',
+    'Fog+Pressure': 'Pea Souper',
+    'Fog+Rainbow': 'Fogbow',
+    'Flood+Fog': 'Fog Bank',
+    'Drought+Fog': 'Haboob',
+    'Fog+Storm': 'Dead Calm',
+    'Drought+Pressure': 'Flash Drought',
+    'Drought+Flood': 'Dust Devil',
+    'Flood+Pressure': 'Surge',
+    'Flood+Rainbow': 'Double Rainbow',
+    'Flood+Storm': 'Storm Surge',
+    'Pressure+Storm': 'Eye',
+    'Rainbow+Storm': 'Storm Bow',
+    // 3-element
+    'Pressure+Storm+Wind': 'Hurricane',
+    'Flood+Frost+Pressure': 'Avalanche',
+    'Rain+Storm+Wind': 'Typhoon',
+    'Frost+Rainbow+Wind': 'Aurora',
+    'Pressure+Storm+Thunder': 'Superstorm',
+    'Drought+Heat+Wind': 'Sandfire',
+    'Pressure+Rain+Wind': 'Cyclone',
+    'Flood+Storm+Wind': 'Waterspout',
+    'Frost+Pressure+Rain': 'Freezing Rain',
+    'Flood+Heat+Rain': 'Rainforest',
+    'Frost+Rain+Wind': 'Snowstorm',
+    'Frost+Rain+Thunder': 'Ice Storm',
+    'Drought+Frost+Heat': 'Desert Night',
+    'Flood+Fog+Rain': 'Sea Fog',
+    'Flood+Heat+Wind': 'Steam Devil',
+    'Frost+Pressure+Wind': 'Arctic Blast',
+    'Heat+Pressure+Thunder': 'Ball Lightning',
+    'Rain+Rainbow+Thunder': 'Rainbow Storm',
+    'Fog+Storm+Thunder': 'Shelf Cloud',
+    'Drought+Thunder+Wind': 'Derecho',
+    // 4-element
+    'Frost+Rain+Storm+Wind': "Nor'easter",
+    'Drought+Fog+Frost+Pressure': 'Polar Night',
+    'Drought+Heat+Pressure+Wind': 'Heat Dome',
+    'Flood+Frost+Rain+Wind': 'Lake Effect',
+    'Flood+Pressure+Rain+Storm': 'Megaflood',
+    'Drought+Heat+Storm+Wind': 'Firenado',
+    'Drought+Frost+Pressure+Wind': 'Ice Age',
+    'Pressure+Rain+Thunder+Wind': 'Thunderstorm Cell',
+    'Rain+Storm+Thunder+Wind': 'Squall Line',
+    'Drought+Heat+Rain+Wind': 'Virga',
+    'Drought+Heat+Thunder+Wind': 'Flash Fire',
+    // 5-element
+    'Pressure+Rain+Storm+Thunder+Wind': 'Perfect Storm',
+    'Drought+Flood+Frost+Pressure+Wind': 'Glacier',
+    'Flood+Heat+Rain+Storm+Wind': 'El Nino',
+    'Frost+Pressure+Storm+Thunder+Wind': 'Polar Storm',
+    'Flood+Pressure+Rain+Storm+Thunder': 'Deluge',
+    'Drought+Heat+Storm+Thunder+Wind': 'Firestorm',
+    // 6-element
+    'Drought+Flood+Frost+Heat+Rain+Wind': 'Climate',
+    'Flood+Heat+Pressure+Rain+Storm+Wind': 'Monsoon System',
+    'Fog+Frost+Pressure+Storm+Thunder+Wind': 'Polar Vortex System',
+    // 7-element
+    'Drought+Flood+Frost+Heat+Pressure+Rain+Wind': 'Ice Age Cycle',
+    'Frost+Heat+Pressure+Rain+Storm+Thunder+Wind': 'Jet Stream',
+    // 8-element
+    'Drought+Fog+Frost+Heat+Pressure+Rain+Thunder+Wind': 'Global Weather',
+    'Drought+Flood+Frost+Heat+Rain+Rainbow+Storm+Wind': 'Climate Shift',
+    // 9-element
+    'Fog+Frost+Heat+Pressure+Rain+Rainbow+Storm+Thunder+Wind': 'Atmosphere',
+    'Drought+Flood+Frost+Heat+Pressure+Rain+Storm+Thunder+Wind': 'Extreme Weather',
+    // 10-element
+    'Drought+Flood+Fog+Frost+Heat+Rain+Rainbow+Storm+Thunder+Wind': 'The Tempest',
+    "Drought+Flood+Fog+Frost+Heat+Pressure+Rain+Storm+Thunder+Wind": "Earth's Weather",
+    // 11-element (all)
+    'Drought+Flood+Fog+Frost+Heat+Pressure+Rain+Rainbow+Storm+Thunder+Wind': 'Climate',
   },
 };
 
@@ -408,7 +465,54 @@ export function generateLatinSquare(size: number, elements: string[], rng: () =>
   return rowShuffled.map((row) => colOrder.map((c) => row[c]));
 }
 
-export function partitionGrid(size: number, rng: () => number): number[][] {
+// Returns a max zone size appropriate for the given grid size and level position.
+// 4 difficulty tiers per world:
+//   Easy    levels  1-7  : small zones, gentle introduction
+//   Medium  levels  8-15 : moderate zone size
+//   Hard    levels 16-22 : large zones
+//   Extreme levels 23-30 : full grid-size zones, all combinations possible
+//
+// Base scales with grid so larger worlds never produce swarms of tiny zones.
+// Extreme always = gridSize (full combination space).
+//   4×4  → 2 / 3 / 4 / 4
+//   7×7  → 4 / 5 / 6 / 7
+//   11×11→ 6 / 8 / 10 / 11
+export function getMaxZoneSize(gridSize: number, levelInWorld: number): number {
+  const tier = levelInWorld <= 7 ? 0 : levelInWorld <= 15 ? 1 : levelInWorld <= 22 ? 2 : 3;
+  const base = Math.max(2, Math.round(gridSize / 2));
+  const range = gridSize - base;
+  const fractions = [0, 0.4, 0.8, 1.0];
+  return base + Math.round(range * fractions[tier]);
+}
+
+// Picks a zone size biased toward the max — smaller zones remain possible
+// to produce interesting single-cell "locked" hints organically.
+export function boundedZoneSize(max: number, rng: () => number): number {
+  const r = rng();
+  if (max <= 2) {
+    return r < 0.25 ? 1 : 2;
+  }
+  if (max === 3) {
+    if (r < 0.08) return 1;
+    if (r < 0.42) return 2;
+    return 3;
+  }
+  if (max === 4) {
+    if (r < 0.05) return 1;
+    if (r < 0.25) return 2;
+    if (r < 0.55) return 3;
+    return 4;
+  }
+  // max >= 5 (larger grids)
+  if (r < 0.05) return 2;
+  if (r < 0.20) return 3;
+  if (r < 0.45) return 4;
+  if (r < 0.75) return 5;
+  return Math.min(max, 6);
+}
+
+export function partitionGrid(size: number, rng: () => number, maxZoneSize?: number): number[][] {
+  const cap = maxZoneSize ?? 4;
   const zoneGrid = Array.from({ length: size }, () => new Array(size).fill(-1));
   let zoneId = 0;
 
@@ -424,7 +528,7 @@ export function partitionGrid(size: number, rng: () => number): number[][] {
   for (const [startR, startC] of shuffledCells) {
     if (zoneGrid[startR][startC] !== -1) continue;
 
-    const zoneSize = weightedZoneSize(rng);
+    const zoneSize = boundedZoneSize(cap, rng);
     const queue: [number, number][] = [[startR, startC]];
     const zone: [number, number][] = [];
 
@@ -461,12 +565,7 @@ export function partitionGrid(size: number, rng: () => number): number[][] {
 }
 
 export function weightedZoneSize(rng: () => number): number {
-  const r = rng();
-  if (r < 0.15) return 2;
-  if (r < 0.45) return 3;
-  if (r < 0.75) return 4;
-  if (r < 0.90) return 5;
-  return 6;
+  return boundedZoneSize(4, rng);
 }
 
 export function splitZonesByUniqueness(
@@ -695,59 +794,22 @@ export function enforceUniqueness(
   return result;
 }
 
-const FALLBACK_NAMES_2 = ['Blend', 'Mix', 'Fusion', 'Alloy', 'Bond'];
-const FALLBACK_NAMES_3 = ['Compound', 'Mixture', 'Amalgam', 'Infusion', 'Synthesis'];
-const FALLBACK_NAMES_4PLUS = ['Formula', 'Concoction', 'Tincture', 'Elixir', 'Essence'];
-
-function hashString(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) {
-    h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h);
-}
-
 export function findRecipe(worldNum: number, ingredients: string[]): string | null {
   const key = [...ingredients].sort().join('+');
   return WORLD_RECIPES[worldNum]?.[key] ?? null;
 }
 
+// For zones whose combo isn't in the catalog: show ingredients honestly
+// rather than inventing a fake generic name.
+// Single-element zones always use the element name directly.
 export function getFallbackName(ingredients: string[]): string {
-  const key = ingredients.join('+');
-  const h = hashString(key);
-  if (ingredients.length === 2) return FALLBACK_NAMES_2[h % FALLBACK_NAMES_2.length];
-  if (ingredients.length === 3) return FALLBACK_NAMES_3[h % FALLBACK_NAMES_3.length];
-  return FALLBACK_NAMES_4PLUS[h % FALLBACK_NAMES_4PLUS.length];
+  if (ingredients.length === 1) return ingredients[0];
+  return ingredients.join(' + ');
 }
 
-// Level-context-aware fallback: rotates to an unused name
-const ALL_FALLBACKS = [
-  ...FALLBACK_NAMES_2, ...FALLBACK_NAMES_3, ...FALLBACK_NAMES_4PLUS,
-];
-function getUniqueFallbackName(ingredients: string[], used: Set<string>): string {
-  const key = ingredients.join('+');
-  const h = hashString(key);
-  const list =
-    ingredients.length === 2 ? FALLBACK_NAMES_2 :
-    ingredients.length === 3 ? FALLBACK_NAMES_3 :
-    FALLBACK_NAMES_4PLUS;
-
-  // Try preferred name first
-  const preferred = list[h % list.length];
-  if (!used.has(preferred)) return preferred;
-
-  // Rotate through same-length list
-  for (const name of list) {
-    if (!used.has(name)) return name;
-  }
-  // Spill into the full fallback pool
-  for (const name of ALL_FALLBACKS) {
-    if (!used.has(name)) return name;
-  }
-  // Absolute last resort: number the preferred name
-  let n = 2;
-  while (used.has(`${preferred} ${n}`)) n++;
-  return `${preferred} ${n}`;
+// Kept for call sites in enforceUniqueness; delegates to getFallbackName.
+function getUniqueFallbackName(ingredients: string[], _used: Set<string>): string {
+  return getFallbackName(ingredients);
 }
 
 export function getStarThresholds(worldNum: number): { three: number; two: number } {
@@ -767,7 +829,11 @@ export function getStarThresholds(worldNum: number): { three: number; two: numbe
 export function generateLevel(worldNum: number, levelInWorld: number): Level {
   const gridSize = worldNum + 3; // 1->4, 2->5, ... 8->11
   const elements = WORLD_ELEMENTS[worldNum];
-  const globalSeed = (worldNum * 1000) + levelInWorld * 37 + (levelInWorld * levelInWorld) % 97;
+  // Wide-scatter seed: same tier levels get very different random streams
+  let h = worldNum * 374761393 + levelInWorld * 668265263 + worldNum * levelInWorld * 2246822519;
+  h = Math.imul(h ^ (h >>> 16), 2246822519);
+  h = Math.imul(h ^ (h >>> 13), 3266489917);
+  const globalSeed = (h ^ (h >>> 16)) >>> 0;
 
   // Try up to 8 partition seeds; keep the attempt with fewest duplicate ingredient sets
   let bestSolution: string[][] = [];
@@ -777,7 +843,8 @@ export function generateLevel(worldNum: number, levelInWorld: number): Level {
   for (let attempt = 0; attempt < 8 && bestDupes > 0; attempt++) {
     const rng = seededRandom(globalSeed + attempt * 7919);
     const solution = generateLatinSquare(gridSize, elements, rng);
-    let zoneMap = partitionGrid(gridSize, rng);
+    const maxZoneSize = getMaxZoneSize(gridSize, levelInWorld);
+    let zoneMap = partitionGrid(gridSize, rng, maxZoneSize);
     zoneMap = splitZonesByUniqueness(zoneMap, solution, gridSize);
 
     const zoneGroups: Map<number, [number, number][]> = new Map();
@@ -807,17 +874,16 @@ export function generateLevel(worldNum: number, levelInWorld: number): Level {
     }
   }
 
-  // Assign recipe names — named recipes get priority; fallbacks are deduplicated
-  const usedNames = new Set<string>();
+  // Assign recipe names — single elements use element name, known combos use the
+  // catalog recipe name (duplicates allowed), unknown combos show ingredients joined.
+  // Never invent fake generic names.
   const zones: Zone[] = bestRawZones.map((z, i) => {
-    const named = findRecipe(worldNum, z.ingredients);
     let recipeName: string;
-    if (named && !usedNames.has(named)) {
-      recipeName = named;
+    if (z.ingredients.length === 1) {
+      recipeName = z.ingredients[0];
     } else {
-      recipeName = getUniqueFallbackName(z.ingredients, usedNames);
+      recipeName = findRecipe(worldNum, z.ingredients) ?? z.ingredients.join(' + ');
     }
-    usedNames.add(recipeName);
     return { id: `z${i}`, recipeName, ingredients: z.ingredients, cells: z.cells };
   });
 
