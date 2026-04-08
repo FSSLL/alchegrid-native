@@ -271,7 +271,7 @@ function GameContent() {
     if (!src) return map;
     src.zones.forEach((zone, zoneIdx) => {
       if (!zone.recipeName) return;
-      const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
+      const opacity = 0.65;
       const zoneBg = colors.zoneBgTints[zoneIdx % colors.zoneBgTints.length];
       zone.cells.forEach(({ row, col }) => {
         map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
