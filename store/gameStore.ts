@@ -6,6 +6,7 @@ interface GameState {
   level: Level | null;
   board: (ElementID | null)[][];
   hintedCells: Record<string, ElementID>;
+  givenKeys: Set<string>;
   status: 'idle' | 'playing' | 'won';
   activeElement: ElementID | null;
   hintMode: boolean;
@@ -34,6 +35,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   level: null,
   board: [],
   hintedCells: {},
+  givenKeys: new Set(),
   status: 'idle',
   activeElement: null,
   hintMode: false,
@@ -48,20 +50,30 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { timerInterval } = get();
     if (timerInterval) clearInterval(timerInterval);
 
-    const emptyBoard = Array.from({ length: level.size }, () =>
+    const board = Array.from({ length: level.size }, () =>
       new Array(level.size).fill(null)
     );
 
+    const givenKeys = new Set<string>();
+    if (level.givenCells) {
+      for (const g of level.givenCells) {
+        board[g.row][g.col] = g.element;
+        givenKeys.add(`${g.row},${g.col}`);
+      }
+    }
+
+    const conflicts = getConflicts(board, level.size, level.zones);
     const interval = setInterval(() => get().tick(), 1000);
 
     set({
       level,
-      board: emptyBoard,
+      board,
       hintedCells: {},
+      givenKeys,
       status: 'playing',
       activeElement: null,
       hintMode: false,
-      conflicts: [],
+      conflicts,
       selectedZone: null,
       startTime: Date.now(),
       elapsedTime: 0,
@@ -71,11 +83,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   placeElement: (row, col, onWin) => {
-    const { level, board, hintedCells, activeElement, hintMode, status } = get();
+    const { level, board, hintedCells, givenKeys, activeElement, hintMode, status } = get();
     if (!level || status !== 'playing') return;
 
     const hintKey = `${row},${col}`;
     if (hintedCells[hintKey]) return;
+    if (givenKeys.has(hintKey)) return;
 
     if (hintMode) {
       get().revealHint(row, col);
@@ -129,9 +142,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   placeSpecificElement: (element, row, col, onWin) => {
-    const { level, board, hintedCells, status } = get();
+    const { level, board, hintedCells, givenKeys, status } = get();
     if (!level || status !== 'playing') return;
     if (hintedCells[`${row},${col}`]) return;
+    if (givenKeys.has(`${row},${col}`)) return;
 
     // Inventory check
     const maxPerElement = level.size;
@@ -163,9 +177,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   clearCell: (row, col) => {
-    const { level, board, hintedCells, status } = get();
+    const { level, board, hintedCells, givenKeys, status } = get();
     if (!level || status !== 'playing') return;
     if (hintedCells[`${row},${col}`]) return;
+    if (givenKeys.has(`${row},${col}`)) return;
     const newBoard = board.map((r) => [...r]);
     newBoard[row][col] = null;
     const conflicts = getConflicts(newBoard, level.size, level.zones);
@@ -173,11 +188,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   removeElement: (row, col) => {
-    const { level, board, hintedCells, status } = get();
+    const { level, board, hintedCells, givenKeys, status } = get();
     if (!level || status !== 'playing') return;
 
     const hintKey = `${row},${col}`;
     if (hintedCells[hintKey]) return;
+    if (givenKeys.has(hintKey)) return;
 
     const newBoard = board.map((r) => [...r]);
     newBoard[row][col] = null;
@@ -187,11 +203,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   revealHint: (row, col) => {
-    const { level, board, hintedCells, status } = get();
+    const { level, board, hintedCells, givenKeys, status } = get();
     if (!level || status !== 'playing') return;
 
     const hintKey = `${row},${col}`;
     if (hintedCells[hintKey]) return;
+    if (givenKeys.has(hintKey)) return;
 
     const answer = level.canonicalSolution[row][col];
     const newBoard = board.map((r) => [...r]);
@@ -241,15 +258,25 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!level) return;
     if (timerInterval) clearInterval(timerInterval);
 
-    const emptyBoard = Array.from({ length: level.size }, () =>
+    const board = Array.from({ length: level.size }, () =>
       new Array(level.size).fill(null)
     );
 
+    const givenKeys = new Set<string>();
+    if (level.givenCells) {
+      for (const g of level.givenCells) {
+        board[g.row][g.col] = g.element;
+        givenKeys.add(`${g.row},${g.col}`);
+      }
+    }
+
+    const conflicts = getConflicts(board, level.size, level.zones);
     const interval = setInterval(() => get().tick(), 1000);
     set({
-      board: emptyBoard,
+      board,
       hintedCells: {},
-      conflicts: [],
+      givenKeys,
+      conflicts,
       activeElement: null,
       hintMode: false,
       startTime: Date.now(),
