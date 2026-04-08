@@ -9,6 +9,8 @@ export type Zone = {
   cells: CellCoord[];
 };
 
+export type GivenCell = { row: number; col: number; element: ElementID };
+
 export type Level = {
   id: string;
   worldId: string;
@@ -17,6 +19,7 @@ export type Level = {
   zones: Zone[];
   canonicalSolution: ElementID[][];
   starThresholds: { three: number; two: number };
+  givenCells?: GivenCell[];
 };
 
 export type WorldInfo = {
