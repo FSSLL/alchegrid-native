@@ -67,7 +67,7 @@ export function useDrag() {
   return ctx;
 }
 
-const GHOST_SIZE = 56;
+const GHOST_SIZE = 72;
 
 export function DragProvider({ children }: { children: ReactNode }) {
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -75,6 +75,11 @@ export function DragProvider({ children }: { children: ReactNode }) {
   // Reanimated shared values for ghost position — no re-renders on move
   const ghostX = useSharedValue(-9999);
   const ghostY = useSharedValue(-9999);
+
+  // Container screen offset — corrects for any padding/inset on the wrapper view
+  const containerOffsetX = useSharedValue(0);
+  const containerOffsetY = useSharedValue(0);
+  const containerRef = useRef<View>(null);
 
   // Stable refs so PanResponder callbacks are never stale
   const dragStateRef = useRef<DragState | null>(null);
@@ -178,10 +183,17 @@ export function DragProvider({ children }: { children: ReactNode }) {
 
   const ghostAnimStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: ghostX.value - GHOST_SIZE / 2 },
-      { translateY: ghostY.value - GHOST_SIZE / 2 },
+      { translateX: ghostX.value - GHOST_SIZE / 2 - containerOffsetX.value },
+      { translateY: ghostY.value - GHOST_SIZE / 2 - containerOffsetY.value },
     ],
   }));
+
+  const handleContainerLayout = () => {
+    containerRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
+      containerOffsetX.value = pageX;
+      containerOffsetY.value = pageY;
+    });
+  };
 
   return (
     <DragCtx.Provider
@@ -197,7 +209,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
         setDropHandlers,
       }}
     >
-      <View style={{ flex: 1 }}>
+      <View ref={containerRef} style={{ flex: 1 }} onLayout={handleContainerLayout}>
         {children}
 
         {/* Floating ghost — absolutely positioned, follows finger */}
