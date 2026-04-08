@@ -25,6 +25,7 @@ const OFFICIAL_LEVELS: Level[] = [
     ["Fire","Wind","Water","Earth"]
   ],
   starThresholds:{three:60,two:120},
+  givenCells:[{row:0,col:0,element:"Wind"},{row:0,col:3,element:"Water"}],
 },
 {
   id:"w1-l02",
@@ -49,6 +50,7 @@ const OFFICIAL_LEVELS: Level[] = [
     ["Water","Fire","Wind","Earth"]
   ],
   starThresholds:{three:60,two:120},
+  givenCells:[{row:0,col:1,element:"Wind"},{row:1,col:1,element:"Water"}],
 },
 {
   id:"w1-l03",
@@ -73,6 +75,7 @@ const OFFICIAL_LEVELS: Level[] = [
     ["Earth","Water","Fire","Wind"]
   ],
   starThresholds:{three:60,two:120},
+  givenCells:[{row:2,col:2,element:"Water"},{row:3,col:2,element:"Fire"}],
 },
 {
   id:"w1-l04",
@@ -97,6 +100,7 @@ const OFFICIAL_LEVELS: Level[] = [
     ["Water","Fire","Earth","Wind"]
   ],
   starThresholds:{three:60,two:120},
+  givenCells:[{row:1,col:2,element:"Wind"},{row:2,col:2,element:"Water"}],
 },
 {
   id:"w1-l05",
@@ -121,6 +125,7 @@ const OFFICIAL_LEVELS: Level[] = [
     ["Water","Fire","Earth","Wind"]
   ],
   starThresholds:{three:60,two:120},
+  givenCells:[{row:0,col:0,element:"Earth"},{row:2,col:1,element:"Wind"}],
 },
 {
   id:"w1-l06",
