@@ -187,7 +187,7 @@ const WORLD_CARD_IMAGES: Record<number, ReturnType<typeof require>> = {
   5: require('../assets/images/world_5_card.jpg'),
   6: require('../assets/images/world_6_card.jpg'),
   7: require('../assets/images/world_7_card.jpg'),
-  8: require('../assets/images/world_8_card.jpg'),
+  8: require('../assets/images/world_8_catalog_card_weather_1775674991582.png'),
 };
 
 // ── World accordion card ──────────────────────────────────────────────────────
