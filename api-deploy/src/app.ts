@@ -199,6 +199,27 @@ app.post('/api/community/levels/:id/like', async (req, res) => {
   }
 });
 
+// ── Leaderboard Weekly Reset (called by Vercel Cron) ─────────────────────────
+
+app.post('/api/leaderboard/reset', async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  const auth = req.headers['authorization'];
+  if (!secret || auth !== `Bearer ${secret}`) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  try {
+    const db = getDb();
+    await db.delete(endlessLeaderboard);
+    await db.delete(hardcoreLeaderboard);
+    console.log('Leaderboards reset at', new Date().toISOString());
+    res.json({ ok: true, resetAt: new Date().toISOString() });
+  } catch (err) {
+    console.error('reset error', err);
+    res.status(500).json({ error: 'Reset failed' });
+  }
+});
+
 // ── Endless Leaderboard ───────────────────────────────────────────────────────
 
 app.get('/api/leaderboard/endless', async (_req, res) => {

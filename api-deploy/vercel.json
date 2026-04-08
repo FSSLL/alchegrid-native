@@ -7,5 +7,11 @@
       "memory": 512,
       "maxDuration": 10
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/leaderboard/reset",
+      "schedule": "0 3 * * 0"
+    }
+  ]
 }
