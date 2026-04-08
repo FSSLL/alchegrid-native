@@ -71,8 +71,7 @@ const BoardCells = memo(({ board, cellSize, gap, conflictSet, hintedCells, given
               isHinted={!!hintedCells[key]}
               isGiven={givenKeys.has(key)}
               ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
-              ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.90}
-              ghostZoneBg={cellGhostInfo[key]?.zoneBg}
+              ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.65}
               onPress={onPress}
             />
           </View>
