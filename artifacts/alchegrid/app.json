@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "Alchegrid",
+    "slug": "alchegrid",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.jpg",
+    "scheme": "alchegrid",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "assets/**"
+    ],
+    "splash": {
+      "image": "./assets/images/icon.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f1117"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.fssll.alchegrid",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.fssll.alchegrid",
+      "backgroundColor": "#0f1117",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/Alchegrid_logo_1772115867830.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/images/icon.jpg",
+      "backgroundColor": "#0e1117"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "apiUrl": "https://alchegrid-native.vercel.app",
+      "eas": {
+        "projectId": "cb01eb69-59f0-4983-89ed-8161f3dae257"
+      }
+    }
+  }
+}
