@@ -13,7 +13,6 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { GRID_BACKGROUNDS } from '../../constants/assets';
-import colors from '../../constants/colors';
 import { useGameStore } from '../../store/gameStore';
 import { useCommunityStore, requestCommunityTab } from '../../store/communityStore';
 import { computeGridLayout } from '../../lib/gridLayout';
@@ -96,19 +95,7 @@ function TestContent() {
     setSelectedZone(cellZoneLookup[`${row},${col}`] ?? null);
   }, [placeElement, cellZoneLookup, setSelectedZone]);
 
-  const cellGhostInfo = useMemo(() => {
-    const map: Record<string, { element: string; opacity: number; zoneBg: string }> = {};
-    if (!level) return map;
-    level.zones.forEach((zone, zoneIdx) => {
-      if (!zone.recipeName) return;
-      const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
-      const zoneBg = colors.zoneTints[zoneIdx % colors.zoneTints.length];
-      zone.cells.forEach(({ row, col }) => {
-        map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
-      });
-    });
-    return map;
-  }, [level]);
+  
 
   const { width: screenWidth } = useWindowDimensions();
   if (!level) return null;
@@ -193,9 +180,8 @@ function TestContent() {
                     cellSize={cellSize}
                     isConflict={conflictSet.has(key)}
                     isHinted={false}
-                    ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
-                    ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.90}
-                    ghostZoneBg={cellGhostInfo[key]?.zoneBg}
+                    ghostElement={null}
+                    ghostOpacity={0.90}
                     onPress={() => handleCellPress(r, c)}
                   />
                 </View>
