@@ -50,6 +50,34 @@ export const RECIPE_EMOJIS: Record<string, string> = {
   pulsar: '💫', magnetar: '🧲', protostar: '⭐', planet: '🌍',
   supernova: '💥', 'neutron star': '💫', galaxy: '🌌',
   'event horizon': '🕳️', quasar: '✨', universe: '🌌',
+    // World 8 – Weather recipes
+    drizzle: '🌦️', hail: '🧊', sleet: '🌨️', monsoon: '⛈️', 'acid rain': '☠️',
+    mist: '🌁', downpour: '🌧️', mirage: '🌵', waterfall: '🌊', puddle: '💧',
+    blizzard: '❄️', 'dust storm': '🌪️', gale: '💨', tornado: '🌪️', sirocco: '🌬️',
+    whirlwind: '🌀', squall: '⛈️', breeze: '🍃', sandstorm: '🌪️', gust: '💨',
+    thundersnow: '🌨️', supercell: '⛈️', 'flash flood': '🌊', 'thunder fog': '🌫️',
+    'dry storm': '⛈️', heatwave: '🌡️', 'storm arc': '🌈', 'black ice': '🧊',
+    permafrost: '🏔️', freeze: '❄️', 'ice fog': '🌫️', 'polar vortex': '🌀',
+    frostfire: '🔥', 'sun dog': '🌈', scorched: '🔥', smog: '🌫️',
+    'hot spring': '♨️', sunshower: '🌦️', 'pea souper': '🌫️', fogbow: '🌈',
+    'fog bank': '🌫️', haboob: '🌪️', 'dead calm': '⚓', 'flash drought': '☀️',
+    'dust devil': '🌀', surge: '🌊', 'double rainbow': '🌈', 'storm surge': '🌊',
+    eye: '🌀', 'storm bow': '🌈',
+    hurricane: '🌀', avalanche: '❄️', typhoon: '🌀', aurora: '🌌',
+    superstorm: '⛈️', sandfire: '🔥', cyclone: '🌀', waterspout: '🌊',
+    'freezing rain': '🧊', rainforest: '🌿', snowstorm: '❄️', 'ice storm': '🌨️',
+    'fire weather': '🔥', 'desert night': '🌙', 'sea fog': '🌫️',
+    'steam devil': '💨', 'arctic blast': '❄️', 'ball lightning': '⚡',
+    'rainbow storm': '🌈', 'bomb cyclone': '🌀', 'shelf cloud': '☁️', derecho: '💨',
+    "nor'easter": '❄️', 'polar night': '🌑', 'heat dome': '☀️', 'lake effect': '❄️',
+    megaflood: '🌊', firenado: '🔥', 'ice age': '🧊', 'thunderstorm cell': '⛈️',
+    'squall line': '⛈️', virga: '🌦️', 'flash fire': '🔥',
+    'perfect storm': '⛈️', glacier: '🧊', 'el nino': '🌡️', 'polar storm': '❄️',
+    deluge: '🌊', firestorm: '🔥', climate: '🌍', 'monsoon system': '⛈️',
+    'polar vortex system': '🌀', 'ice age cycle': '🧊', 'jet stream': '💨',
+    'global weather': '🌍', 'climate shift': '🌍', atmosphere: '🌍',
+    'extreme weather': '⛈️', 'the tempest': '⛈️', "earth's weather": '🌍',
+
 };
 
 export const ELEMENT_EMOJIS: Record<string, string> = {
@@ -103,4 +131,15 @@ export const ELEMENT_EMOJIS: Record<string, string> = {
   magnetism: '🧲',
   radiation: '☢️',
   'dark matter': '🕳️',
+    // World 8 – Weather (base elements)
+    rain: '🌧️',
+    thunder: '⛈️',
+    frost: '❄️',
+    fog: '🌫️',
+    pressure: '🌀',
+    drought: '🏜️',
+    flood: '🌊',
+    storm: '🌪️',
+    rainbow: '🌈',
+
 };
