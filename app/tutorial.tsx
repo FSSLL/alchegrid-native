@@ -357,6 +357,9 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
   // Tracks the tappedCells count at the moment each tip became active.
   // Prevents stale counts from previous tips triggering the next tip immediately.
   const tappedBaseRef = useRef(0);
+  // Live ref to tipIndex so trackPlacement can read it without stale closure.
+  const tipIndexRef = useRef(0);
+  useEffect(() => { tipIndexRef.current = tipIndex; }, [tipIndex]);
 
   // Init the tutorial board once
   useEffect(() => {
@@ -394,10 +397,16 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
   };
 
   function trackPlacement(element: string, row: number, col: number) {
+    const ti = tipIndexRef.current;
+    // step 0: any drop advances drag-element tip
     setHasPlaced(true);
-    if (row === 0 && col === 0 && element === 'Fire') setTopleftPlaced(true);
-    const zone = TUTORIAL_LEVEL.zones.find((z) => z.cells.some((c) => c.row === row && c.col === col));
-    if (zone && zone.cells.length > 1) setMultizonePlaced(true);
+    // step 3: only count Fire dropped on top-left cell (index 0,0)
+    if (ti === 3 && row === 0 && col === 0 && element === 'Fire') setTopleftPlaced(true);
+    // step 4: only count drops into a multi-cell zone
+    if (ti === 4) {
+      const zone = TUTORIAL_LEVEL.zones.find((z) => z.cells.some((c) => c.row === row && c.col === col));
+      if (zone && zone.cells.length > 1) setMultizonePlaced(true);
+    }
   }
 
   // Cell tap only shows zone tooltip — placement is drag-only
@@ -443,6 +452,9 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
     }
     if (shouldAdvance) {
       tappedBaseRef.current = tappedCells; // lock in baseline before index changes
+      setHasPlaced(false);
+      setTopleftPlaced(false);
+      setMultizonePlaced(false);
       if (tipIndex < PRACTICE_TIPS.length - 1) setTipIndex((p) => p + 1);
       else setTipsComplete(true);
     }
