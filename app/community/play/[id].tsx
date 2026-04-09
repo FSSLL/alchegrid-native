@@ -12,6 +12,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { GRID_BACKGROUNDS } from '../../../constants/assets';
+import colors from '../../../constants/colors';
 import { useGameStore } from '../../../store/gameStore';
 import { useCommunityStore, communityLevelToGameLevel, formatSolveTime } from '../../../store/communityStore';
 import GameCell from '../../../components/GameCell';
@@ -21,6 +22,7 @@ import GridLines from '../../../components/GridLines';
 import ElementPalette from '../../../components/ElementPalette';
 import ZoneTooltip from '../../../components/ZoneTooltip';
 import { DragProvider, useDrag } from '../../../contexts/DragContext';
+import { useT } from '../../../hooks/useT';
 
 export default function CommunityPlayScreen() {
   return (
@@ -48,6 +50,7 @@ function cellLayoutForSize(size: number, screenWidth: number): { cellSize: numbe
 }
 
 function PlayContent() {
+  const t = useT();
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 8 : insets.top;
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -90,9 +93,9 @@ function PlayContent() {
   useEffect(() => {
     if (status === 'won' && id) {
       stopTimer();
-      const t = elapsedTime;
-      setSolveTime(t);
-      markLevelSolved(id, t);
+      const elapsed = elapsedTime;
+      setSolveTime(elapsed);
+      markLevelSolved(id, elapsed);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowWinPopup(true);
     }
@@ -150,22 +153,21 @@ function PlayContent() {
     setSelectedZone(cellZoneLookup[key] ?? null);
   }, [cellZoneLookup, setSelectedZone]);
 
-
-
   const cellGhostInfo = useMemo(() => {
-      const map: Record<string, { element: string; opacity: number }> = {};
-      if (!level) return map;
-      level.zones.forEach((zone) => {
-        if (!zone.recipeName) return;
-        const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
-        zone.cells.forEach(({ row, col }) => {
-          map[`${row},${col}`] = { element: zone.recipeName!, opacity };
-        });
+    const map: Record<string, { element: string; opacity: number; zoneBg: string }> = {};
+    if (!level) return map;
+    level.zones.forEach((zone, zoneIdx) => {
+      if (!zone.recipeName) return;
+      const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
+      const zoneBg = colors.zoneBgTints[zoneIdx % colors.zoneBgTints.length];
+      zone.cells.forEach(({ row, col }) => {
+        map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
       });
-      return map;
-    }, [level]);
+    });
+    return map;
+  }, [level]);
 
-    const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth } = useWindowDimensions();
   if (!level) return null;
 
   const { cellSize, cellGap, gridPx } = cellLayoutForSize(level.size, screenWidth);
@@ -187,8 +189,8 @@ function PlayContent() {
           <Text style={styles.levelName} numberOfLines={1}>{levelDisplayName}</Text>
           <Text style={styles.levelMeta}>
             {level.size}×{level.size}
-            {mistakes > 0 ? `  ·  ⚠ ${mistakes} mistake${mistakes > 1 ? 's' : ''}` : ''}
-            {status === 'won' ? '  ·  ✓ Solved!' : ''}
+            {mistakes > 0 ? `  ·  ${mistakes > 1 ? t('comMistakes', { n: mistakes }) : t('comMistake', { n: mistakes })}` : ''}
+            {status === 'won' ? `  ·  ${t('comSolvedBadge')}` : ''}
           </Text>
         </View>
         <Pressable
@@ -234,6 +236,7 @@ function PlayContent() {
                     isHinted={!!hintedCells[key]}
                     ghostElement={el === null ? (cellGhostInfo[key]?.element ?? null) : null}
                     ghostOpacity={cellGhostInfo[key]?.opacity ?? 0.90}
+                    ghostZoneBg={cellGhostInfo[key]?.zoneBg}
                     onPress={() => handleCellPress(r, c)}
                   />
                 </View>
@@ -254,9 +257,9 @@ function PlayContent() {
         <View style={styles.overlay}>
           <View style={styles.popup}>
             <Text style={styles.popupEmoji}>🎉</Text>
-            <Text style={styles.popupTitle}>Congratulations!</Text>
+            <Text style={styles.popupTitle}>{t('comCongratulations')}</Text>
             <Text style={styles.popupLevelName} numberOfLines={2}>{levelDisplayName}</Text>
-            <Text style={styles.popupTime}>Solved in {formatSolveTime(solveTime)}</Text>
+            <Text style={styles.popupTime}>{t('comSolvedIn', { time: formatSolveTime(solveTime) })}</Text>
             <Pressable
               style={styles.okBtn}
               onPress={() => {
@@ -264,7 +267,7 @@ function PlayContent() {
                 router.back();
               }}
             >
-              <Text style={styles.okBtnText}>Back to Explore</Text>
+              <Text style={styles.okBtnText}>{t('comBackToExplore')}</Text>
             </Pressable>
           </View>
         </View>
