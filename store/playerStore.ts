@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Language } from '../lib/i18n';
 
 interface PlayerStore {
   coins: number;
@@ -12,6 +13,7 @@ interface PlayerStore {
   unlimitedHints: boolean;
   tutorialDismissed: boolean;
   seenWorlds: number[];
+  language: Language;
 
   completeLevel: (globalLevel: number, stars: number) => void;
   addCoins: (n: number) => void;
@@ -25,6 +27,7 @@ interface PlayerStore {
   dismissTutorial: () => void;
   canUseHint: () => boolean;
   hasDailyFreeHint: () => boolean;
+  setLanguage: (lang: Language) => void;
   unlockAll: () => void;
   resetProgress: () => void;
 }
@@ -41,6 +44,7 @@ export const usePlayerStore = create<PlayerStore>()(
       unlimitedHints: false,
       tutorialDismissed: false,
       seenWorlds: [],
+      language: 'en' as Language,
 
       completeLevel: (globalLevel, stars) => {
         set((s) => {
@@ -89,6 +93,8 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       dismissTutorial: () => set({ tutorialDismissed: true }),
+
+      setLanguage: (lang) => set({ language: lang }),
 
       unlockAll: () => {
         const allStars: Record<number, number> = {};
