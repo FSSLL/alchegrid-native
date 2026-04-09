@@ -15,8 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { usePlayerStore } from '../store/playerStore';
 import { useAudioStore } from '../store/audioStore';
-import { LANGUAGE_META, type Language } from '../lib/i18n';
-import { useT, useIsRTL } from '../hooks/useT';
+import { useT } from '../hooks/useT';
 
 // ── Inline slider ─────────────────────────────────────────────────────────────
 function VolumeSlider({
@@ -117,10 +116,9 @@ export default function SettingsScreen() {
   const [code, setCode] = useState('');
   const [sliderActive, setSliderActive] = useState(false);
   const t = useT();
-  const isRTL = useIsRTL();
   const {
-    coins, hintBalance, unlimitedHints, language,
-    activateUnlimitedHints, addHint, addCoins, unlockAll, resetProgress, setLanguage,
+    coins, hintBalance, unlimitedHints,
+    activateUnlimitedHints, addHint, addCoins, unlockAll, resetProgress,
   } = usePlayerStore();
   const {
     musicVolume, sfxVolume, hapticsEnabled,
@@ -146,47 +144,21 @@ export default function SettingsScreen() {
     }
   };
 
-  const rtlText = isRTL ? { writingDirection: 'rtl' as const, textAlign: 'right' as const } : {};
-
   return (
     <LinearGradient colors={['#0e1117', '#111827', '#0e1117']} style={[styles.container, { paddingTop: topPad }]}>
-      <View style={[styles.header, isRTL && styles.headerRTL]}>
+      <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>{t('back')}</Text>
         </Pressable>
-        <Text style={[styles.title, rtlText]}>{t('settings')}</Text>
+        <Text style={styles.title}>{t('settings')}</Text>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} scrollEnabled={!sliderActive}>
 
-        {/* ── Language ──────────────────────────────────────────────────── */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, rtlText]}>{t('language')}</Text>
-          <View style={[styles.card, styles.langCard]}>
-            {(Object.keys(LANGUAGE_META) as Language[]).map((lang) => {
-              const meta = LANGUAGE_META[lang];
-              const active = language === lang;
-              return (
-                <Pressable
-                  key={lang}
-                  style={[styles.langBtn, active && styles.langBtnActive]}
-                  onPress={() => setLanguage(lang)}
-                  activeOpacity={0.75}
-                >
-                  <Text style={styles.langFlag}>{meta.flag}</Text>
-                  <Text style={[styles.langLabel, active && styles.langLabelActive]}>
-                    {meta.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
         {/* ── Sound & Haptics ────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, rtlText]}>{t('soundHaptics')}</Text>
+          <Text style={styles.sectionTitle}>{t('soundHaptics')}</Text>
           <View style={styles.card}>
             <VolumeSlider label="🎵 Music" value={musicVolume} onChange={setMusicVolume}
               onInteractStart={() => setSliderActive(true)} onInteractEnd={() => setSliderActive(false)} />
@@ -194,8 +166,8 @@ export default function SettingsScreen() {
             <VolumeSlider label="🔊 SFX" value={sfxVolume} onChange={setSfxVolume} accent="#22c55e"
               onInteractStart={() => setSliderActive(true)} onInteractEnd={() => setSliderActive(false)} />
             <View style={styles.separator} />
-            <View style={[styles.row, isRTL && styles.rowRTL]}>
-              <Text style={[styles.rowLabel, rtlText]}>📳 Haptics</Text>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>📳 Haptics</Text>
               <Pressable
                 style={[styles.toggle, hapticsEnabled && styles.toggleOn]}
                 onPress={() => setHapticsEnabled(!hapticsEnabled)}
@@ -209,26 +181,26 @@ export default function SettingsScreen() {
 
         {/* ── Account ───────────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, rtlText]}>{t('account')}</Text>
+          <Text style={styles.sectionTitle}>{t('account')}</Text>
           <View style={styles.card}>
-            <View style={[styles.row, isRTL && styles.rowRTL]}>
-              <Text style={[styles.rowLabel, rtlText]}>🪙 {t('coins')}</Text>
-              <Text style={[styles.rowValue, rtlText]}>{coins}</Text>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>🪙 {t('coins')}</Text>
+              <Text style={styles.rowValue}>{coins}</Text>
             </View>
             <View style={styles.separator} />
-            <View style={[styles.row, isRTL && styles.rowRTL]}>
-              <Text style={[styles.rowLabel, rtlText]}>💡 {t('hints')}</Text>
-              <Text style={[styles.rowValue, rtlText]}>{unlimitedHints ? '∞' : hintBalance}</Text>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>💡 {t('hints')}</Text>
+              <Text style={styles.rowValue}>{unlimitedHints ? '∞' : hintBalance}</Text>
             </View>
           </View>
         </View>
 
         {/* ── Redeem Code ───────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, rtlText]}>{t('redeemCode')}</Text>
+          <Text style={styles.sectionTitle}>{t('redeemCode')}</Text>
           <View style={styles.card}>
             <TextInput
-              style={[styles.codeInput, rtlText]}
+              style={styles.codeInput}
               value={code}
               onChangeText={setCode}
               placeholder="Enter code..."
@@ -243,7 +215,7 @@ export default function SettingsScreen() {
 
         {/* ── Dev Tools ─────────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, rtlText]}>🛠 Dev Tools</Text>
+          <Text style={styles.sectionTitle}>🛠 Dev Tools</Text>
           <View style={styles.card}>
             {/* Unlock All Levels — hidden for release, kept for future testing
             <Pressable
@@ -279,9 +251,9 @@ export default function SettingsScreen() {
 
         {/* ── About ─────────────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, rtlText]}>{t('about')}</Text>
+          <Text style={styles.sectionTitle}>{t('about')}</Text>
           <View style={styles.card}>
-            <Text style={[styles.aboutText, rtlText]}>
+            <Text style={styles.aboutText}>
               Alchegrid is a strategic elemental Latin-square puzzle game.
               {'\n\n'}
               8 worlds · 240 levels · Infinite possibilities
@@ -293,30 +265,30 @@ export default function SettingsScreen() {
 
         {/* ── Contact Us ────────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, rtlText]}>{t('contactUs')}</Text>
+          <Text style={styles.sectionTitle}>{t('contactUs')}</Text>
           <View style={styles.card}>
-            <Text style={[styles.contactIntro, rtlText]}>{t('loveToHear')}</Text>
+            <Text style={styles.contactIntro}>{t('loveToHear')}</Text>
             <View style={styles.separator} />
-            <View style={[styles.contactRow, isRTL && styles.rowRTL]}>
+            <View style={styles.contactRow}>
               <Text style={styles.contactIcon}>📧</Text>
               <View style={styles.contactInfo}>
-                <Text style={[styles.contactLabel, rtlText]}>{t('email')}</Text>
+                <Text style={styles.contactLabel}>{t('email')}</Text>
                 <Text style={styles.contactValue}>alchegridapp@gmail.com</Text>
               </View>
             </View>
             <View style={styles.separator} />
-            <View style={[styles.contactRow, isRTL && styles.rowRTL]}>
+            <View style={styles.contactRow}>
               <Text style={styles.contactIcon}>📞</Text>
               <View style={styles.contactInfo}>
-                <Text style={[styles.contactLabel, rtlText]}>{t('phone')}</Text>
+                <Text style={styles.contactLabel}>{t('phone')}</Text>
                 <Text style={styles.contactValue}>+971 54 466 5566</Text>
               </View>
             </View>
             <View style={styles.separator} />
-            <View style={[styles.contactRow, isRTL && styles.rowRTL]}>
+            <View style={styles.contactRow}>
               <Text style={styles.contactIcon}>💬</Text>
               <View style={styles.contactInfo}>
-                <Text style={[styles.contactLabel, rtlText]}>{t('whatsapp')}</Text>
+                <Text style={styles.contactLabel}>{t('whatsapp')}</Text>
                 <Text style={styles.contactValue}>+971 54 466 5566</Text>
               </View>
             </View>
@@ -336,7 +308,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     justifyContent: 'space-between',
   },
-  headerRTL: { flexDirection: 'row-reverse' },
   backBtn: {
     width: 36, height: 36,
     alignItems: 'center', justifyContent: 'center',
@@ -354,19 +325,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#171c26', borderRadius: 14, padding: 16,
     borderWidth: 1, borderColor: '#242e42', gap: 14,
   },
-  langCard: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 12 },
-  langBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 12, borderWidth: 1.5,
-    borderColor: '#242e42', backgroundColor: '#1a2030',
-  },
-  langBtnActive: { borderColor: '#ff6a00', backgroundColor: 'rgba(255,106,0,0.12)' },
-  langFlag:  { fontSize: 18 },
-  langLabel: { fontSize: 13, fontWeight: '600', color: '#8e9ab0' },
-  langLabelActive: { color: '#ff6a00' },
   row:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rowRTL:    { flexDirection: 'row-reverse' },
   rowLabel:  { color: '#eef1f5', fontSize: 15, fontWeight: '600' },
   rowValue:  { color: '#8e9ab0', fontSize: 15, fontWeight: '600' },
   separator: { height: 1, backgroundColor: '#242e42' },
