@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { usePlayerStore } from '../store/playerStore';
 import { useAudioStore } from '../store/audioStore';
+import { LANGUAGE_META, type Language } from '../lib/i18n';
+import { useT, useIsRTL } from '../hooks/useT';
 
 // ── Inline slider ─────────────────────────────────────────────────────────────
 function VolumeSlider({
@@ -71,17 +73,14 @@ function VolumeSlider({
     <View style={sl.row}>
       <Text style={sl.label}>{label}</Text>
       <View style={sl.right}>
-        {/* hit area — 44px tall so the thumb is always touchable */}
         <View
           style={sl.hitArea}
           onLayout={(e) => { trackW.current = e.nativeEvent.layout.width; }}
           {...pan.panHandlers}
         >
-          {/* track rail */}
           <View style={sl.track}>
             <View style={[sl.fill, { width: `${filled}%`, backgroundColor: fillColor }]} />
           </View>
-          {/* thumb */}
           <View
             style={[
               sl.thumb,
@@ -89,7 +88,6 @@ function VolumeSlider({
             ]}
           />
         </View>
-        {/* mute label */}
         <Text style={[sl.muteHint, { color: muted ? '#6b7280' : '#8e9ab0' }]}>
           {muted ? 'muted' : `${filled}%`}
         </Text>
@@ -102,29 +100,12 @@ const sl = StyleSheet.create({
   row:      { flexDirection: 'row', alignItems: 'center', gap: 12 },
   label:    { color: '#eef1f5', fontSize: 14, fontWeight: '600', width: 52 },
   right:    { flex: 1, gap: 4 },
-  hitArea:  {
-    height: 44,
-    justifyContent: 'center',
-  },
-  track:    {
-    height: 6,
-    backgroundColor: '#242e42',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  fill:     {
-    position: 'absolute',
-    top: 0, left: 0,
-    height: '100%',
-    borderRadius: 3,
-  },
+  hitArea:  { height: 44, justifyContent: 'center' },
+  track:    { height: 6, backgroundColor: '#242e42', borderRadius: 3, overflow: 'hidden' },
+  fill:     { position: 'absolute', top: 0, left: 0, height: '100%', borderRadius: 3 },
   thumb:    {
-    position: 'absolute',
-    top: (44 - 22) / 2,
-    marginLeft: -11,
-    width: 22, height: 22,
-    borderRadius: 11,
-    borderWidth: 2.5,
+    position: 'absolute', top: (44 - 22) / 2, marginLeft: -11,
+    width: 22, height: 22, borderRadius: 11, borderWidth: 2.5,
   },
   muteHint: { fontSize: 11, fontWeight: '600' },
 });
@@ -135,9 +116,11 @@ export default function SettingsScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const [code, setCode] = useState('');
   const [sliderActive, setSliderActive] = useState(false);
+  const t = useT();
+  const isRTL = useIsRTL();
   const {
-    coins, hintBalance, unlimitedHints,
-    activateUnlimitedHints, addHint, addCoins, unlockAll, resetProgress,
+    coins, hintBalance, unlimitedHints, language,
+    activateUnlimitedHints, addHint, addCoins, unlockAll, resetProgress, setLanguage,
   } = usePlayerStore();
   const {
     musicVolume, sfxVolume, hapticsEnabled,
@@ -163,21 +146,47 @@ export default function SettingsScreen() {
     }
   };
 
+  const rtlText = isRTL ? { writingDirection: 'rtl' as const, textAlign: 'right' as const } : {};
+
   return (
     <LinearGradient colors={['#0e1117', '#111827', '#0e1117']} style={[styles.container, { paddingTop: topPad }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, isRTL && styles.headerRTL]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
+          <Text style={styles.backIcon}>{t('back')}</Text>
         </Pressable>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={[styles.title, rtlText]}>{t('settings')}</Text>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} scrollEnabled={!sliderActive}>
 
+        {/* ── Language ──────────────────────────────────────────────────── */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, rtlText]}>{t('language')}</Text>
+          <View style={[styles.card, styles.langCard]}>
+            {(Object.keys(LANGUAGE_META) as Language[]).map((lang) => {
+              const meta = LANGUAGE_META[lang];
+              const active = language === lang;
+              return (
+                <Pressable
+                  key={lang}
+                  style={[styles.langBtn, active && styles.langBtnActive]}
+                  onPress={() => setLanguage(lang)}
+                  activeOpacity={0.75}
+                >
+                  <Text style={styles.langFlag}>{meta.flag}</Text>
+                  <Text style={[styles.langLabel, active && styles.langLabelActive]}>
+                    {meta.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
         {/* ── Sound & Haptics ────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sound & Haptics</Text>
+          <Text style={[styles.sectionTitle, rtlText]}>{t('soundHaptics')}</Text>
           <View style={styles.card}>
             <VolumeSlider label="🎵 Music" value={musicVolume} onChange={setMusicVolume}
               onInteractStart={() => setSliderActive(true)} onInteractEnd={() => setSliderActive(false)} />
@@ -185,8 +194,8 @@ export default function SettingsScreen() {
             <VolumeSlider label="🔊 SFX" value={sfxVolume} onChange={setSfxVolume} accent="#22c55e"
               onInteractStart={() => setSliderActive(true)} onInteractEnd={() => setSliderActive(false)} />
             <View style={styles.separator} />
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>📳 Haptics</Text>
+            <View style={[styles.row, isRTL && styles.rowRTL]}>
+              <Text style={[styles.rowLabel, rtlText]}>📳 Haptics</Text>
               <Pressable
                 style={[styles.toggle, hapticsEnabled && styles.toggleOn]}
                 onPress={() => setHapticsEnabled(!hapticsEnabled)}
@@ -200,26 +209,26 @@ export default function SettingsScreen() {
 
         {/* ── Account ───────────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={[styles.sectionTitle, rtlText]}>{t('account')}</Text>
           <View style={styles.card}>
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>🪙 Coins</Text>
-              <Text style={styles.rowValue}>{coins}</Text>
+            <View style={[styles.row, isRTL && styles.rowRTL]}>
+              <Text style={[styles.rowLabel, rtlText]}>🪙 {t('coins')}</Text>
+              <Text style={[styles.rowValue, rtlText]}>{coins}</Text>
             </View>
             <View style={styles.separator} />
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>💡 Hint Balance</Text>
-              <Text style={styles.rowValue}>{unlimitedHints ? '∞ (Unlimited)' : hintBalance}</Text>
+            <View style={[styles.row, isRTL && styles.rowRTL]}>
+              <Text style={[styles.rowLabel, rtlText]}>💡 {t('hints')}</Text>
+              <Text style={[styles.rowValue, rtlText]}>{unlimitedHints ? '∞' : hintBalance}</Text>
             </View>
           </View>
         </View>
 
         {/* ── Redeem Code ───────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Redeem Code</Text>
+          <Text style={[styles.sectionTitle, rtlText]}>{t('redeemCode')}</Text>
           <View style={styles.card}>
             <TextInput
-              style={styles.codeInput}
+              style={[styles.codeInput, rtlText]}
               value={code}
               onChangeText={setCode}
               placeholder="Enter code..."
@@ -227,14 +236,14 @@ export default function SettingsScreen() {
               autoCapitalize="characters"
             />
             <Pressable style={styles.redeemBtn} onPress={handleRedeemCode}>
-              <Text style={styles.redeemBtnText}>Redeem</Text>
+              <Text style={styles.redeemBtnText}>{t('redeem')}</Text>
             </Pressable>
           </View>
         </View>
 
         {/* ── Dev Tools ─────────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🛠 Dev Tools</Text>
+          <Text style={[styles.sectionTitle, rtlText]}>🛠 Dev Tools</Text>
           <View style={styles.card}>
             {/* Unlock All Levels — hidden for release, kept for future testing
             <Pressable
@@ -270,9 +279,9 @@ export default function SettingsScreen() {
 
         {/* ── About ─────────────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={[styles.sectionTitle, rtlText]}>{t('about')}</Text>
           <View style={styles.card}>
-            <Text style={styles.aboutText}>
+            <Text style={[styles.aboutText, rtlText]}>
               Alchegrid is a strategic elemental Latin-square puzzle game.
               {'\n\n'}
               8 worlds · 240 levels · Infinite possibilities
@@ -284,30 +293,30 @@ export default function SettingsScreen() {
 
         {/* ── Contact Us ────────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Us</Text>
+          <Text style={[styles.sectionTitle, rtlText]}>{t('contactUs')}</Text>
           <View style={styles.card}>
-            <Text style={styles.contactIntro}>We'd love to hear from you</Text>
+            <Text style={[styles.contactIntro, rtlText]}>{t('loveToHear')}</Text>
             <View style={styles.separator} />
-            <View style={styles.contactRow}>
+            <View style={[styles.contactRow, isRTL && styles.rowRTL]}>
               <Text style={styles.contactIcon}>📧</Text>
               <View style={styles.contactInfo}>
-                <Text style={styles.contactLabel}>Email</Text>
+                <Text style={[styles.contactLabel, rtlText]}>{t('email')}</Text>
                 <Text style={styles.contactValue}>alchegridapp@gmail.com</Text>
               </View>
             </View>
             <View style={styles.separator} />
-            <View style={styles.contactRow}>
+            <View style={[styles.contactRow, isRTL && styles.rowRTL]}>
               <Text style={styles.contactIcon}>📞</Text>
               <View style={styles.contactInfo}>
-                <Text style={styles.contactLabel}>Phone</Text>
+                <Text style={[styles.contactLabel, rtlText]}>{t('phone')}</Text>
                 <Text style={styles.contactValue}>+971 54 466 5566</Text>
               </View>
             </View>
             <View style={styles.separator} />
-            <View style={styles.contactRow}>
+            <View style={[styles.contactRow, isRTL && styles.rowRTL]}>
               <Text style={styles.contactIcon}>💬</Text>
               <View style={styles.contactInfo}>
-                <Text style={styles.contactLabel}>WhatsApp</Text>
+                <Text style={[styles.contactLabel, rtlText]}>{t('whatsapp')}</Text>
                 <Text style={styles.contactValue}>+971 54 466 5566</Text>
               </View>
             </View>
@@ -323,12 +332,11 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: 'transparent' },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 12,
     justifyContent: 'space-between',
   },
+  headerRTL: { flexDirection: 'row-reverse' },
   backBtn: {
     width: 36, height: 36,
     alignItems: 'center', justifyContent: 'center',
@@ -339,64 +347,50 @@ const styles = StyleSheet.create({
   scroll:       { padding: 16, gap: 20 },
   section:      { gap: 8 },
   sectionTitle: {
-    fontSize: 12, fontWeight: '700',
-    color: '#8e9ab0',
+    fontSize: 12, fontWeight: '700', color: '#8e9ab0',
     textTransform: 'uppercase', letterSpacing: 1,
   },
   card: {
-    backgroundColor: '#171c26',
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#242e42',
-    gap: 14,
+    backgroundColor: '#171c26', borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: '#242e42', gap: 14,
   },
+  langCard: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 12 },
+  langBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: 12, borderWidth: 1.5,
+    borderColor: '#242e42', backgroundColor: '#1a2030',
+  },
+  langBtnActive: { borderColor: '#ff6a00', backgroundColor: 'rgba(255,106,0,0.12)' },
+  langFlag:  { fontSize: 18 },
+  langLabel: { fontSize: 13, fontWeight: '600', color: '#8e9ab0' },
+  langLabelActive: { color: '#ff6a00' },
   row:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  rowRTL:    { flexDirection: 'row-reverse' },
   rowLabel:  { color: '#eef1f5', fontSize: 15, fontWeight: '600' },
   rowValue:  { color: '#8e9ab0', fontSize: 15, fontWeight: '600' },
   separator: { height: 1, backgroundColor: '#242e42' },
   codeInput: {
-    backgroundColor: '#1a2030',
-    borderRadius: 10,
-    padding: 12,
-    color: '#eef1f5',
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#242e42',
+    backgroundColor: '#1a2030', borderRadius: 10, padding: 12,
+    color: '#eef1f5', fontSize: 15, borderWidth: 1, borderColor: '#242e42',
   },
-  redeemBtn:     {
-    backgroundColor: '#ff6a00',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
+  redeemBtn:     { backgroundColor: '#ff6a00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   redeemBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   aboutText:     { color: '#8e9ab0', fontSize: 14, lineHeight: 22 },
-
   contactIntro:  { color: '#eef1f5', fontSize: 14, fontWeight: '600', textAlign: 'center' },
   contactRow:    { flexDirection: 'row', alignItems: 'center', gap: 12 },
   contactIcon:   { fontSize: 22 },
   contactInfo:   { flex: 1 },
   contactLabel:  { color: '#8e9ab0', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
   contactValue:  { color: '#eef1f5', fontSize: 14, fontWeight: '600', marginTop: 2 },
-
-  // Toggle switch
   toggle: {
-    width: 48, height: 28,
-    borderRadius: 14,
-    backgroundColor: '#242e42',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
+    width: 48, height: 28, borderRadius: 14,
+    backgroundColor: '#242e42', justifyContent: 'center', paddingHorizontal: 3,
   },
   toggleOn:      { backgroundColor: '#ff6a00' },
   toggleThumb: {
-    width: 22, height: 22,
-    borderRadius: 11,
-    backgroundColor: '#8e9ab0',
-    alignSelf: 'flex-start',
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: '#8e9ab0', alignSelf: 'flex-start',
   },
-  toggleThumbOn: {
-    backgroundColor: '#fff',
-    alignSelf: 'flex-end',
-  },
+  toggleThumbOn: { backgroundColor: '#fff', alignSelf: 'flex-end' },
 });
