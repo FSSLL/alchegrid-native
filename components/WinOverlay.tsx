@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useT } from '../hooks/useT';
 
 const { width } = Dimensions.get('window');
 
@@ -28,6 +29,7 @@ function formatTime(sec: number): string {
 export default function WinOverlay({ stars, elapsed, coinsEarned, onNext, onReplay }: WinOverlayProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.7)).current;
+  const t = useT();
 
   useEffect(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -42,17 +44,17 @@ export default function WinOverlay({ stars, elapsed, coinsEarned, onNext, onRepl
   return (
     <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
       <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
-        <Text style={styles.title}>Level Complete!</Text>
+        <Text style={styles.title}>{t('levelComplete')}</Text>
         <Text style={styles.stars}>{starEmojis}</Text>
-        <Text style={styles.time}>Time: {formatTime(elapsed)}</Text>
-        <Text style={styles.coins}>+{coinsEarned} coins 🪙</Text>
+        <Text style={styles.time}>{t('timeLabel', { t: formatTime(elapsed) })}</Text>
+        <Text style={styles.coins}>{t('coinsEarned', { n: coinsEarned })}</Text>
 
         <View style={styles.buttons}>
           <Pressable style={styles.replayBtn} onPress={onReplay}>
-            <Text style={styles.replayText}>Replay</Text>
+            <Text style={styles.replayText}>{t('replay')}</Text>
           </Pressable>
           <Pressable style={styles.nextBtn} onPress={onNext}>
-            <Text style={styles.nextText}>Next Level →</Text>
+            <Text style={styles.nextText}>{t('nextLevel')}</Text>
           </Pressable>
         </View>
       </Animated.View>
