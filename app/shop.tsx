@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Pressable from '../components/Pressable';
+import { useT } from '../hooks/useT';
 import {
   View,
   Text,
@@ -34,6 +35,7 @@ const PACK_META: Record<string, { label: string; coins: number; tag?: string }> 
 export default function ShopScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const t = useT();
 
   const { coins, hintBalance, unlimitedHints, spendCoins, addHint, addCoins } = usePlayerStore();
   const { packages, isLoading, purchasePackage, restorePurchases, isPurchasing, isRestoring } = useSubscription();
@@ -99,9 +101,9 @@ export default function ShopScreen() {
       {/* Header */}
       <View style={ss.header}>
         <Pressable onPress={() => router.back()} style={ss.backBtn}>
-          <Text style={ss.backText}>←</Text>
+          <Text style={ss.backText}>{t('back')}</Text>
         </Pressable>
-        <Text style={ss.headerTitle}>Shop</Text>
+        <Text style={ss.headerTitle}>{t('shop')}</Text>
         <View style={ss.backBtn} />
       </View>
 
@@ -123,15 +125,15 @@ export default function ShopScreen() {
         </View>
 
         {/* ─── Spend coins on hints ───────────────────────────────────── */}
-        <Text style={ss.sectionTitle}>Spend Coins</Text>
+        <Text style={ss.sectionTitle}>{t('spendCoins')}</Text>
 
         <View style={ss.itemCard}>
           <View style={ss.itemIconCircle}>
             <Text style={ss.itemIconText}>💡</Text>
           </View>
           <View style={ss.itemInfo}>
-            <Text style={ss.itemName}>Hint</Text>
-            <Text style={ss.itemDesc}>Reveals one correct cell on the board</Text>
+            <Text style={ss.itemName}>{t('hints')}</Text>
+            <Text style={ss.itemDesc}>{t('revealsCell')}</Text>
           </View>
           <View style={ss.itemRight}>
             <View style={ss.priceRow}>
@@ -145,7 +147,7 @@ export default function ShopScreen() {
             >
               {buyingHint
                 ? <ActivityIndicator size="small" color="#fff" />
-                : <Text style={[ss.buyBtnText, !canAffordHint && ss.buyBtnTextDisabled]}>Buy</Text>
+                : <Text style={[ss.buyBtnText, !canAffordHint && ss.buyBtnTextDisabled]}>{t('buy')}</Text>
               }
             </Pressable>
           </View>
@@ -158,14 +160,14 @@ export default function ShopScreen() {
         )}
 
         {/* ─── Buy coin packs ─────────────────────────────────────────── */}
-        <Text style={[ss.sectionTitle, { marginTop: 28 }]}>Buy Coins</Text>
+        <Text style={[ss.sectionTitle, { marginTop: 28 }]}>{t('buyCoins')}</Text>
 
         {isLoading ? (
           <ActivityIndicator color="#60a5fa" style={{ marginVertical: 24 }} />
         ) : packages.length === 0 ? (
-          <Text style={ss.lowCoinNote}>Coin packs not available right now.</Text>
+          <Text style={ss.lowCoinNote}>{t('noPacksAvailable')}</Text>
         ) : (
-          packages.filter((pkg) => pkg.identifier in PACK_META).map((pkg) => {
+          packages.map((pkg) => {
             const meta = PACK_META[pkg.identifier];
             const busy = purchasingId === pkg.identifier;
             const price = pkg.product.priceString;
@@ -206,7 +208,7 @@ export default function ShopScreen() {
         <Pressable style={ss.restoreBtn} onPress={handleRestore} disabled={isRestoring}>
           {isRestoring
             ? <ActivityIndicator size="small" color="#60a5fa" />
-            : <Text style={ss.restoreText}>Restore Purchases</Text>
+            : <Text style={ss.restoreText}>{t('restorePurchases')}</Text>
           }
         </Pressable>
 
