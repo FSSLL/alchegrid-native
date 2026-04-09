@@ -8,22 +8,17 @@ import {
   TextInput,
   Platform,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useCommunityStore, communityLevelToGameLevel, formatSolveTime, type CommunityLevel } from '../store/communityStore';
 import { getApiBase } from '../lib/apiBase';
 import { useGameStore } from '../store/gameStore';
+import { useT } from '../hooks/useT';
 
 type ActiveFilter = 'all' | 'shared' | 'liked' | 'mine' | 'solved';
 type SortOption = 'newest' | 'oldest' | 'grid_asc' | 'grid_desc';
-
-const SORT_LABELS: Record<SortOption, string> = {
-  newest:    '🕐 Newest',
-  oldest:    '🕰 Oldest',
-  grid_asc:  '⬆ Grid',
-  grid_desc: '⬇ Grid',
-};
 
 interface ServerStatus {
   queuedUploads: number;
@@ -34,6 +29,7 @@ interface ServerStatus {
 }
 
 export default function CommunityExplore() {
+  const t = useT();
   const [filter, setFilter] = useState<ActiveFilter>('all');
   const [sort, setSort]   = useState<SortOption>('newest');
   const [search, setSearch] = useState('');
@@ -51,6 +47,13 @@ export default function CommunityExplore() {
 
   const { initGame } = useGameStore();
 
+  const SORT_LABELS: Record<SortOption, string> = {
+    newest:    t('comSortNewest'),
+    oldest:    t('comSortOldest'),
+    grid_asc:  t('comSortGridAsc'),
+    grid_desc: t('comSortGridDesc'),
+  };
+
   const fetchStatus = async () => {
     const base = getApiBase();
     if (!base) return;
@@ -61,19 +64,19 @@ export default function CommunityExplore() {
   };
 
   const handleRefresh = async () => {
-      setSyncing(true);
-      setFetchError(null);
-      try {
-        await Promise.all([refreshRemoteLevels(), fetchStatus()]);
-        if (useCommunityStore.getState().syncStatus === 'error') {
-          setFetchError('Could not reach server. Pull down to retry.');
-        }
-      } catch {
-        setFetchError('Could not reach server. Pull down to retry.');
-      } finally {
-        setSyncing(false);
+    setSyncing(true);
+    setFetchError(null);
+    try {
+      await Promise.all([refreshRemoteLevels(), fetchStatus()]);
+      if (useCommunityStore.getState().syncStatus === 'error') {
+        setFetchError(t('comServerError'));
       }
-    };
+    } catch {
+      setFetchError(t('comServerError'));
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   useEffect(() => {
     handleRefresh();
@@ -94,13 +97,11 @@ export default function CommunityExplore() {
       default:       base = allBrowsable;
     }
 
-    // Search filter
     const q = search.trim().toLowerCase();
     if (q) {
       base = base.filter((l) => l.name.toLowerCase().includes(q));
     }
 
-    // Hide solved toggle
     if (hideSolved && filter !== 'solved') {
       base = base.filter((l) => !solvedLevelIds.includes(l.id));
     }
@@ -156,20 +157,28 @@ export default function CommunityExplore() {
 
   const isSyncing = syncing || syncStatus === 'syncing';
 
+  const FILTERS: [ActiveFilter, string][] = [
+    ['all',    `${t('comFilterAll')} (${allBrowsable.length})`],
+    ['shared', `${t('comFilterShared')} (${sharedCount})`],
+    ['liked',  t('comFilterLiked')],
+    ['solved', `${t('comFilterSolved')} (${solvedCount})`],
+    ['mine',   `${t('comFilterMine')} (${myMineCount})`],
+  ];
+
   return (
     <View style={styles.container}>
       {/* Status / refresh row */}
       <View style={styles.statusBar}>
-        <Text style={styles.statusLabel}>🌐 Community</Text>
+        <Text style={styles.statusLabel}>🌐 {t('community')}</Text>
         {serverStatus?.rateLimited && (
-          <View style={styles.badge}><Text style={styles.badgeText}>⚠ Rate limited</Text></View>
+          <View style={styles.badge}><Text style={styles.badgeText}>{t('comRateLimited')}</Text></View>
         )}
         {(serverStatus?.queuedUploads ?? 0) > 0 && (
           <View style={[styles.badge, { backgroundColor: 'rgba(251,191,36,0.2)' }]}>
-            <Text style={styles.badgeText}>↑ {serverStatus!.queuedUploads} queued</Text>
+            <Text style={styles.badgeText}>{t('comQueued', { n: serverStatus!.queuedUploads })}</Text>
           </View>
         )}
-        <Text style={styles.remoteCount}>{serverStatus?.totalLevels ?? remoteLevels.length} remote</Text>
+        <Text style={styles.remoteCount}>{t('comRemote', { n: serverStatus?.totalLevels ?? remoteLevels.length })}</Text>
         <Pressable onPress={handleRefresh} disabled={isSyncing} style={styles.refreshBtn}>
           {isSyncing
             ? <ActivityIndicator size="small" color="#60a5fa" />
@@ -178,18 +187,18 @@ export default function CommunityExplore() {
       </View>
 
       {/* Error banner */}
-        {fetchError && (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorBannerText}>⚠ {fetchError}</Text>
-          </View>
-        )}
+      {fetchError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>⚠ {fetchError}</Text>
+        </View>
+      )}
 
-        {/* Search bar */}
+      {/* Search bar */}
       <View style={styles.searchRow}>
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by level name…"
+          placeholder={t('comSearchPlaceholder')}
           placeholderTextColor="rgba(255,255,255,0.3)"
           value={search}
           onChangeText={setSearch}
@@ -207,20 +216,14 @@ export default function CommunityExplore() {
 
       {/* Stats row */}
       <View style={styles.statsRow}>
-        <StatPill icon="🗂" label={`${allBrowsable.length} levels`} />
-        <StatPill icon="🏆" label={`${totalSolved} solved`} />
-        {totalLiked > 0 && <StatPill icon="❤" label={`${totalLiked} liked`} />}
+        <StatPill icon="🗂" label={t('comLevelsCount', { n: allBrowsable.length })} />
+        <StatPill icon="🏆" label={t('comSolvedCount', { n: totalSolved })} />
+        {totalLiked > 0 && <StatPill icon="❤" label={t('comLikedCount', { n: totalLiked })} />}
       </View>
 
       {/* Filter tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterContent}>
-        {([
-          ['all',    `All (${allBrowsable.length})`],
-          ['shared', `🌐 Shared (${sharedCount})`],
-          ['liked',  '❤ Liked'],
-          ['solved', `✓ Solved (${solvedCount})`],
-          ['mine',   `👤 Mine (${myMineCount})`],
-        ] as [ActiveFilter, string][]).map(([f, label]) => (
+        {FILTERS.map(([f, label]) => (
           <Pressable
             key={f}
             style={[styles.filterBtn, filter === f && styles.filterBtnActive[f]]}
@@ -233,7 +236,7 @@ export default function CommunityExplore() {
 
       {/* Sort + hide-solved row */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sortRow} contentContainerStyle={styles.sortContent}>
-        <Text style={styles.sortLabel}>Sort:</Text>
+        <Text style={styles.sortLabel}>{t('comSortLabel')}</Text>
         {(Object.keys(SORT_LABELS) as SortOption[]).map((s) => (
           <Pressable
             key={s}
@@ -245,9 +248,7 @@ export default function CommunityExplore() {
             </Text>
           </Pressable>
         ))}
-        {/* Separator */}
         <View style={styles.sortSeparator} />
-        {/* Hide-solved checkbox */}
         <Pressable
           style={[styles.hidesolvedBtn, hideSolved && styles.hidesolvedBtnActive]}
           onPress={() => setHideSolved((v) => !v)}
@@ -256,7 +257,7 @@ export default function CommunityExplore() {
             {hideSolved && <Text style={styles.checkmark}>✓</Text>}
           </View>
           <Text style={[styles.hidesolvedText, hideSolved && styles.hidesolvedTextActive]}>
-            Hide solved
+            {t('comHideSolved')}
           </Text>
         </Pressable>
       </ScrollView>
@@ -266,6 +267,13 @@ export default function CommunityExplore() {
         style={styles.list}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isSyncing}
+            onRefresh={handleRefresh}
+            tintColor="#60a5fa"
+          />
+        }
       >
         {filteredLevels.length === 0 ? (
           <EmptyState filter={filter} hasSearch={search.length > 0} />
@@ -302,26 +310,27 @@ function StatPill({ icon, label }: { icon: string; label: string }) {
 }
 
 function EmptyState({ filter, hasSearch }: { filter: ActiveFilter; hasSearch: boolean }) {
+  const t = useT();
   if (hasSearch) {
     return (
       <View style={styles.emptyWrap}>
         <Text style={styles.emptyIcon}>🔍</Text>
-        <Text style={styles.emptyText}>No levels match your search.</Text>
+        <Text style={styles.emptyText}>{t('comEmptySearch')}</Text>
       </View>
     );
   }
-  const messages: Record<ActiveFilter, { icon: string; text: string }> = {
-    all:    { icon: '👥', text: 'No levels yet. Create or refresh to discover levels.' },
-    shared: { icon: '🌐', text: 'No shared levels yet. Tap Refresh.' },
-    liked:  { icon: '❤', text: 'No liked levels yet.' },
-    solved: { icon: '🏆', text: 'No solved levels yet. Start playing!' },
-    mine:   { icon: '👤', text: "You haven't published any levels yet." },
+  const messages: Record<ActiveFilter, { icon: string; textKey: 'comEmptyAll' | 'comEmptyShared' | 'comEmptyLiked' | 'comEmptySolved' | 'comEmptyMine' }> = {
+    all:    { icon: '👥', textKey: 'comEmptyAll' },
+    shared: { icon: '🌐', textKey: 'comEmptyShared' },
+    liked:  { icon: '❤', textKey: 'comEmptyLiked' },
+    solved: { icon: '🏆', textKey: 'comEmptySolved' },
+    mine:   { icon: '👤', textKey: 'comEmptyMine' },
   };
   const m = messages[filter];
   return (
     <View style={styles.emptyWrap}>
       <Text style={styles.emptyIcon}>{m.icon}</Text>
-      <Text style={styles.emptyText}>{m.text}</Text>
+      <Text style={styles.emptyText}>{t(m.textKey)}</Text>
     </View>
   );
 }
@@ -342,10 +351,10 @@ function LevelCard({
   onCancelDelete: () => void;
   onConfirmDelete: () => void;
 }) {
+  const t = useT();
   return (
     <View style={[styles.card, isSolved && styles.cardSolved]}>
       <View style={styles.cardMain}>
-        {/* Left: info */}
         <View style={styles.cardInfo}>
           <View style={styles.cardTitleRow}>
             <Text style={styles.cardName} numberOfLines={1}>{level.name}</Text>
@@ -367,7 +376,6 @@ function LevelCard({
           </View>
         </View>
 
-        {/* Right: actions */}
         <View style={styles.cardActions}>
           <Pressable style={styles.actionBtn} onPress={onLike}>
             <Text style={[styles.actionIcon, isLiked && styles.likedIcon]}>
@@ -380,20 +388,19 @@ function LevelCard({
             </Pressable>
           )}
           <Pressable style={styles.playBtn} onPress={onPlay}>
-            <Text style={styles.playBtnText}>{isSolved ? 'Replay' : 'Play'}</Text>
+            <Text style={styles.playBtnText}>{isSolved ? t('replay') : t('comPlay')}</Text>
           </Pressable>
         </View>
       </View>
 
-      {/* Delete confirmation row */}
       {confirmDelete && (
         <View style={styles.confirmRow}>
-          <Text style={styles.confirmText}>Delete this level permanently?</Text>
+          <Text style={styles.confirmText}>{t('comDeleteConfirm')}</Text>
           <Pressable style={styles.cancelBtn} onPress={onCancelDelete}>
-            <Text style={styles.cancelBtnText}>Cancel</Text>
+            <Text style={styles.cancelBtnText}>{t('cancel')}</Text>
           </Pressable>
           <Pressable style={styles.deleteBtn} onPress={onConfirmDelete}>
-            <Text style={styles.deleteBtnText}>Delete</Text>
+            <Text style={styles.deleteBtnText}>{t('comDelete')}</Text>
           </Pressable>
         </View>
       )}
@@ -401,7 +408,6 @@ function LevelCard({
   );
 }
 
-// Dynamic active color per filter
 const FILTER_ACTIVE_BG: Record<ActiveFilter, string> = {
   all:    'rgba(96,165,250,0.2)',
   shared: 'rgba(59,130,246,0.25)',
@@ -436,12 +442,12 @@ const styles = StyleSheet.create({
   refreshIcon: { color: '#60a5fa', fontSize: 20, fontWeight: '700' },
 
   errorBanner: {
-      backgroundColor: 'rgba(239,68,68,0.15)', borderBottomWidth: 1,
-      borderColor: 'rgba(239,68,68,0.3)', paddingHorizontal: 14, paddingVertical: 8,
-    },
-    errorBannerText: { color: '#fca5a5', fontSize: 12, fontWeight: '600', textAlign: 'center' },
+    backgroundColor: 'rgba(239,68,68,0.15)', borderBottomWidth: 1,
+    borderColor: 'rgba(239,68,68,0.3)', paddingHorizontal: 14, paddingVertical: 8,
+  },
+  errorBannerText: { color: '#fca5a5', fontSize: 12, fontWeight: '600', textAlign: 'center' },
 
-    searchRow: {
+  searchRow: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: 12, marginTop: 8, marginBottom: 2,
     backgroundColor: 'rgba(255,255,255,0.07)',
