@@ -18,6 +18,7 @@ import { useGameStore } from '../store/gameStore';
 import { RECIPE_CATALOG } from '../constants/recipeCatalog';
 import { ZONE_COLORS, isCellsConnected, isAdjacentToSet, maxZoneSizeForGrid } from '../lib/recipeCatalog';
 import type { Level } from '../lib/types';
+import { useT } from '../hooks/useT';
 
 // ── Builder cell sizes ────────────────────────────────────────────────────────
 const CELL_SZ: Record<number, number> = {
@@ -71,6 +72,7 @@ function validateDraft(draft: {
 
 // ── Main builder component ────────────────────────────────────────────────────
 export default function CommunityBuilder() {
+  const t = useT();
   const [step, setStep] = useState<Step>('setup');
   const [isDrawingZone, setIsDrawingZone] = useState(false);
   const [showRecipePicker, setShowRecipePicker] = useState(false);
@@ -249,7 +251,7 @@ export default function CommunityBuilder() {
     try {
       await publishLevel();
       setStep('setup');
-      showToast('Level Published! Visible to all players 🌍');
+      showToast(t('builderPublished'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } finally {
       setIsPublishing(false);
@@ -294,11 +296,11 @@ export default function CommunityBuilder() {
       {/* ── STEP 1: Setup ─────────────────────────────────────────────────── */}
       {step === 'setup' && (
         <ScrollView contentContainerStyle={styles.setupContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.fieldLabel}>Level Name</Text>
+          <Text style={styles.fieldLabel}>{t('builderLevelName')}</Text>
           <View style={styles.nameRow}>
             <TextInput
               style={styles.nameInput}
-              placeholder="Enter a name..."
+              placeholder={t('builderEnterName')}
               placeholderTextColor="rgba(255,255,255,0.3)"
               value={draft.name}
               onChangeText={setDraftName}
@@ -317,13 +319,13 @@ export default function CommunityBuilder() {
             </View>
           </View>
           {nameStatus === 'taken' && (
-            <Text style={styles.nameTakenHint}>This name is already taken. Try another.</Text>
+            <Text style={styles.nameTakenHint}>{t('builderNameTaken')}</Text>
           )}
           {nameStatus === 'available' && (
-            <Text style={styles.nameAvailableHint}>Name is available!</Text>
+            <Text style={styles.nameAvailableHint}>{t('builderNameAvailable')}</Text>
           )}
 
-          <Text style={styles.fieldLabel}>Board Size</Text>
+          <Text style={styles.fieldLabel}>{t('builderBoardSize')}</Text>
           <View style={styles.sizeGrid}>
             {[4, 5, 6, 7].map((s) => (
               <Pressable
@@ -339,10 +341,10 @@ export default function CommunityBuilder() {
           </View>
 
           <View style={styles.infoBox}>
-            <Text style={styles.infoText}>1. Draw zones by tapping grid cells</Text>
-            <Text style={styles.infoText}>2. Pick a recipe for each zone</Text>
-            <Text style={styles.infoText}>3. Test-play to record the solution</Text>
-            <Text style={styles.infoText}>4. Publish to share with the community</Text>
+            <Text style={styles.infoText}>{t('builderStep1')}</Text>
+            <Text style={styles.infoText}>{t('builderStep2')}</Text>
+            <Text style={styles.infoText}>{t('builderStep3')}</Text>
+            <Text style={styles.infoText}>{t('builderStep4')}</Text>
           </View>
 
           <Pressable
@@ -352,19 +354,18 @@ export default function CommunityBuilder() {
             ]}
             onPress={() => {
               if (!draft.name.trim()) {
-                showToast('Please enter a level name first');
+                showToast(t('builderEnterNameFirst'));
                 return;
               }
               if (nameStatus === 'taken') {
-                showToast('This name is already taken. Choose another.');
+                showToast(t('builderNameTaken'));
                 return;
               }
-              // Default draft size to 4 if somehow above 7 (coming soon sizes hidden)
               if (draft.size > 7) setDraftSize(4);
               setStep('zones');
             }}
           >
-            <Text style={styles.nextBtnText}>Next: Draw Zones →</Text>
+            <Text style={styles.nextBtnText}>{t('builderNextZones')}</Text>
           </Pressable>
         </ScrollView>
       )}
@@ -375,10 +376,10 @@ export default function CommunityBuilder() {
           {/* Info bar */}
           <View style={styles.infoBar}>
             <Text style={styles.infoBarText}>
-              Cells: <Text style={styles.infoBarVal}>{usedCells}/{totalCells}</Text>
+              {t('builderCellsInfo', { used: usedCells, total: totalCells })}
             </Text>
             <Text style={styles.infoBarText}>
-              Elements: <Text style={styles.infoBarVal}>{uniqueElements.length}/{draft.size}</Text>
+              {t('builderElementsInfo', { n: uniqueElements.length, total: draft.size })}
             </Text>
           </View>
 
@@ -398,19 +399,19 @@ export default function CommunityBuilder() {
             <View style={styles.pickerWrap}>
               <View style={styles.pickerHeader}>
                 <Text style={styles.pickerTitle}>
-                  Pick recipe for {cellCount} cell{cellCount > 1 ? 's' : ''}
+                  {t('builderPickRecipe', { n: cellCount, s: cellCount > 1 ? 's' : '' })}
                 </Text>
                 <Pressable onPress={() => { setShowRecipePicker(false); setIsDrawingZone(true); }}>
-                  <Text style={styles.pickerCancel}>← Back</Text>
+                  <Text style={styles.pickerCancel}>{t('tutBackBtn')}</Text>
                 </Pressable>
               </View>
               {availableRecipes.length === 0 ? (
                 <View style={styles.pickerEmpty}>
                   <Text style={styles.pickerEmptyText}>
-                    No recipes for {cellCount} cell{cellCount > 1 ? 's' : ''} with remaining element budget ({remainingBudget} left).
+                    {t('builderNoRecipes', { n: cellCount, s: cellCount > 1 ? 's' : '', n2: remainingBudget })}
                   </Text>
                   <Text style={styles.pickerEmptyHint}>
-                    Try a different zone size or adjust existing zones.
+                    {t('builderTryDifferent')}
                   </Text>
                 </View>
               ) : (
@@ -506,7 +507,7 @@ export default function CommunityBuilder() {
               {isDrawingZone ? (
                 <View style={styles.drawControls}>
                   <Pressable style={styles.cancelDrawBtn} onPress={handleCancelDraw}>
-                    <Text style={styles.cancelDrawText}>Cancel</Text>
+                    <Text style={styles.cancelDrawText}>{t('cancel')}</Text>
                   </Pressable>
                   <Pressable
                     style={[styles.finishDrawBtn, draft.currentZoneCells.length === 0 && styles.disabledBtn]}
@@ -514,13 +515,13 @@ export default function CommunityBuilder() {
                     disabled={draft.currentZoneCells.length === 0}
                   >
                     <Text style={styles.finishDrawText}>
-                      ✓ Pick Combination ({draft.currentZoneCells.length} cell{draft.currentZoneCells.length !== 1 ? 's' : ''})
+                      {t('builderPickCombo', { n: draft.currentZoneCells.length, s: draft.currentZoneCells.length !== 1 ? 's' : '' })}
                     </Text>
                   </Pressable>
                 </View>
               ) : (
                 <Pressable style={styles.addZoneBtn} onPress={handleStartZone}>
-                  <Text style={styles.addZoneBtnText}>+ Add Zone</Text>
+                  <Text style={styles.addZoneBtnText}>{t('builderAddZone')}</Text>
                 </Pressable>
               )}
 
@@ -560,13 +561,13 @@ export default function CommunityBuilder() {
                     onPress={handleTestPlay}
                     disabled={usedCells < totalCells || draft.zones.length === 0}
                   >
-                    <Text style={styles.testPlayText}>▶ Test Play</Text>
+                    <Text style={styles.testPlayText}>{t('builderTestPlay')}</Text>
                   </Pressable>
                   <Pressable
                     style={styles.nextStepBtn}
                     onPress={() => setStep('publish')}
                   >
-                    <Text style={styles.nextStepText}>Review & Publish →</Text>
+                    <Text style={styles.nextStepText}>{t('builderReviewPublish')}</Text>
                   </Pressable>
                 </View>
               )}
@@ -581,15 +582,15 @@ export default function CommunityBuilder() {
       {step === 'publish' && (
         <ScrollView contentContainerStyle={styles.publishContent} showsVerticalScrollIndicator={false}>
           <View style={styles.reviewCard}>
-            <ReviewRow label="Name" value={draft.name || '(untitled)'} />
-            <ReviewRow label="Size" value={`${draft.size}×${draft.size}`} />
+            <ReviewRow label={t('builderReviewName')} value={draft.name || '(untitled)'} />
+            <ReviewRow label={t('builderReviewSize')} value={`${draft.size}×${draft.size}`} />
             <ReviewRow
-              label="Elements"
+              label={t('builderReviewElements')}
               value={uniqueElements.join(', ') || '—'}
             />
-            <ReviewRow label="Zones" value={draft.zones.length.toString()} />
+            <ReviewRow label={t('builderReviewZones')} value={draft.zones.length.toString()} />
             <ReviewRow
-              label="Solved"
+              label={t('builderReviewSolved')}
               value={draft.solvedAfterLastEdit ? '✓ Yes' : '✗ No'}
               accent={draft.solvedAfterLastEdit ? '#34d399' : '#f87171'}
             />
@@ -605,7 +606,7 @@ export default function CommunityBuilder() {
 
           {!draft.solvedAfterLastEdit && (
             <Pressable style={styles.testSolveBtn} onPress={handleTestPlay}>
-              <Text style={styles.testSolveBtnText}>▶ Test & Solve</Text>
+              <Text style={styles.testSolveBtnText}>{t('builderTestSolve')}</Text>
             </Pressable>
           )}
 
@@ -615,15 +616,15 @@ export default function CommunityBuilder() {
             disabled={!validation.ok || isPublishing}
           >
             <Text style={styles.publishBtnText}>
-              {isPublishing ? '⏳ Publishing...' : publishSyncStatus === 'error' ? '⚠️ Retry Publish' : '🚀 Publish Level'}
+              {isPublishing ? t('builderPublishing') : publishSyncStatus === 'error' ? t('builderRetryPublish') : t('builderPublish')}
             </Text>
           </Pressable>
           {publishSyncStatus === 'error' && (
-            <Text style={styles.uploadErrorText}>Upload failed — tap to retry</Text>
+            <Text style={styles.uploadErrorText}>{t('builderUploadFailed')}</Text>
           )}
 
           <Pressable style={styles.resetBtn} onPress={handleReset}>
-            <Text style={styles.resetBtnText}>Reset & Start Over</Text>
+            <Text style={styles.resetBtnText}>{t('builderReset')}</Text>
           </Pressable>
         </ScrollView>
       )}
