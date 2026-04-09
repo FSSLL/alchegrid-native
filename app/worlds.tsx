@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { WORLD_INFO, isWorldUnlocked, getWorldStars, LEVELS_PER_WORLD, STARS_TO_UNLOCK_NEXT_WORLD } from '../lib/levelRegistry';
 import { usePlayerStore } from '../store/playerStore';
 import { WORLD_BUTTONS, WORLD_ASPECTS } from '../constants/assets';
+import { useT, useIsRTL } from '../hooks/useT';
 
 const WORLD_TEXT_PADDING_TOP = [20, 35, 35, 35, 35, 35, 35, 35];
 
@@ -21,14 +22,16 @@ export default function WorldsScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 20 : insets.top;
   const { progressIndex, starsByLevel } = usePlayerStore();
+  const t = useT();
+  const isRTL = useIsRTL();
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: topPad + 8 }]}>
+      <View style={[styles.header, isRTL && styles.headerRTL, { paddingTop: topPad + 8 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
+          <Text style={styles.backIcon}>{t('back')}</Text>
         </Pressable>
-        <Text style={styles.title}>Select World</Text>
+        <Text style={styles.title}>{t('selectWorld')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -61,18 +64,18 @@ export default function WorldsScreen() {
               <View style={[StyleSheet.absoluteFill, styles.worldContent, { paddingTop: ptop }]}>
                 <Text style={styles.worldName}>{world.name}</Text>
                 {isComingSoon ? (
-                  <Text style={styles.worldMeta}>{world.size}×{world.size} Grid</Text>
+                  <Text style={styles.worldMeta}>{t('gridSize', { w: world.size, h: world.size })}</Text>
                 ) : (
                   <Text style={styles.worldMeta}>
                     {unlocked
-                      ? `${world.size}×${world.size} Grid • ${completed}/${LEVELS_PER_WORLD} Complete`
-                      : `Collect ${STARS_TO_UNLOCK_NEXT_WORLD} stars in ${prevWorldName}`}
+                      ? t('gridComplete', { w: world.size, h: world.size, n: completed, total: LEVELS_PER_WORLD })
+                      : t('collectStars', { n: STARS_TO_UNLOCK_NEXT_WORLD, world: prevWorldName })}
                   </Text>
                 )}
                 {isComingSoon ? (
                   <View style={styles.starsRow}>
                     <Text style={styles.lockIcon}>🔒</Text>
-                    <Text style={styles.comingSoonText}>Coming Soon</Text>
+                    <Text style={styles.comingSoonText}>{t('comingSoon')}</Text>
                   </View>
                 ) : unlocked ? (
                   <View style={styles.starsRow}>
@@ -82,12 +85,11 @@ export default function WorldsScreen() {
                 ) : (
                   <View style={styles.starsRow}>
                     <Text style={styles.lockIcon}>🔒</Text>
-                    <Text style={styles.lockedText}>Locked</Text>
+                    <Text style={styles.lockedText}>{t('locked')}</Text>
                   </View>
                 )}
               </View>
 
-              {/* Coming soon overlay */}
               {isComingSoon && (
                 <View style={StyleSheet.absoluteFill} pointerEvents="none">
                   <View style={styles.comingSoonOverlay} />
@@ -109,6 +111,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingBottom: 12,
     justifyContent: 'space-between',
   },
+  headerRTL: { flexDirection: 'row-reverse' },
   backBtn: {
     width: 40, height: 40, alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 12,
