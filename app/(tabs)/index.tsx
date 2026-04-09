@@ -18,17 +18,18 @@ import {
   LOGO_ASPECT, CARD_ASPECT, PLAY_BTN_ASPECT, BANNER_ASPECT, HARDCORE_ASPECT,
 } from '../../constants/assets';
 import { TutorialPopup } from '../../components/TutorialPopup';
+import { useT } from '../../hooks/useT';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const t = useT();
   const { progressIndex, coins, hintBalance, unlimitedHints, tutorialDismissed, dismissTutorial } = usePlayerStore();
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // Show tutorial popup once home screen is mounted, if not dismissed
   useEffect(() => {
     if (!tutorialDismissed) {
-      const t = setTimeout(() => setShowTutorial(true), 600);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => setShowTutorial(true), 600);
+      return () => clearTimeout(timer);
     }
   }, [tutorialDismissed]);
 
@@ -49,10 +50,10 @@ export default function HomeScreen() {
   };
 
   const BANNERS = [
-    { label: 'Select World', sub: 'Browse & replay levels', route: '/worlds', comingSoon: false },
-    { label: 'Tutorial', sub: 'Learn how to play', route: '/tutorial', comingSoon: false },
-    { label: '🧭 Community', sub: 'Play & share player-built levels', route: '/community', comingSoon: false },
-    { label: 'Endless Mode', sub: 'Adaptive difficulty, chase high scores', route: '/endless', comingSoon: true },
+    { labelKey: 'selectWorld' as const, subKey: 'browseLevels' as const, route: '/worlds', comingSoon: false },
+    { labelKey: 'tutorial' as const, subKey: 'learnToPlay' as const, route: '/tutorial', comingSoon: false },
+    { labelKey: 'community' as const, subKey: 'playShareLevels' as const, route: '/community', comingSoon: false },
+    { labelKey: 'endlessMode' as const, subKey: 'adaptiveDifficulty' as const, route: '/endless', comingSoon: true },
   ];
 
   return (
@@ -65,22 +66,20 @@ export default function HomeScreen() {
       {/* Logo */}
       <View style={styles.logoWrap}>
         <Image source={LOGO} style={styles.logo} resizeMode="contain" />
-        <Text style={styles.tagline}>Master the Elements. Conquer the Grid.</Text>
+        <Text style={styles.tagline}>{t('tagline')}</Text>
       </View>
 
       {/* Continue Journey card */}
       <Pressable onPress={handlePlay} activeOpacity={0.88} style={styles.cardWrap}>
         <Image source={CARD_BG} style={styles.cardBg} resizeMode="cover" />
         <View style={[StyleSheet.absoluteFill, styles.cardContent]}>
-          <Text style={styles.cardDesc}>
-            A strategic elemental puzzle game where{'\n'}logic, geometry, and alchemy combine.
-          </Text>
+          <Text style={styles.cardDesc}>{t('cardDesc')}</Text>
           <Text style={styles.cardTitle}>
-            {allComplete ? 'All Complete! 🎉' : 'Continue Journey'}
+            {allComplete ? t('allComplete') : t('continueJourney')}
           </Text>
           <Text style={styles.cardSub}>
             {allComplete
-              ? 'You have mastered all 8 worlds!'
+              ? t('masteredAllWorlds')
               : `${currentWorld?.name} • Level ${levelInWorld}`}
           </Text>
 
@@ -97,7 +96,7 @@ export default function HomeScreen() {
           <View style={styles.playBtnWrap}>
             <Image source={PLAY_BTN} style={styles.playBtnBg} resizeMode="contain" />
             <View style={[StyleSheet.absoluteFill, styles.playBtnContent]}>
-              <Text style={styles.playBtnText}>▶  Play Level {levelInWorld}</Text>
+              <Text style={styles.playBtnText}>{t('playLevel', { n: levelInWorld })}</Text>
             </View>
           </View>
         </View>
@@ -117,12 +116,12 @@ export default function HomeScreen() {
         >
           <Image source={BANNER_BG} style={styles.bannerBg} resizeMode="contain" />
           <View style={[StyleSheet.absoluteFill, styles.bannerContent]}>
-            <Text style={styles.bannerTitle}>{item.label}</Text>
-            <Text style={styles.bannerSub}>{item.sub}</Text>
+            <Text style={styles.bannerTitle}>{t(item.labelKey)}</Text>
+            <Text style={styles.bannerSub}>{t(item.subKey)}</Text>
           </View>
           {item.comingSoon && (
             <View style={[StyleSheet.absoluteFill, styles.comingSoonOverlay]} pointerEvents="none">
-              <Text style={styles.comingSoonLabel}>🔒  Coming Soon</Text>
+              <Text style={styles.comingSoonLabel}>🔒  {t('comingSoon')}</Text>
             </View>
           )}
         </Pressable>
@@ -132,7 +131,7 @@ export default function HomeScreen() {
       <Pressable activeOpacity={1} style={styles.hardcoreWrap}>
         <Image source={HARDCORE_BG} style={styles.hardcoreBg} resizeMode="contain" />
         <View style={[StyleSheet.absoluteFill, styles.comingSoonOverlay]} pointerEvents="none">
-          <Text style={styles.comingSoonLabel}>🔒  Coming Soon</Text>
+          <Text style={styles.comingSoonLabel}>🔒  {t('comingSoon')}</Text>
         </View>
       </Pressable>
 
@@ -145,7 +144,7 @@ export default function HomeScreen() {
         >
           <Image source={BANNER_BG} style={styles.bannerBg} resizeMode="contain" />
           <View style={[StyleSheet.absoluteFill, styles.bannerContent]}>
-            <Text style={styles.bannerTitle}>Catalog</Text>
+            <Text style={styles.bannerTitle}>{t('catalog')}</Text>
           </View>
         </Pressable>
         <Pressable
@@ -155,7 +154,7 @@ export default function HomeScreen() {
         >
           <Image source={BANNER_BG} style={styles.bannerBg} resizeMode="contain" />
           <View style={[StyleSheet.absoluteFill, styles.bannerContent]}>
-            <Text style={styles.bannerTitle}>Shop</Text>
+            <Text style={styles.bannerTitle}>{t('shop')}</Text>
           </View>
         </Pressable>
         <Pressable
@@ -165,7 +164,7 @@ export default function HomeScreen() {
         >
           <Image source={BANNER_BG} style={styles.bannerBg} resizeMode="contain" />
           <View style={[StyleSheet.absoluteFill, styles.bannerContent]}>
-            <Text style={styles.bannerTitle}>⚙ Settings</Text>
+            <Text style={styles.bannerTitle}>⚙ {t('settings')}</Text>
           </View>
         </Pressable>
       </View>
