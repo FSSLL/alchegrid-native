@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { WORLD_INFO, LEVELS_PER_WORLD, getWorldStars } from '../lib/levelRegistry';
 import { usePlayerStore } from '../store/playerStore';
 import WorldIntroCard from '../components/WorldIntroCard';
+import { useT, useIsRTL } from '../hooks/useT';
 
 const WORLD_ACCENT: string[] = [
   '#22c55e', '#d97706', '#3b82f6', '#f97316',
@@ -30,6 +31,8 @@ export default function WorldLevelsScreen() {
   const world = WORLD_INFO[worldIndex];
   const { progressIndex, starsByLevel, seenWorlds, markWorldSeen } = usePlayerStore();
   const accent = WORLD_ACCENT[worldIndex];
+  const t = useT();
+  const isRTL = useIsRTL();
 
   const isFirstVisit = !seenWorlds.includes(worldIndex);
   const [showIntro, setShowIntro] = useState(false);
@@ -70,13 +73,13 @@ export default function WorldLevelsScreen() {
   return (
     <View style={[styles.bg, { backgroundColor: 'transparent' }]}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: topPad + 8 }]}>
+      <View style={[styles.header, isRTL && styles.headerRTL, { paddingTop: topPad + 8 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
+          <Text style={styles.backIcon}>{t('back')}</Text>
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={styles.title}>{world.name}</Text>
-          <Text style={styles.subtitle}>{world.size}×{world.size} Grid • {world.elements.length} Elements</Text>
+          <Text style={styles.subtitle}>{t('elementsLabel', { n: world.elements.length, w: world.size, h: world.size })}</Text>
         </View>
         <Pressable onPress={() => setShowIntro(true)} style={styles.infoBtn}>
           <Text style={styles.infoIcon}>ⓘ</Text>
@@ -87,7 +90,7 @@ export default function WorldLevelsScreen() {
       <View style={styles.starsBar}>
         <View style={[styles.starsBadge, { borderColor: accent }]}>
           <Text style={[styles.starsBadgeText, { color: accent }]}>
-            ⭐ {totalStars} / {maxStars} Stars
+            {t('starsProgress', { n: totalStars, max: maxStars })}
           </Text>
         </View>
         <View style={styles.starsBarBg}>
@@ -153,6 +156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingBottom: 8,
     justifyContent: 'space-between',
   },
+  headerRTL: { flexDirection: 'row-reverse' },
   backBtn: {
     width: 40, height: 40, alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 12,
