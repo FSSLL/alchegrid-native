@@ -8,8 +8,8 @@ import {
   Animated,
   Platform,
 } from 'react-native';
-
 import { router } from 'expo-router';
+import { useT } from '../hooks/useT';
 
 const ND = Platform.OS !== 'web';
 
@@ -19,6 +19,7 @@ interface Props {
 }
 
 export function TutorialPopup({ show, onClose }: Props) {
+  const t = useT();
   const [neverShow, setNeverShow] = useState(false);
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.88)).current;
@@ -57,13 +58,9 @@ export function TutorialPopup({ show, onClose }: Props) {
             <Text style={styles.iconEmoji}>📖</Text>
           </View>
 
-          <Text style={styles.title}>New to Alchegrid?</Text>
-          <Text style={styles.body}>
-            Play the tutorial to learn how the game works — elements, combinations, zones, and more!
-          </Text>
-          <Text style={styles.subBody}>
-            You can always replay the tutorial from the home screen.
-          </Text>
+          <Text style={styles.title}>{t('newToAlchegrid')}</Text>
+          <Text style={styles.body}>{t('tutorialPopupBody')}</Text>
+          <Text style={styles.subBody}>{t('tutorialPopupSub')}</Text>
 
           {/* Primary button */}
           <Pressable
@@ -74,7 +71,7 @@ export function TutorialPopup({ show, onClose }: Props) {
               router.push('/tutorial');
             }}
           >
-            <Text style={styles.primaryBtnText}>📖  Play Tutorial</Text>
+            <Text style={styles.primaryBtnText}>{t('playTutorial')}</Text>
           </Pressable>
 
           {/* Secondary button */}
@@ -83,7 +80,7 @@ export function TutorialPopup({ show, onClose }: Props) {
             activeOpacity={0.85}
             onPress={() => onClose(neverShow)}
           >
-            <Text style={styles.secondaryBtnText}>Not Now</Text>
+            <Text style={styles.secondaryBtnText}>{t('notNow')}</Text>
           </Pressable>
 
           {/* "Don't show again" checkbox */}
@@ -91,7 +88,7 @@ export function TutorialPopup({ show, onClose }: Props) {
             <View style={[styles.checkbox, neverShow && styles.checkboxOn]}>
               {neverShow && <Text style={styles.checkMark}>✓</Text>}
             </View>
-            <Text style={styles.checkLabel}>Don't show this again</Text>
+            <Text style={styles.checkLabel}>{t('dontShowAgain')}</Text>
           </Pressable>
 
         </Animated.View>
