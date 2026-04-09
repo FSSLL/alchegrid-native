@@ -15,7 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { WORLD_INFO, LEVELS_PER_WORLD, getWorldStars } from '../lib/levelRegistry';
 import { usePlayerStore } from '../store/playerStore';
 import WorldIntroCard from '../components/WorldIntroCard';
-import { useT, useIsRTL } from '../hooks/useT';
+import { useT } from '../hooks/useT';
 
 const WORLD_ACCENT: string[] = [
   '#22c55e', '#d97706', '#3b82f6', '#f97316',
@@ -32,7 +32,6 @@ export default function WorldLevelsScreen() {
   const { progressIndex, starsByLevel, seenWorlds, markWorldSeen } = usePlayerStore();
   const accent = WORLD_ACCENT[worldIndex];
   const t = useT();
-  const isRTL = useIsRTL();
 
   const isFirstVisit = !seenWorlds.includes(worldIndex);
   const [showIntro, setShowIntro] = useState(false);
@@ -73,7 +72,7 @@ export default function WorldLevelsScreen() {
   return (
     <View style={[styles.bg, { backgroundColor: 'transparent' }]}>
       {/* Header */}
-      <View style={[styles.header, isRTL && styles.headerRTL, { paddingTop: topPad + 8 }]}>
+      <View style={[styles.header, { paddingTop: topPad + 8 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>{t('back')}</Text>
         </Pressable>
