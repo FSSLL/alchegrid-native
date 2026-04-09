@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Pressable from '../../components/Pressable';
+import { useT } from '../../hooks/useT';
 import {
   View,
   Text,
@@ -26,13 +27,42 @@ function formatScore(n: number): string {
   return n.toLocaleString();
 }
 
+function getNextSundayResetMs(): number {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const daysUntil = day === 0
+    ? (now.getUTCHours() >= 3 ? 7 : 0)
+    : (7 - day);
+  const next = new Date(now);
+  next.setUTCDate(next.getUTCDate() + daysUntil);
+  next.setUTCHours(3, 0, 0, 0);
+  return next.getTime() - now.getTime();
+}
+
+function formatCountdown(ms: number): string {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 export default function EndlessLobby() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 20 : insets.top;
+  const t = useT();
   const [tab, setTab] = useState<'start' | 'leaderboard'>('start');
   const [playerName, setPlayerName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [resetIn, setResetIn] = useState(() => getNextSundayResetMs());
+
+  useEffect(() => {
+    const id = setInterval(() => setResetIn(getNextSundayResetMs()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const {
     runActive,
@@ -95,7 +125,7 @@ export default function EndlessLobby() {
         <Text style={styles.gameOverTitle}>
           {gameOverReason === 'timer' ? '⏱ Timed Out' : '🏳 Run Ended'}
         </Text>
-        <Text style={styles.gameOverSub}>Endless Mode</Text>
+        <Text style={styles.gameOverSub}>{t('endlessMode')}</Text>
 
         <View style={styles.statsGrid}>
           <StatBox label="Score" value={formatScore(totalScore)} accent="#fbbf24" />
@@ -108,7 +138,7 @@ export default function EndlessLobby() {
 
         {levelsCompleted >= 1 && !submitted && (
           <View style={styles.submitSection}>
-            <Text style={styles.submitLabel}>Save your score to the leaderboard</Text>
+            <Text style={styles.submitLabel}>{t('saveScoreLeaderboard')}</Text>
             <TextInput
               style={styles.nameInput}
               placeholder="Your name (max 20 chars)"
@@ -126,7 +156,7 @@ export default function EndlessLobby() {
             >
               {submitting
                 ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={styles.submitBtnText}>Submit Score</Text>}
+                : <Text style={styles.submitBtnText}>{t('submitScore')}</Text>}
             </Pressable>
           </View>
         )}
@@ -137,7 +167,7 @@ export default function EndlessLobby() {
 
         <View style={styles.gameOverButtons}>
           <Pressable style={styles.playAgainBtn} onPress={handlePlayAgain}>
-            <Text style={styles.playAgainText}>▶  Play Again</Text>
+            <Text style={styles.playAgainText}>▶  {t('tryAgain')}</Text>
           </Pressable>
           <Pressable style={styles.homeBtn} onPress={() => { dismissGameOver(); router.back(); }}>
             <Text style={styles.homeBtnText}>← Home</Text>
@@ -155,7 +185,7 @@ export default function EndlessLobby() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </Pressable>
-        <Text style={styles.title}>Endless Mode</Text>
+        <Text style={styles.title}>{t('endlessMode')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -171,7 +201,7 @@ export default function EndlessLobby() {
           style={[styles.tab, tab === 'leaderboard' && styles.tabActive]}
           onPress={() => { setTab('leaderboard'); refreshLeaderboard(); }}
         >
-          <Text style={[styles.tabText, tab === 'leaderboard' && styles.tabTextActive]}>Leaderboard</Text>
+          <Text style={[styles.tabText, tab === 'leaderboard' && styles.tabTextActive]}>{t('leaderboard')}</Text>
         </Pressable>
       </View>
 
@@ -198,13 +228,17 @@ export default function EndlessLobby() {
           )}
 
           <Pressable style={styles.startBtn} onPress={handleStartRun} activeOpacity={0.85}>
-            <Text style={styles.startBtnText}>Start Endless Run</Text>
+            <Text style={styles.startBtnText}>{t('startEndlessRun')}</Text>
           </Pressable>
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={styles.lbContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.resetNote}>
+            <Text style={styles.resetNoteText}>🔄 Resets every Sunday at 6 AM (GMT+3)</Text>
+            <Text style={styles.resetNoteCountdown}>Next reset in {formatCountdown(resetIn)}</Text>
+          </View>
           {leaderboard.length === 0 ? (
-            <Text style={styles.emptyLb}>No scores yet — be the first!</Text>
+            <Text style={styles.emptyLb}>{t('noScoresYet')}</Text>
           ) : (
             leaderboard.map((entry, i) => (
               <View key={`${entry.playerName}-${i}`} style={styles.lbRow}>
@@ -291,6 +325,9 @@ const styles = StyleSheet.create({
   startBtnText: { color: '#1a1200', fontSize: 18, fontWeight: '900', letterSpacing: 0.5 },
 
   lbContent: { paddingHorizontal: 16, paddingTop: 12, gap: 2 },
+  resetNote: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 10, marginBottom: 12, alignItems: 'center', gap: 2 },
+  resetNoteText: { color: 'rgba(255,255,255,0.55)', fontSize: 12 },
+  resetNoteCountdown: { color: '#ff6a00', fontSize: 12, fontWeight: '600' },
   emptyLb: { color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 40, fontSize: 15 },
   lbRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
