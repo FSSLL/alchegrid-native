@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Pressable from '../../components/Pressable';
+import { useT } from '../../hooks/useT';
 import {
   View,
   Text,
@@ -22,6 +23,28 @@ function formatTime(ms: number): string {
   return `${m}:${(s % 60).toString().padStart(2, '0')}`;
 }
 
+function getNextSundayResetMs(): number {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const daysUntil = day === 0
+    ? (now.getUTCHours() >= 3 ? 7 : 0)
+    : (7 - day);
+  const next = new Date(now);
+  next.setUTCDate(next.getUTCDate() + daysUntil);
+  next.setUTCHours(3, 0, 0, 0);
+  return next.getTime() - now.getTime();
+}
+
+function formatCountdown(ms: number): string {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 const REASON_META: Record<string, { title: string; icon: string }> = {
   mistakes:  { title: 'Out of Lives!',    icon: '💀' },
   inactivity:{ title: 'Timed Out!',       icon: '💀' },
@@ -32,10 +55,17 @@ const REASON_META: Record<string, { title: string; icon: string }> = {
 export default function HardcoreLobby() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 20 : insets.top;
+  const t = useT();
   const [tab, setTab] = useState<'start' | 'leaderboard'>('start');
   const [playerName, setPlayerName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [resetIn, setResetIn] = useState(() => getNextSundayResetMs());
+
+  useEffect(() => {
+    const id = setInterval(() => setResetIn(getNextSundayResetMs()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const {
     runActive, showGameOver, gameOverReason,
@@ -89,7 +119,7 @@ export default function HardcoreLobby() {
 
         <Text style={styles.gameOverIcon}>{meta.icon}</Text>
         <Text style={styles.gameOverTitle}>{meta.title}</Text>
-        <Text style={styles.gameOverSub}>Hardcore Mode</Text>
+        <Text style={styles.gameOverSub}>{t('hardcoreMode')}</Text>
 
         <View style={styles.statsGrid}>
           <StatBox label="Level Reached" value={levelReached.toString()} accent={levelReached >= 70 ? '#fbbf24' : '#60a5fa'} />
@@ -100,7 +130,7 @@ export default function HardcoreLobby() {
 
         {canSubmit && !submitted && (
           <View style={styles.submitSection}>
-            <Text style={styles.submitLabel}>Save your run to the leaderboard</Text>
+            <Text style={styles.submitLabel}>{t('saveRunLeaderboard')}</Text>
             <TextInput
               style={styles.nameInput}
               placeholder="Your name (max 20 chars)"
@@ -118,7 +148,7 @@ export default function HardcoreLobby() {
             >
               {submitting
                 ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={styles.submitBtnText}>Submit Score</Text>}
+                : <Text style={styles.submitBtnText}>{t('submitScore')}</Text>}
             </Pressable>
           </View>
         )}
@@ -127,7 +157,7 @@ export default function HardcoreLobby() {
 
         <View style={styles.gameOverButtons}>
           <Pressable style={styles.playAgainBtn} onPress={handlePlayAgain}>
-            <Text style={styles.playAgainText}>▶  Play Again</Text>
+            <Text style={styles.playAgainText}>▶  {t('tryAgain')}</Text>
           </Pressable>
           <Pressable style={styles.homeBtn} onPress={() => { dismissGameOver(); router.back(); }}>
             <Text style={styles.homeBtnText}>← Home</Text>
@@ -144,7 +174,7 @@ export default function HardcoreLobby() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </Pressable>
-        <Text style={styles.title}>Hardcore Mode</Text>
+        <Text style={styles.title}>{t('hardcoreMode')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -159,7 +189,7 @@ export default function HardcoreLobby() {
           style={[styles.tab, tab === 'leaderboard' && styles.tabActive]}
           onPress={() => { setTab('leaderboard'); refreshLeaderboard(); }}
         >
-          <Text style={[styles.tabText, tab === 'leaderboard' && styles.tabTextActive]}>Leaderboard</Text>
+          <Text style={[styles.tabText, tab === 'leaderboard' && styles.tabTextActive]}>{t('leaderboard')}</Text>
         </Pressable>
       </View>
 
@@ -174,7 +204,7 @@ export default function HardcoreLobby() {
             {[0, 1, 2].map((i) => (
               <Text key={i} style={styles.lifeHeart}>❤️</Text>
             ))}
-            <Text style={styles.livesLabel}>Three lives total</Text>
+            <Text style={styles.livesLabel}>{t('threeLivesTotal')}</Text>
           </View>
 
           <View style={styles.rulesBox}>
@@ -187,19 +217,23 @@ export default function HardcoreLobby() {
 
           {bestLevel > 0 && (
             <View style={styles.bestRow}>
-              <Text style={styles.bestLabel}>Your Best</Text>
+              <Text style={styles.bestLabel}>{t('yourBest')}</Text>
               <Text style={styles.bestVal}>Level {bestLevel}</Text>
             </View>
           )}
 
           <Pressable style={styles.startBtn} onPress={handleStartRun} activeOpacity={0.85}>
-            <Text style={styles.startBtnText}>Start Hardcore Run</Text>
+            <Text style={styles.startBtnText}>{t('startHardcoreRun')}</Text>
           </Pressable>
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={styles.lbContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.resetNote}>
+            <Text style={styles.resetNoteText}>🔄 Resets every Sunday at 6 AM (GMT+3)</Text>
+            <Text style={styles.resetNoteCountdown}>Next reset in {formatCountdown(resetIn)}</Text>
+          </View>
           {leaderboard.length === 0 ? (
-            <Text style={styles.emptyLb}>No runs yet — be the first!</Text>
+            <Text style={styles.emptyLb}>{t('noRunsYet')}</Text>
           ) : (
             leaderboard.map((entry, i) => (
               <View key={`${entry.playerName}-${i}`} style={styles.lbRow}>
@@ -298,6 +332,9 @@ const styles = StyleSheet.create({
   startBtnText: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: 0.5 },
 
   lbContent: { paddingHorizontal: 16, paddingTop: 12, gap: 2 },
+  resetNote: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 10, marginBottom: 12, alignItems: 'center', gap: 2 },
+  resetNoteText: { color: 'rgba(255,255,255,0.55)', fontSize: 12 },
+  resetNoteCountdown: { color: '#ff6a00', fontSize: 12, fontWeight: '600' },
   emptyLb: { color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 40, fontSize: 15 },
   lbRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
