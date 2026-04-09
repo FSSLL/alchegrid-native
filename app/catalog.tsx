@@ -23,6 +23,7 @@ import { router } from 'expo-router';
 import { ELEMENT_DEFINITIONS } from '../constants/elementDefinitions';
 import { RECIPE_CATALOG, WORLD_CATALOG, type WorldCatalogInfo } from '../constants/recipeCatalog';
 import ElementIcon from '../components/ElementIcon';
+import { useT } from '../hooks/useT';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ActiveDef { name: string; definition: string }
@@ -64,7 +65,7 @@ const DefinitionPopup = React.memo(function DefinitionPopup({
       <View style={styles.sheetWrapper} pointerEvents="box-none">
         <Animated.View style={[styles.sheet, sheetStyle]}>
           <View style={styles.defIconBox}>
-            <ElementIcon name={active?.name ?? ''} size={20} />
+            <ElementIcon name={active?.name ?? ''} size={36} />
           </View>
           <View style={styles.defTextBlock}>
             <Text style={styles.defName}>{active?.name}</Text>
@@ -81,9 +82,10 @@ const DefinitionPopup = React.memo(function DefinitionPopup({
 
 // ── Recipe group section label ────────────────────────────────────────────────
 function GroupLabel({ count }: { count: number }) {
+  const t = useT();
   return (
     <Text style={styles.groupLabel}>
-      {count}-ELEMENT COMBINATIONS
+      {t('nElementCombos', { n: count })}
     </Text>
   );
 }
@@ -134,6 +136,7 @@ function WorldBody({
   info,
   onTap,
 }: { info: WorldCatalogInfo; onTap: (n: string) => void }) {
+  const t = useT();
   const recipes = useMemo(() => {
     const filtered = RECIPE_CATALOG.filter((r) => r.world === info.world);
     const groups: Record<number, typeof filtered> = {};
@@ -150,7 +153,7 @@ function WorldBody({
   return (
     <View style={[styles.worldBody, { borderTopColor: info.border }]}>
       {/* Element badges */}
-      <Text style={[styles.tapLabel, { color: info.badgeText }]}>Tap to learn</Text>
+      <Text style={[styles.tapLabel, { color: info.badgeText }]}>{t('tapToLearn')}</Text>
       <View style={styles.badgeRow}>
         {info.elements.map((el) => (
           <Pressable
@@ -187,7 +190,7 @@ const WORLD_CARD_IMAGES: Record<number, ReturnType<typeof require>> = {
   5: require('../assets/images/world_5_card.jpg'),
   6: require('../assets/images/world_6_card.jpg'),
   7: require('../assets/images/world_7_card.jpg'),
-  8: require('../assets/images/world_8_catalog_card_weather_1775674991582.png'),
+  8: require('../assets/images/world_8_card.jpg'),
 };
 
 // ── World accordion card ──────────────────────────────────────────────────────
@@ -202,6 +205,7 @@ function WorldCard({
   onToggle: () => void;
   onTap: (n: string) => void;
 }) {
+  const t = useT();
   const isComingSoon = info.world >= 5;
   const recipeCount = useMemo(
     () => RECIPE_CATALOG.filter((r) => r.world === info.world).length,
@@ -234,7 +238,7 @@ function WorldCard({
         <View style={styles.worldMetaOnImg}>
           <Text style={styles.worldName}>{info.name}</Text>
           <Text style={[styles.worldMetaLine, styles.worldMetaLineOnImg]}>
-            {info.grid} grid · {recipeCount} combos
+            {t('gridCombos', { grid: info.grid, n: recipeCount })}
           </Text>
         </View>
         <View style={styles.chevronPill}>
@@ -248,7 +252,7 @@ function WorldCard({
       {/* Coming soon overlay */}
       {isComingSoon && (
         <View style={[StyleSheet.absoluteFill, styles.comingSoonOverlay]} pointerEvents="none">
-          <Text style={styles.comingSoonLabel}>Coming Soon</Text>
+          <Text style={styles.comingSoonLabel}>{t('comingSoon')}</Text>
         </View>
       )}
     </Pressable>
@@ -263,10 +267,10 @@ function WorldCard({
       </LinearGradient>
       <View style={styles.worldMeta}>
         <Text style={styles.worldName}>{info.name}</Text>
-        <Text style={styles.worldMetaLine}>{info.grid} grid · {recipeCount} combos</Text>
+        <Text style={styles.worldMetaLine}>{t('gridCombos', { grid: info.grid, n: recipeCount })}</Text>
       </View>
       {isComingSoon ? (
-        <Text style={styles.comingSoonInline}>🔒 Coming Soon</Text>
+        <Text style={styles.comingSoonInline}>🔒 {t('comingSoon')}</Text>
       ) : (
         <Text style={[styles.chevron, { color: info.accent }]}>{isOpen ? '▲' : '▼'}</Text>
       )}
@@ -281,11 +285,64 @@ function WorldCard({
   );
 }
 
+// ── Info Tooltip ─────────────────────────────────────────────────────────────
+const InfoTooltip = React.memo(function InfoTooltip({
+  visible,
+  onDismiss,
+}: { visible: boolean; onDismiss: () => void }) {
+  const t = useT();
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(-6);
+  const [rendered, setRendered] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      setRendered(true);
+      opacity.value    = withSpring(1, { damping: 22, stiffness: 320 });
+      translateY.value = withSpring(0, { damping: 22, stiffness: 320 });
+    } else {
+      opacity.value    = withTiming(0, { duration: 140 });
+      translateY.value = withTiming(-6, { duration: 140 }, (done) => {
+        if (done) runOnJS(setRendered)(false);
+      });
+    }
+  }, [visible]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  if (!rendered && !visible) return null;
+
+  return (
+    <>
+      {/* Full-screen dismiss layer — catches taps outside tooltip */}
+      <TouchableWithoutFeedback onPress={onDismiss}>
+        <View style={StyleSheet.absoluteFill} />
+      </TouchableWithoutFeedback>
+      {/* Tooltip — tapping it also dismisses */}
+      <Animated.View style={[styles.infoTooltip, animStyle]}>
+        <TouchableWithoutFeedback onPress={onDismiss}>
+          <View>
+            <View style={styles.infoTooltipCaret} />
+            <Text style={styles.infoTooltipText}>
+              {t('catalogTooltip')}
+            </Text>
+          </View>
+        </TouchableWithoutFeedback>
+      </Animated.View>
+    </>
+  );
+});
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function CatalogScreen() {
   const insets = useSafeAreaInsets();
+  const t = useT();
   const [openWorld, setOpenWorld] = useState(1);
   const [activeDef, setActiveDef] = useState<ActiveDef | null>(null);
+  const [infoVisible, setInfoVisible] = useState(false);
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
 
   const showDef = useCallback((name: string) => {
@@ -303,12 +360,25 @@ export default function CatalogScreen() {
     <View style={[styles.root, { paddingTop: topPad }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.title}>Recipe Catalog</Text>
-        <View style={{ width: 36 }} />
+        {/* Left group: back + info */}
+        <View style={styles.headerLeft}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Text style={styles.backIcon}>←</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setInfoVisible((v) => !v)}
+            style={styles.infoBtn}
+            hitSlop={8}
+          >
+            <Text style={styles.infoBtnText}>i</Text>
+          </Pressable>
+        </View>
+        <Text style={styles.title}>{t('recipeCatalog')}</Text>
+        <View style={{ width: 72 }} />
       </View>
+
+      {/* Info tooltip (positioned below header) */}
+      <InfoTooltip visible={infoVisible} onDismiss={() => setInfoVisible(false)} />
 
       {/* Accordion list */}
       <ScrollView
@@ -318,6 +388,9 @@ export default function CatalogScreen() {
           { paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 20 },
         ]}
         showsVerticalScrollIndicator={false}
+        onScrollBeginDrag={() => setInfoVisible(false)}
+        onMomentumScrollBegin={() => setInfoVisible(false)}
+        scrollEventThrottle={16}
       >
         {WORLD_CATALOG.map((info) => (
           <WorldCard
@@ -350,6 +423,59 @@ const styles = StyleSheet.create({
     backgroundColor: '#131c2e', borderRadius: 10,
   },
   backIcon:      { color: '#eef1f5', fontSize: 18, fontWeight: '700' },
+  headerLeft: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+  },
+  infoBtn: {
+    width: 28, height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f5a623',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#f5a623',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  infoBtnText: {
+    color: '#1a1000',
+    fontSize: 14,
+    fontWeight: '800',
+    fontStyle: 'italic',
+    lineHeight: 17,
+  },
+  infoTooltip: {
+    position: 'absolute',
+    top: 82,
+    left: 16,
+    right: 16,
+    backgroundColor: '#f5a623',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    zIndex: 99,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  infoTooltipCaret: {
+    position: 'absolute',
+    top: -7,
+    left: 46,
+    width: 14,
+    height: 14,
+    backgroundColor: '#f5a623',
+    transform: [{ rotate: '45deg' }],
+    borderRadius: 2,
+  },
+  infoTooltipText: {
+    color: '#1a1000',
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
   title:         { fontSize: 20, fontWeight: '700', color: '#eef1f5' },
   scroll:        { flex: 1 },
   scrollContent: { padding: 12, gap: 8 },
