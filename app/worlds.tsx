@@ -14,7 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { WORLD_INFO, isWorldUnlocked, getWorldStars, LEVELS_PER_WORLD, STARS_TO_UNLOCK_NEXT_WORLD } from '../lib/levelRegistry';
 import { usePlayerStore } from '../store/playerStore';
 import { WORLD_BUTTONS, WORLD_ASPECTS } from '../constants/assets';
-import { useT, useIsRTL } from '../hooks/useT';
+import { useT } from '../hooks/useT';
 
 const WORLD_TEXT_PADDING_TOP = [20, 35, 35, 35, 35, 35, 35, 35];
 
@@ -23,11 +23,10 @@ export default function WorldsScreen() {
   const topPad = Platform.OS === 'web' ? 20 : insets.top;
   const { progressIndex, starsByLevel } = usePlayerStore();
   const t = useT();
-  const isRTL = useIsRTL();
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, isRTL && styles.headerRTL, { paddingTop: topPad + 8 }]}>
+      <View style={[styles.header, { paddingTop: topPad + 8 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>{t('back')}</Text>
         </Pressable>
