@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import type { WorldInfo } from '../lib/types';
 import ElementIcon from './ElementIcon';
+import { useT } from '../hooks/useT';
 
 interface Props {
   world: WorldInfo;
@@ -22,6 +23,7 @@ export default function WorldIntroCard({ world, prevWorldName, isFirstVisit, onC
   const slideAnim = useRef(new Animated.Value(60)).current;
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const isWorld1  = world.worldNumber === 1;
+  const t = useT();
 
   useEffect(() => {
     Animated.parallel([
@@ -48,22 +50,20 @@ export default function WorldIntroCard({ world, prevWorldName, isFirstVisit, onC
               </View>
               <View>
                 {isUnlockState ? (
-                  <Text style={styles.tagline}>World Unlocked!</Text>
+                  <Text style={styles.tagline}>{t('worldUnlocked')}</Text>
                 ) : (
-                  <Text style={[styles.tagline, { color: '#8e9ab0' }]}>About This World</Text>
+                  <Text style={[styles.tagline, { color: '#8e9ab0' }]}>{t('aboutThisWorld')}</Text>
                 )}
                 <Text style={styles.worldName}>{world.name}</Text>
               </View>
             </View>
             {isUnlockState ? (
               <Text style={styles.desc}>
-                You've mastered{' '}
-                <Text style={styles.descBold}>{prevWorldName}</Text>!
-                {' '}This world has its own unique elements — even familiar ones combine into completely different results here.
+                {t('masteredWorld', { world: prevWorldName ?? '' })}
               </Text>
             ) : (
               <Text style={styles.desc}>
-                Each world has its own elements and combinations. The same ingredient pair may produce something entirely different than in another world.
+                {t('eachWorldDesc')}
               </Text>
             )}
           </View>
@@ -71,7 +71,7 @@ export default function WorldIntroCard({ world, prevWorldName, isFirstVisit, onC
           {/* Elements list */}
           <View style={styles.elementsSection}>
             <Text style={styles.elementsLabel}>
-              {world.elements.length} Elements · {world.size}×{world.size} Grid
+              {t('elementsLabel', { n: world.elements.length, w: world.size, h: world.size })}
             </Text>
             <ScrollView
               horizontal
@@ -90,7 +90,7 @@ export default function WorldIntroCard({ world, prevWorldName, isFirstVisit, onC
           {/* CTA */}
           <Pressable style={styles.ctaBtn} onPress={onClose} activeOpacity={0.85}>
             <Text style={styles.ctaBtnText}>
-              {isUnlockState ? "Let's Explore!" : 'Got it'}
+              {isUnlockState ? t('letsExplore') : t('gotIt')}
             </Text>
           </Pressable>
         </Animated.View>
