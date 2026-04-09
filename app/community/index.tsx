@@ -6,9 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CommunityExplore from '../../components/CommunityExplore';
 import CommunityBuilder from '../../components/CommunityBuilder';
 import { takePendingCommunityTab } from '../../store/communityStore';
+import { useT } from '../../hooks/useT';
 
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
+  const t = useT();
   const topPad = Platform.OS === 'web' ? 16 : insets.top;
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<'explore' | 'build'>(
@@ -31,7 +33,7 @@ export default function CommunityScreen() {
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backIcon}>←</Text>
         </Pressable>
-        <Text style={styles.title}>Community</Text>
+        <Text style={styles.title}>{t('community')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -42,7 +44,7 @@ export default function CommunityScreen() {
           onPress={() => setTab('explore')}
         >
           <Text style={[styles.tabText, tab === 'explore' && styles.tabTextActive]}>
-            🧭 Explore Levels
+            🧭 {t('exploreLevels')}
           </Text>
         </Pressable>
         <Pressable
@@ -50,7 +52,7 @@ export default function CommunityScreen() {
           onPress={() => setTab('build')}
         >
           <Text style={[styles.tabText, tab === 'build' && styles.tabTextActive]}>
-            🔨 Make Level
+            🔨 {t('makeLevel')}
           </Text>
         </Pressable>
       </View>
