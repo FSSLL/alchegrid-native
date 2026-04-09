@@ -32,6 +32,7 @@ import { DragProvider, useDrag } from '../contexts/DragContext';
 import { GRID_BACKGROUNDS } from '../constants/assets';
 import type { Level } from '../lib/types';
 import { computeGridLayout } from '../lib/gridLayout';
+import { useT } from '../hooks/useT';
 
 // ─── Tutorial practice level ──────────────────────────────────────────────────
 const TUTORIAL_LEVEL: Level = {
@@ -58,40 +59,36 @@ const TUTORIAL_LEVEL: Level = {
   ],
 };
 
-// ─── Slide definitions (content as render functions to avoid hoisting issues) ──
-const SLIDES: { id: string; title: string; renderContent: () => React.ReactElement }[] = [
-  { id: 'welcome',     title: 'Welcome to Alchegrid!',    renderContent: () => <SlideWelcome /> },
-  { id: 'elements',    title: 'Meet the Elements',        renderContent: () => <SlideElements /> },
-  { id: 'combinations',title: 'Element Combinations',     renderContent: () => <SlideCombinations /> },
-  { id: 'zones',       title: 'Zones & Recipes',          renderContent: () => <SlideZones /> },
-  { id: 'single-cell', title: 'Single-Cell Zones',        renderContent: () => <SlideSingleCell /> },
-  { id: 'tips',        title: 'Tips & Scoring',           renderContent: () => <SlideTips /> },
-];
+// ─── Slide definitions (computed inside TutorialScreen via useT) ──────────────
+type SlidesDef = { id: string; title: string; renderContent: () => React.ReactElement }[];
+function getSlides(t: (k: string) => string): SlidesDef {
+  return [
+    { id: 'welcome',      title: t('tutWelcomeTitle'),  renderContent: () => <SlideWelcome /> },
+    { id: 'elements',     title: t('tutElementsTitle'), renderContent: () => <SlideElements /> },
+    { id: 'combinations', title: t('tutCombosTitle'),   renderContent: () => <SlideCombinations /> },
+    { id: 'zones',        title: t('tutZonesTitle'),    renderContent: () => <SlideZones /> },
+    { id: 'single-cell',  title: t('tutSingleTitle'),   renderContent: () => <SlideSingleCell /> },
+    { id: 'tips',         title: t('tutTipsTitle'),     renderContent: () => <SlideTips /> },
+  ];
+}
 
 // ─── Slide content components ─────────────────────────────────────────────────
 function SlideWelcome() {
+  const t = useT();
   return (
     <View style={ss.slideInner}>
-      <Text style={ss.slideBody}>
-        Alchegrid combines{' '}
-        <Text style={ss.amber}>elemental alchemy</Text>
-        {' '}with grid-based logic.
-      </Text>
+      <Text style={ss.slideBody}>{t('tutWelcomeBody')}</Text>
       <Text style={[ss.slideBody, { marginTop: 6, color: 'rgba(255,255,255,0.6)' }]}>
-        Fill every cell following two rules:
+        {t('tutWelcomeFill')}
       </Text>
       <View style={{ gap: 10, marginTop: 12 }}>
         <View style={ss.ruleCard}>
           <Text style={ss.ruleNum}>1</Text>
-          <Text style={ss.ruleText}>
-            No element can repeat in any row or column — like Sudoku.
-          </Text>
+          <Text style={ss.ruleText}>{t('tutWelcomeRule1')}</Text>
         </View>
         <View style={ss.ruleCard}>
           <Text style={ss.ruleNum}>2</Text>
-          <Text style={ss.ruleText}>
-            Each zone on the board requires a specific combination of elements.
-          </Text>
+          <Text style={ss.ruleText}>{t('tutWelcomeRule2')}</Text>
         </View>
       </View>
     </View>
@@ -99,6 +96,7 @@ function SlideWelcome() {
 }
 
 function SlideElements() {
+  const t = useT();
   const elements = [
     { name: 'Wind',  color: '#7dd3fc' },
     { name: 'Earth', color: '#92400e' },
@@ -108,7 +106,7 @@ function SlideElements() {
   return (
     <View style={ss.slideInner}>
       <Text style={ss.slideBody}>
-        In <Text style={{ color: '#34d399', fontWeight: '700' }}>Nature Lab</Text>, you work with four base elements:
+        {t('tutElementsIn', { world: 'Nature Lab' })}
       </Text>
       <View style={ss.elemGrid}>
         {elements.map(({ name, color }) => (
@@ -119,13 +117,14 @@ function SlideElements() {
         ))}
       </View>
       <Text style={[ss.slideBody, { color: 'rgba(255,255,255,0.5)', marginTop: 8, fontSize: 11 }]}>
-        Drag these from the inventory onto the board.
+        {t('tutElementsDrag')}
       </Text>
     </View>
   );
 }
 
 function SlideCombinations() {
+  const t = useT();
   const combos = [
     { result: 'Steam',     ingredients: ['Fire', 'Water'] },
     { result: 'Mud',       ingredients: ['Earth', 'Water'] },
@@ -136,9 +135,7 @@ function SlideCombinations() {
   ];
   return (
     <View style={ss.slideInner}>
-      <Text style={ss.slideBody}>
-        Elements inside a <Text style={ss.amber}>zone</Text> combine to create new elements!
-      </Text>
+      <Text style={ss.slideBody}>{t('tutCombosBody')}</Text>
       <View style={{ gap: 6, marginTop: 10 }}>
         {combos.map(({ result, ingredients }) => (
           <View key={result} style={ss.comboRow}>
@@ -161,18 +158,13 @@ function SlideCombinations() {
 }
 
 function SlideZones() {
+  const t = useT();
   return (
     <View style={ss.slideInner}>
-      <Text style={ss.slideBody}>
-        The board is divided into <Text style={ss.amber}>zones</Text> — groups of cells outlined by green borders.
-      </Text>
+      <Text style={ss.slideBody}>{t('tutZonesBody')}</Text>
       <View style={ss.infoBox}>
-        <Text style={ss.infoText}>
-          Each zone has a <Text style={{ color: '#34d399', fontWeight: '700' }}>recipe</Text> — the combination it needs you to create.
-        </Text>
-        <Text style={[ss.infoText, { marginTop: 8 }]}>
-          Tap any cell to see the zone's tooltip, showing what combination is required.
-        </Text>
+        <Text style={ss.infoText}>{t('tutZonesEach')}</Text>
+        <Text style={[ss.infoText, { marginTop: 8 }]}>{t('tutZonesTap')}</Text>
         <View style={ss.exampleRow}>
           <ElementIcon name="Fire"  size={30} />
           <Text style={ss.dimText}>+</Text>
@@ -183,37 +175,33 @@ function SlideZones() {
         </View>
       </View>
       <Text style={[ss.slideBody, { color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 4 }]}>
-        Place the right elements in the zone's cells to satisfy the recipe.
+        {t('tutZonesPlace')}
       </Text>
     </View>
   );
 }
 
 function SlideSingleCell() {
+  const t = useT();
   return (
     <View style={ss.slideInner}>
-      <Text style={ss.slideBody}>
-        Some zones contain only <Text style={ss.amber}>one cell</Text>. These require exactly one specific element.
-      </Text>
+      <Text style={ss.slideBody}>{t('tutSingleBody')}</Text>
       <View style={ss.infoBox}>
-        <Text style={ss.infoText}>
-          You can identify them by their{' '}
-          <Text style={{ color: '#fff', fontWeight: '700' }}>black &amp; white ghost icon</Text>.
-        </Text>
+        <Text style={ss.infoText}>{t('tutSingleIdentify')}</Text>
         <View style={{ flexDirection: 'row', gap: 28, justifyContent: 'center', marginTop: 14 }}>
           <View style={{ alignItems: 'center', gap: 6 }}>
             <View style={ss.ghostBox}>
               <ElementIcon name="Fire" size={44} opacity={0.4} />
             </View>
-            <Text style={ss.ghostLabel}>Single-cell</Text>
-            <Text style={[ss.ghostLabel, { color: 'rgba(255,255,255,0.35)', fontSize: 9 }]}>(B&W ghost)</Text>
+            <Text style={ss.ghostLabel}>{t('tutSingleLabel')}</Text>
+            <Text style={[ss.ghostLabel, { color: 'rgba(255,255,255,0.35)', fontSize: 9 }]}>{t('tutSingleBW')}</Text>
           </View>
           <View style={{ alignItems: 'center', gap: 6 }}>
             <View style={ss.ghostBox}>
               <ElementIcon name="Fire" size={44} opacity={0.7} />
             </View>
-            <Text style={ss.ghostLabel}>Multi-cell</Text>
-            <Text style={[ss.ghostLabel, { color: 'rgba(255,255,255,0.35)', fontSize: 9 }]}>(Colored ghost)</Text>
+            <Text style={ss.ghostLabel}>{t('tutMultiLabel')}</Text>
+            <Text style={[ss.ghostLabel, { color: 'rgba(255,255,255,0.35)', fontSize: 9 }]}>{t('tutMultiColored')}</Text>
           </View>
         </View>
       </View>
@@ -222,21 +210,22 @@ function SlideSingleCell() {
 }
 
 function SlideTips() {
+  const t = useT();
   const tips = [
-    { icon: '⭐', text: 'Complete levels faster for more stars (up to 3 per level).' },
-    { icon: '💡', text: 'Use hints when stuck — they reveal the correct element for a cell.' },
-    { icon: '🪙', text: 'Earn coins by completing levels. Spend them on extra hints.' },
-    { icon: '🔵', text: 'Hinted cells have a blue border — they\'re locked in and always correct.' },
-    { icon: '🔴', text: 'Red highlights mean a conflict — no duplicates allowed in any row or column.' },
+    { icon: '⭐', textKey: 'tutTipStars' },
+    { icon: '💡', textKey: 'tutTipHints' },
+    { icon: '🪙', textKey: 'tutTipCoins' },
+    { icon: '🔵', textKey: 'tutTipBlue' },
+    { icon: '🔴', textKey: 'tutTipRed' },
   ];
   return (
     <View style={ss.slideInner}>
-      <Text style={ss.slideBody}>A few more things to help you succeed:</Text>
+      <Text style={ss.slideBody}>{t('tutTipsBody')}</Text>
       <View style={{ gap: 8, marginTop: 10 }}>
-        {tips.map(({ icon, text }) => (
+        {tips.map(({ icon, textKey }) => (
           <View key={icon} style={ss.tipRow}>
             <Text style={{ fontSize: 18 }}>{icon}</Text>
-            <Text style={ss.tipText}>{text}</Text>
+            <Text style={ss.tipText}>{t(textKey as any)}</Text>
           </View>
         ))}
       </View>
@@ -257,15 +246,17 @@ type TipPosition =
 
 type TipStep = { id: string; title: string; text: string; action: string; position: TipPosition };
 
-const PRACTICE_TIPS: TipStep[] = [
-  { id: 'drag-element', title: 'Place an Element',      text: 'Drag an element from the inventory and drop it onto a cell on the board.',             action: 'Drag an element onto a cell',        position: 'above-inventory' },
-  { id: 'tap-cell',     title: 'Check a Zone',          text: 'Tap any cell to see which combination its zone requires.',                               action: 'Tap a cell on the board',            position: 'above-board' },
-  { id: 'read-tooltip', title: 'Zone Tooltip',          text: 'The tooltip shows the recipe and ingredients. Tap another cell to compare.',             action: 'Tap a different cell',               position: 'below-board' },
-  { id: 'single-cell',  title: 'Single-Cell Zone',      text: 'See the ghost icon at the top-left? Drag Fire from the inventory and drop it on that cell!', action: 'Drag Fire to the top-left cell',  position: 'over-board-topleft' },
-  { id: 'multi-cell',   title: 'Multi-Cell Zones',      text: 'Colored ghost icons show multi-cell zones. Drag an element from inventory into one now.',   action: 'Drag an element into a multi-cell zone', position: 'over-board' },
-  { id: 'conflicts',    title: 'Watch for Conflicts!',  text: 'Same element twice in a row or column? Those cells turn red! Tap anywhere to continue.', action: 'Tap anywhere to dismiss',            position: 'below-board-arrow-up' },
-  { id: 'go',           title: "You're Ready!",         text: 'The timer is running — finish faster for more stars! Complete the puzzle on your own.',   action: '',                                   position: 'over-board-top' },
-];
+function getPracticeTips(t: (k: string) => string): TipStep[] {
+  return [
+    { id: 'drag-element', title: t('tipDragTitle'),      text: t('tipDragText'),      action: t('tipDragAction'),      position: 'above-inventory' },
+    { id: 'tap-cell',     title: t('tipTapTitle'),       text: t('tipTapText'),       action: t('tipTapAction'),       position: 'above-board' },
+    { id: 'read-tooltip', title: t('tipTooltipTitle'),   text: t('tipTooltipText'),   action: t('tipTooltipAction'),   position: 'below-board' },
+    { id: 'single-cell',  title: t('tipSingleTitle'),    text: t('tipSingleText'),    action: t('tipSingleAction'),    position: 'over-board-topleft' },
+    { id: 'multi-cell',   title: t('tipMultiTitle'),     text: t('tipMultiText'),     action: t('tipMultiAction'),     position: 'over-board' },
+    { id: 'conflicts',    title: t('tipConflictsTitle'), text: t('tipConflictsText'), action: t('tipConflictsAction'), position: 'below-board-arrow-up' },
+    { id: 'go',           title: t('tipGoTitle'),        text: t('tipGoText'),        action: '',                      position: 'over-board-top' },
+  ];
+}
 
 // ─── Bouncing arrow ───────────────────────────────────────────────────────────
 function BouncingArrow({ direction, color = '#fbbf24' }: { direction: 'up' | 'down'; color?: string }) {
@@ -334,6 +325,8 @@ function TipOverlay({ tip, tipIndex, total }: { tip: TipStep; tipIndex: number; 
 
 // ─── Practice board (inner content that can call useDrag) ─────────────────────
 function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
+  const t = useT();
+  const PRACTICE_TIPS = useMemo(() => getPracticeTips(t), [t]);
   const { width: sw } = useWindowDimensions();
   const { cellSize: CELL_SIZE, gap: GRID_GAP } = computeGridLayout(4, sw);
 
@@ -463,8 +456,8 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
   // "You're Ready!" auto-disappears after 4s
   useEffect(() => {
     if (PRACTICE_TIPS[tipIndex]?.id === 'go' && !tipsComplete) {
-      const t = setTimeout(() => setTipsComplete(true), 4000);
-      return () => clearTimeout(t);
+      const tid = setTimeout(() => setTipsComplete(true), 4000);
+      return () => clearTimeout(tid);
     }
   }, [tipIndex, tipsComplete]);
 
@@ -603,8 +596,8 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
       {showWin && (
         <View style={ss.winOverlay}>
           <View style={ss.winCard}>
-            <Text style={ss.winTitle}>Tutorial Complete!</Text>
-            <Text style={ss.winSub}>Great job! You've mastered the basics.</Text>
+            <Text style={ss.winTitle}>{t('tutCompleteTitle')}</Text>
+            <Text style={ss.winSub}>{t('tutCompleteBody')}</Text>
             <View style={{ flexDirection: 'row', gap: 8, marginVertical: 16 }}>
               {[1, 2, 3].map((s) => {
                 const active =
@@ -620,10 +613,10 @@ function PracticeBoardContent({ onComplete }: { onComplete: () => void }) {
             </View>
             <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
               <Pressable style={[ss.winBtn, ss.winBtnOutline]} onPress={handleRetry}>
-                <Text style={{ color: '#fff', fontWeight: '700' }}>Try Again</Text>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>{t('tryAgain')}</Text>
               </Pressable>
               <Pressable style={[ss.winBtn, ss.winBtnPrimary]} onPress={onComplete}>
-                <Text style={{ color: '#fff', fontWeight: '700' }}>Done</Text>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>{t('done')}</Text>
               </Pressable>
             </View>
           </View>
@@ -643,9 +636,12 @@ function PracticeBoard({ onComplete }: { onComplete: () => void }) {
 
 // ─── Main Tutorial screen ─────────────────────────────────────────────────────
 export default function TutorialScreen() {
+  const t = useT();
   const insets = useSafeAreaInsets();
   const { width: sw } = useWindowDimensions();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
+
+  const SLIDES = useMemo(() => getSlides(t as any), [t]);
 
   const [step, setStep] = useState(0);
   const [showPracticeToast, setShowPracticeToast] = useState(false);
@@ -685,12 +681,12 @@ export default function TutorialScreen() {
         >
           <Text style={ss.headerBtnText}>←</Text>
         </Pressable>
-        <Text style={ss.headerTitle}>{isPractice ? 'Practice Level' : 'Tutorial'}</Text>
+        <Text style={ss.headerTitle}>{isPractice ? t('tutPracticeTitle') : t('tutorial')}</Text>
         <Pressable
           onPress={() => router.replace('/worlds')}
           style={ss.headerBtn}
         >
-          <Text style={[ss.headerBtnText, { fontSize: 13, fontWeight: '600' }]}>Skip</Text>
+          <Text style={[ss.headerBtnText, { fontSize: 13, fontWeight: '600' }]}>{t('skip')}</Text>
         </Pressable>
       </View>
 
@@ -715,7 +711,7 @@ export default function TutorialScreen() {
             <View style={ss.navRow}>
               {step > 0 && (
                 <Pressable style={ss.navBtn} onPress={() => goTo(step - 1)}>
-                  <Text style={ss.navBtnText}>← Back</Text>
+                  <Text style={ss.navBtnText}>{t('tutBackBtn')}</Text>
                 </Pressable>
               )}
               <Pressable
@@ -723,14 +719,14 @@ export default function TutorialScreen() {
                 onPress={() => goTo(step + 1)}
               >
                 <Text style={ss.navBtnText}>
-                  {step === SLIDES.length - 1 ? 'Start Practice →' : 'Next →'}
+                  {step === SLIDES.length - 1 ? t('tutStartPractice') : t('tutNext')}
                 </Text>
               </Pressable>
             </View>
 
             {/* "Let's Practice!" shortcut */}
             <Pressable style={ss.practiceBtn} onPress={handleLetsPractice}>
-              <Text style={ss.practiceBtnText}>🎮  Let's Practice!</Text>
+              <Text style={ss.practiceBtnText}>{t('tutLetsPractice')}</Text>
             </Pressable>
 
             <View style={{ height: insets.bottom + 16 }} />
@@ -741,9 +737,7 @@ export default function TutorialScreen() {
       {/* Practice phase */}
       {isPractice && (
         <Animated.View style={[{ flex: 1 }, { opacity: fadeAnim }]}>
-          <Text style={ss.practiceSubtitle}>
-            Try solving this level using everything you've learned!
-          </Text>
+          <Text style={ss.practiceSubtitle}>{t('tutPracticeSubtitle')}</Text>
           <View style={{ flex: 1 }}>
             <PracticeBoard onComplete={() => router.replace('/worlds')} />
           </View>
@@ -753,7 +747,7 @@ export default function TutorialScreen() {
       {/* Toast: finish slides first */}
       {showPracticeToast && (
         <View style={ss.toast}>
-          <Text style={ss.toastText}>Finish the slides first! Practice is on the last page.</Text>
+          <Text style={ss.toastText}>{t('tutFinishSlides')}</Text>
         </View>
       )}
     </View>
