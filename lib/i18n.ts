@@ -1,5 +1,7 @@
 import en from '../constants/translations/en';
 
+export type Language = 'en';
+
 export function translate(key: string, vars?: Record<string, string | number>): string {
   let str = (en as Record<string, string>)[key] ?? key;
   if (vars) {
