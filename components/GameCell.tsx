@@ -149,6 +149,7 @@ const GameCell = memo(({
             size={iconSize}
             showLabel={showLabel}
             labelFontSize={labelFontSize}
+            opacity={0.55}
           />
         ) : element && isBeingDragged ? (
           <ElementIcon
