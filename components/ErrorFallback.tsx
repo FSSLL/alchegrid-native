@@ -73,9 +73,16 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
           Something went wrong
         </Text>
 
-        <Text style={[styles.message, { color: colors.mutedForeground }]}>
-          Please reload the app to continue.
-        </Text>
+        <ScrollView style={styles.errorBox} contentContainerStyle={{ padding: 10 }}>
+          <Text style={styles.errorMsg} selectable>
+            {error.message}
+          </Text>
+          {error.stack ? (
+            <Text style={styles.errorStack} selectable>
+              {error.stack.slice(0, 600)}
+            </Text>
+          ) : null}
+        </ScrollView>
 
         <Pressable
           onPress={handleRestart}
@@ -274,5 +281,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     width: "100%",
+  },
+  errorBox: {
+    width: "100%",
+    maxHeight: 180,
+    backgroundColor: "rgba(255,0,0,0.12)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,0,0,0.3)",
+  },
+  errorMsg: {
+    color: "#ff6060",
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+  errorStack: {
+    color: "rgba(255,96,96,0.7)",
+    fontSize: 10,
+    lineHeight: 14,
   },
 });
