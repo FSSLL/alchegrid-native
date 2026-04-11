@@ -127,17 +127,21 @@ function GameContent() {
   const hintPulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    let anim: Animated.CompositeAnimation;
     if (hintMode) {
-      Animated.loop(
+      anim = Animated.loop(
         Animated.sequence([
           Animated.timing(hintPulse, { toValue: 1.14, duration: 480, useNativeDriver: true }),
           Animated.timing(hintPulse, { toValue: 1, duration: 480, useNativeDriver: true }),
         ]),
-      ).start();
+      );
+      anim.start();
     } else {
       hintPulse.stopAnimation();
-      Animated.timing(hintPulse, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+      anim = Animated.timing(hintPulse, { toValue: 1, duration: 150, useNativeDriver: true });
+      anim.start();
     }
+    return () => { anim.stop(); hintPulse.stopAnimation(); };
   }, [hintMode]);
 
   useEffect(() => {

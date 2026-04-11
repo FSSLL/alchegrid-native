@@ -26,10 +26,12 @@ export default function WorldIntroCard({ world, prevWorldName, isFirstVisit, onC
   const t = useT();
 
   useEffect(() => {
-    Animated.parallel([
+    const anim = Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 280, useNativeDriver: true }),
       Animated.spring(slideAnim, { toValue: 0, friction: 8, useNativeDriver: true }),
-    ]).start();
+    ]);
+    anim.start();
+    return () => anim.stop();
   }, []);
 
   const isUnlockState = isFirstVisit && !isWorld1 && !!prevWorldName;
