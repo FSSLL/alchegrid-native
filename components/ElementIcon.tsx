@@ -23,6 +23,7 @@ interface ElementIconProps {
   showLabel?: boolean;
   opacity?: number;
   labelFontSize?: number;
+  noVideo?: boolean;
 }
 
 const ElementIcon = memo(({
@@ -31,9 +32,10 @@ const ElementIcon = memo(({
   showLabel = false,
   opacity = 1,
   labelFontSize,
+  noVideo = false,
 }: ElementIconProps) => {
   const key = normalizeName(name);
-  const videoSrc = VIDEO_MAP[key] ?? null;
+  const videoSrc = (!noVideo && VIDEO_MAP[key]) ? VIDEO_MAP[key] : null;
   const pngSrc   = videoSrc ? null : (ELEMENT_PNGS[key] ?? ELEMENT_PNGS[name] ?? null);
   const emoji     = ELEMENT_EMOJIS[key] ?? RECIPE_EMOJIS[key] ?? name[0];
   const shortName = name.length > 6 ? name.substring(0, 4) : name;
@@ -102,6 +104,7 @@ const styles = StyleSheet.create({
   },
   emoji: {
     textAlign: 'center',
+    color: '#ffffff',
   },
   label: {
     color: 'rgba(255,255,255,0.75)',
