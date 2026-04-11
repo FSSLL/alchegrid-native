@@ -423,8 +423,8 @@ function GameContent() {
         />
       </View>
 
-      {/* Win overlay */}
-      {status === 'won' && (
+      {/* Win overlay — only render when this screen's level matches the store */}
+      {status === 'won' && level?.id === currentLevelData?.id && (
         <WinOverlay
           stars={stars}
           elapsed={elapsedTime}

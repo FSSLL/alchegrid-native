@@ -33,10 +33,12 @@ export default function WinOverlay({ stars, elapsed, coinsEarned, onNext, onRepl
 
   useEffect(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Animated.parallel([
+    const anim = Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, friction: 6, useNativeDriver: true }),
-    ]).start();
+    ]);
+    anim.start();
+    return () => anim.stop();
   }, [fadeAnim, scaleAnim]);
 
   const starEmojis = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
