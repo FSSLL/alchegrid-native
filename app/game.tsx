@@ -272,10 +272,13 @@ function GameContent() {
     const map: Record<string, { element: string; opacity: number; zoneBg: string }> = {};
     const src = level?.id === currentLevelData?.id ? level : currentLevelData;
     if (!src) return map;
+    const bgTints: string[] = colors.zoneBgTints ?? [];
     src.zones.forEach((zone, zoneIdx) => {
       if (!zone.recipeName) return;
       const opacity = 0.65;
-      const zoneBg = colors.zoneBgTints[zoneIdx % colors.zoneBgTints.length];
+      const zoneBg = bgTints.length > 0
+        ? bgTints[zoneIdx % bgTints.length]
+        : 'rgba(255,255,255,0.10)';
       zone.cells.forEach(({ row, col }) => {
         map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
       });

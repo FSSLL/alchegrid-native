@@ -12,6 +12,7 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GRID_BACKGROUNDS } from '../../constants/assets';
+import colors from '../../constants/colors';
 import { useGameStore } from '../../store/gameStore';
 import { useEndlessStore } from '../../store/endlessStore';
 import { usePlayerStore } from '../../store/playerStore';
@@ -59,14 +60,17 @@ function EndlessGameContent() {
 
   // ── ghost elements (zone recipe hints shown in empty cells) ──────────────
   const cellGhostInfo = useMemo(() => {
-    const map: Record<string, { element: string; opacity: number; grayscale: boolean }> = {};
+    const map: Record<string, { element: string; opacity: number; zoneBg: string }> = {};
     if (!level) return map;
-    level.zones.forEach((zone) => {
+    const bgTints: string[] = colors.zoneBgTints ?? [];
+    level.zones.forEach((zone, zoneIdx) => {
       if (!zone.recipeName) return;
       const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
-      const grayscale = zone.cells.length === 1;
+      const zoneBg = bgTints.length > 0
+        ? bgTints[zoneIdx % bgTints.length]
+        : 'rgba(255,255,255,0.10)';
       zone.cells.forEach(({ row, col }) => {
-        map[`${row},${col}`] = { element: zone.recipeName!, opacity, grayscale };
+        map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
       });
     });
     return map;
@@ -340,6 +344,7 @@ function EndlessGameContent() {
                     isHinted={!!hintedCells[key]}
                     ghostElement={el === null ? (ghost?.element ?? null) : null}
                     ghostOpacity={ghost?.opacity ?? 0.90}
+                    ghostZoneBg={ghost?.zoneBg}
                     onPress={() => handleCellPress(r, c)}
                   />
                 </View>

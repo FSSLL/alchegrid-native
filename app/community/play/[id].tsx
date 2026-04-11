@@ -156,10 +156,13 @@ function PlayContent() {
   const cellGhostInfo = useMemo(() => {
     const map: Record<string, { element: string; opacity: number; zoneBg: string }> = {};
     if (!level) return map;
+    const bgTints: string[] = colors.zoneBgTints ?? [];
     level.zones.forEach((zone, zoneIdx) => {
       if (!zone.recipeName) return;
       const opacity = zone.cells.length === 1 ? 0.65 : 0.90;
-      const zoneBg = colors.zoneBgTints[zoneIdx % colors.zoneBgTints.length];
+      const zoneBg = bgTints.length > 0
+        ? bgTints[zoneIdx % bgTints.length]
+        : 'rgba(255,255,255,0.10)';
       zone.cells.forEach(({ row, col }) => {
         map[`${row},${col}`] = { element: zone.recipeName!, opacity, zoneBg };
       });
