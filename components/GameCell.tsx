@@ -166,7 +166,6 @@ const GameCell = memo(({
               size={iconSize}
               showLabel={false}
               opacity={ghostOpacity}
-              noVideo
             />
           </>
         ) : null}
